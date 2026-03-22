@@ -1,0 +1,105 @@
+using System;
+using System.Collections.Generic;
+
+namespace MyGame2.Stage
+{
+    // 스테이지에서 발생하는 모든 이벤트를 중앙 관리하는 허브.
+    // StageState 변이 메서드가 이벤트를 발행하고,
+    // View / GameManager / Undo 시스템이 구독한다.
+    
+    public sealed class StageEvents
+    {
+        
+        // 엔티티 이벤트(나중에 호출 하실려고 할때 쓰시라고 주석 처리 완료)
+        // 엔티티가 셀을 이동했을 때. (entityId, from, to)
+        public event Action<int, GridPos, GridPos> EntityMoved;
+
+        // 엔티티의 바라보는 방향이 바뀌었을 때. (entityId, newFacing)
+        public event Action<int, Direction> FacingChanged;
+
+        // 엔티티가 사망 처리되었을 때. (entityId)
+        public event Action<int> EntityKilled;
+
+        // 활성 플레이어가 전환되었을 때. (newActivePlayerId)
+        public event Action<int> ActivePlayerChanged;
+        
+        // 게임 오버 상태가 되었을 때.
+        public event Action GameOverTriggered;
+
+        // 스테이지 클리어 상태가 되었을 때.
+        public event Action StageClearTriggered;
+
+        // 인덱스가 증가했을 때. (newTurnIndex)
+        public event Action<int> TurnAdvanced;
+        
+        // 플레이어 턴이 실행 완료된 후 발행.
+        // View 동기화의 주 트리거.
+        public event Action<TurnOutcome> TurnExecuted;
+
+        // 새 스테이지가 로드/리빌드된 직후. (stageIndex)
+        public event Action<int> StageLoaded;
+        
+        // 발행 메서드 (StageState, TurnSystem 등이 호출)
+        
+        public void RaiseEntityMoved(int entityId, GridPos from, GridPos to)
+        {
+            EntityMoved?.Invoke(entityId, from, to);
+        }
+
+        public void RaiseFacingChanged(int entityId, Direction newFacing)
+        {
+            FacingChanged?.Invoke(entityId, newFacing);
+        }
+
+        public void RaiseEntityKilled(int entityId)
+        {
+            EntityKilled?.Invoke(entityId);
+        }
+
+        public void RaiseActivePlayerChanged(int newActivePlayerId)
+        {
+            ActivePlayerChanged?.Invoke(newActivePlayerId);
+        }
+
+        public void RaiseGameOver()
+        {
+            GameOverTriggered?.Invoke();
+        }
+
+        public void RaiseStageClear()
+        {
+            StageClearTriggered?.Invoke();
+        }
+
+        public void RaiseTurnAdvanced(int newTurnIndex)
+        {
+            TurnAdvanced?.Invoke(newTurnIndex);
+        }
+
+        public void RaiseTurnExecuted(TurnOutcome outcome)
+        {
+            TurnExecuted?.Invoke(outcome);
+        }
+
+        public void RaiseStageLoaded(int stageIndex)
+        {
+            StageLoaded?.Invoke(stageIndex);
+        }
+
+       
+        // 모든 구독자를 해제한다.
+        // 스테이지 전환 시 이전 구독을 깨끗하게 정리할 때 사용.
+        public void ClearAll()
+        {
+            EntityMoved = null;
+            FacingChanged = null;
+            EntityKilled = null;
+            ActivePlayerChanged = null;
+            GameOverTriggered = null;
+            StageClearTriggered = null;
+            TurnAdvanced = null;
+            TurnExecuted = null;
+            StageLoaded = null;
+        }
+    }
+}
