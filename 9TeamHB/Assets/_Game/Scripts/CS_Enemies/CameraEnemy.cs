@@ -8,6 +8,7 @@ namespace MyGame2.Stage
     // LineLong: 직선 5칸
     // PyramidSmall: 피라미드 3줄 (1+3+5칸)
     // PyramidLarge: 피라미드 5줄 (1+3+5+7+9칸)
+    // Fixed3x3: 본인 위치 포함 3×3 고정형 (비회전)
     public sealed class CameraEnemy
     {
         // 카메라가 플레이어를 감지하는지 판정한다.
@@ -70,6 +71,9 @@ namespace MyGame2.Stage
                     break;
                 case CameraType.PyramidLarge:
                     AddPyramidCells(state, camera, 5, result);
+                    break;
+                case CameraType.Fixed3x3:
+                    AddFixed3x3Cells(state, camera, result);
                     break;
             }
 
@@ -147,6 +151,30 @@ namespace MyGame2.Stage
 
                     CellData cellData = state.GetCell(cell);
                     if (cellData.HasWall)
+                        continue;
+
+                    result.Add(cell);
+                }
+            }
+        }
+
+        // 고정형 3×3 감지.
+        // 본인 위치 포함 주변 9칸. 방향 무관, 회전 안 함.
+        // 벽은 감지 범위에서 제외되지만, 시야 차단은 없음 (전부 인접칸이므로).
+        private void AddFixed3x3Cells(StageState state, EntityState camera, List<GridPos> result)
+        {
+            GridPos center = camera.Position;
+
+            for (int dy = -1; dy <= 1; dy++)
+            {
+                for (int dx = -1; dx <= 1; dx++)
+                {
+                    GridPos cell = new GridPos(center.X + dx, center.Y + dy);
+
+                    if (!state.IsInside(cell))
+                        continue;
+
+                    if (state.GetCell(cell).HasWall)
                         continue;
 
                     result.Add(cell);
