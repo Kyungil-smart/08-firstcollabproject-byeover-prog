@@ -57,7 +57,7 @@ namespace MyGame2.Stage
         {
             List<GridPos> result = new List<GridPos>(16);
 
-            switch (camera.DetectionPattern)
+            switch (camera.Camera.Pattern)
             {
                 case CameraType.LineShort:
                     AddLineCells(state, camera, 3, result);
@@ -103,11 +103,11 @@ namespace MyGame2.Stage
                 }
             }
         }
-        
+
         // 피라미드형 감지.
         // rows줄: 1줄째 1칸, 2줄째 3칸, 3줄째 5칸...
         // 각 칸별로 벽 판정을 개별 수행한다.
-        
+
         private void AddPyramidCells(StageState state, EntityState camera, int rows, List<GridPos> result)
         {
             Direction forward = camera.Facing;

@@ -15,9 +15,7 @@ namespace MyGame2.Stage
         public readonly Direction[] PatrolRoute;
 
         public SpawnData(
-            EntityKind kind,
-            GridPos position,
-            Direction facing,
+            EntityKind kind, GridPos position, Direction facing,
             int playerSlot = 0,
             BoxType boxOwnership = BoxType.Shared,
             CameraType detectionPattern = CameraType.LineShort,

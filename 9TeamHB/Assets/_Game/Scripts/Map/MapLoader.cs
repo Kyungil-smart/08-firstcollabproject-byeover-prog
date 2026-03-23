@@ -216,8 +216,7 @@ namespace MyGame2.Stage
 
             return new MapDefinition(width, height, cellFlags, spawns);
         }
-
-        // 줄 정규화: 빈 줄과 주석(//) 제거.
+        
         private static string[] NormalizeLines(string rawText)
         {
             string normalized = rawText.Replace("\r\n", "\n").Replace('\r', '\n');

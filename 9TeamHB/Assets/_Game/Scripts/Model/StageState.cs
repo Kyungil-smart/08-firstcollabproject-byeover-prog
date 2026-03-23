@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    // 스테이지의 유일한 상태 소유자.
-    // 모든 변이 메서드는 StageEvents를 통해 이벤트를 발행한다.
-
     public sealed class StageState
     {
         public const int InvalidEntityId = -1;
@@ -19,7 +17,6 @@ namespace MyGame2.Stage
         private readonly List<int> _animalIds;
 
         private int _nextEntityId;
-
         private readonly StageEvents _events;
 
         public int Width { get; private set; }
@@ -37,8 +34,6 @@ namespace MyGame2.Stage
         public IEnumerable<EntityState> Entities { get { return _entitiesById.Values; } }
         public StageEvents Events { get { return _events; } }
 
-        // 생성자
-
         private StageState(int width, int height, CellData[] cells, StageEvents events)
         {
             Width = width;
@@ -53,19 +48,14 @@ namespace MyGame2.Stage
             _animalIds = new List<int>(8);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
-            TurnIndex = 0;
-            IsGameOver = false;
-            IsStageClear = false;
         }
-
+        
         // 팩토리
 
         public static StageState FromMapDefinition(MapDefinition definition, StageEvents events = null)
         {
             if (definition == null)
-            {
                 throw new ArgumentNullException(nameof(definition));
-            }
 
             CellFlags[] flags = definition.CloneCellFlags();
             CellData[] cells = new CellData[flags.Length];
@@ -82,241 +72,173 @@ namespace MyGame2.Stage
 
             foreach (SpawnData spawn in definition.Spawns)
             {
-                EntityState entity = CreateEntityTemplate(spawn);
+                EntityState entity = CreateEntity(spawn);
                 state.AddEntity(entity);
             }
 
-            if (state._playerIds.Count != 2)
-            {
-                throw new InvalidOperationException("StageState requires exactly two players.");
-            }
+            Debug.Assert(state._playerIds.Count == 2,
+                "StageState requires exactly two players.");
 
             state.ActivePlayerId = state._playerIds[0];
             return state;
         }
 
+        // SpawnData로부터 EntityState를 생성한다. 종류별 팩토리 사용.
+        private static EntityState CreateEntity(SpawnData spawn)
+        {
+            switch (spawn.Kind)
+            {
+                case EntityKind.Player:
+                    return EntityState.CreatePlayer(spawn.Position, spawn.Facing, spawn.PlayerSlot);
+                case EntityKind.Box:
+                    return EntityState.CreateBox(spawn.Position, spawn.BoxOwnership);
+                case EntityKind.CameraEnemy:
+                    return EntityState.CreateCamera(spawn.Position, spawn.Facing, spawn.DetectionPattern);
+                case EntityKind.RobotEnemy:
+                    return EntityState.CreateRobot(spawn.Position, spawn.Facing, spawn.PatrolRoute);
+                case EntityKind.AnimalEnemy:
+                    return EntityState.CreateAnimal(spawn.Position, spawn.Facing);
+                default:
+                    throw new ArgumentException($"Unknown EntityKind: {spawn.Kind}");
+            }
+        }
+
         // 읽기 전용 쿼리
 
-        public bool IsInside(GridPos position)
+        public bool IsInside(GridPos pos)
         {
-            return position.X >= 0 && position.X < Width &&
-                   position.Y >= 0 && position.Y < Height;
+            return pos.X >= 0 && pos.X < Width && pos.Y >= 0 && pos.Y < Height;
         }
 
-        public CellData GetCell(GridPos position)
-        {
-            return _cells[ToIndex(position)];
-        }
-
-        public bool HasGoal(GridPos position)
-        {
-            return GetCell(position).HasGoal;
-        }
-
-        public bool HasTrap(GridPos position)
-        {
-            return GetCell(position).HasTrap;
-        }
-
-        public int GetOccupantId(GridPos position)
-        {
-            return GetCell(position).OccupantId;
-        }
+        public CellData GetCell(GridPos pos) { return _cells[ToIndex(pos)]; }
+        public bool HasGoal(GridPos pos) { return GetCell(pos).HasGoal; }
+        public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
+        public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
         public bool TryGetEntity(int entityId, out EntityState entity)
         {
             return _entitiesById.TryGetValue(entityId, out entity);
         }
 
-        public int GetPlayerIdBySlot(int playerSlot)
+        public int GetPlayerIdBySlot(int slot)
         {
             for (int i = 0; i < _playerIds.Count; i++)
             {
-                EntityState player = _entitiesById[_playerIds[i]];
-                if (player.PlayerSlot == playerSlot)
-                {
-                    return player.Id;
-                }
+                EntityState p = _entitiesById[_playerIds[i]];
+                if (p.Player.Slot == slot) return p.Id;
             }
-
             return InvalidEntityId;
         }
 
         public bool IsAnyPlayerDead()
         {
             for (int i = 0; i < _playerIds.Count; i++)
-            {
-                if (_entitiesById[_playerIds[i]].IsAlive == false)
-                {
-                    return true;
-                }
-            }
-
+                if (!_entitiesById[_playerIds[i]].IsAlive) return true;
             return false;
         }
 
         public GridPos GetNearestLivingPlayerPosition(GridPos from)
         {
-            int bestDistance = int.MaxValue;
-            GridPos bestPosition = from;
-
+            int best = int.MaxValue;
+            GridPos bestPos = from;
             for (int i = 0; i < _playerIds.Count; i++)
             {
-                EntityState player = _entitiesById[_playerIds[i]];
-                if (!player.IsAlive)
-                {
-                    continue;
-                }
-
-                int distance = Math.Abs(player.Position.X - from.X) +
-                               Math.Abs(player.Position.Y - from.Y);
-
-                if (distance < bestDistance)
-                {
-                    bestDistance = distance;
-                    bestPosition = player.Position;
-                }
+                EntityState p = _entitiesById[_playerIds[i]];
+                if (!p.IsAlive) continue;
+                int d = Math.Abs(p.Position.X - from.X) + Math.Abs(p.Position.Y - from.Y);
+                if (d < best) { best = d; bestPos = p.Position; }
             }
-
-            return bestPosition;
+            return bestPos;
         }
-
-        // 변이 메서드
 
         public void SetActivePlayer(int entityId)
         {
-            if (entityId == InvalidEntityId || !_entitiesById.ContainsKey(entityId))
-            {
-                return;
-            }
-
-            if (ActivePlayerId == entityId)
-            {
-                return;
-            }
-
+            if (entityId == InvalidEntityId || !_entitiesById.ContainsKey(entityId)) return;
+            if (ActivePlayerId == entityId) return;
             ActivePlayerId = entityId;
             _events?.RaiseActivePlayerChanged(entityId);
         }
 
-        public void MoveEntity(int entityId, GridPos destination)
+        // 엔티티를 이동시킨다. 목적지 점유 검증은 호출자 책임.
+        public bool TryMoveEntity(int entityId, GridPos destination)
         {
-            if (!_entitiesById.TryGetValue(entityId, out EntityState entity))
-            {
-                throw new KeyNotFoundException($"Entity id {entityId} was not found.");
-            }
+            if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
+            if (!entity.IsAlive) return false;
+
+            Debug.Assert(!GetCell(destination).IsOccupied,
+                $"TryMoveEntity: {destination} is occupied by {GetCell(destination).OccupantId}");
 
             GridPos from = entity.Position;
             ClearOccupant(from);
             entity.Position = destination;
             SetOccupant(destination, entity.Id);
-
             _events?.RaiseEntityMoved(entityId, from, destination);
+            return true;
+        }
+
+        // 하위 호환용 — TryMoveEntity와 동일.
+        public void MoveEntity(int entityId, GridPos destination)
+        {
+            TryMoveEntity(entityId, destination);
         }
 
         public void SetFacing(int entityId, Direction facing)
         {
-            if (!_entitiesById.TryGetValue(entityId, out EntityState entity))
-            {
-                return;
-            }
-
-            if (entity.Facing == facing)
-            {
-                return;
-            }
-
+            if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return;
+            if (entity.Facing == facing) return;
             entity.Facing = facing;
             _events?.RaiseFacingChanged(entityId, facing);
         }
 
         public bool KillEntity(int entityId)
         {
-            if (!_entitiesById.TryGetValue(entityId, out EntityState entity))
-            {
-                return false;
-            }
-
-            if (!entity.IsAlive)
-            {
-                return false;
-            }
-
+            if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
+            if (!entity.IsAlive) return false;
             entity.IsAlive = false;
             ClearOccupant(entity.Position);
-
             _events?.RaiseEntityKilled(entityId);
             return true;
         }
 
-        // 함정을 비활성화한다 (상자가 덮었을 때).
         public void DisableTrap(GridPos position)
         {
-            if (!IsInside(position))
-            {
-                return;
-            }
-
-            int index = ToIndex(position);
-            CellData cell = _cells[index];
-
-            if (!cell.HasTrap)
-            {
-                return;
-            }
-
+            if (!IsInside(position)) return;
+            int idx = ToIndex(position);
+            CellData cell = _cells[idx];
+            if (!cell.HasTrap) return;
             cell.Flags &= ~CellFlags.Trap;
-            _cells[index] = cell;
+            _cells[idx] = cell;
         }
 
-        // 모든 카메라를 시계 방향으로 1단계 회전한다.
         public void RotateAllCameras()
         {
             for (int i = 0; i < _cameraIds.Count; i++)
             {
-                if (_entitiesById.TryGetValue(_cameraIds[i], out EntityState camera) && camera.IsAlive)
-                {
-                    Direction newFacing = camera.Facing.RotateClockwise();
-                    camera.Facing = newFacing;
-                    _events?.RaiseFacingChanged(camera.Id, newFacing);
-                }
+                if (!_entitiesById.TryGetValue(_cameraIds[i], out EntityState cam)) continue;
+                if (!cam.IsAlive) continue;
+                Direction next = cam.Facing.RotateClockwise();
+                cam.Facing = next;
+                _events?.RaiseFacingChanged(cam.Id, next);
             }
         }
 
-        // 로봇 순찰 인덱스를 1칸 전진시킨다 (다른 스테이지용).
         public void AdvancePatrolIndex(int entityId)
         {
-            if (!_entitiesById.TryGetValue(entityId, out EntityState entity))
-            {
-                return;
-            }
-
-            if (entity.PatrolRoute == null || entity.PatrolRoute.Length == 0)
-            {
-                return;
-            }
-
-            entity.PatrolIndex = (entity.PatrolIndex + 1) % entity.PatrolRoute.Length;
+            if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return;
+            if (!entity.Patrol.HasRoute) return;
+            entity.Patrol.Advance();
         }
 
         public void MarkGameOver()
         {
-            if (IsGameOver)
-            {
-                return;
-            }
-
+            if (IsGameOver) return;
             IsGameOver = true;
             _events?.RaiseGameOver();
         }
 
         public void MarkStageClear()
         {
-            if (IsStageClear)
-            {
-                return;
-            }
-
+            if (IsStageClear) return;
             IsStageClear = true;
             _events?.RaiseStageClear();
         }
@@ -326,112 +248,38 @@ namespace MyGame2.Stage
             TurnIndex++;
             _events?.RaiseTurnAdvanced(TurnIndex);
         }
-
-        // 내부 유틸리티
-
+        
         private int AddEntity(EntityState entity)
         {
             entity.Id = _nextEntityId++;
             _entitiesById.Add(entity.Id, entity);
-
-            if (entity.IsBlocking)
-            {
-                SetOccupant(entity.Position, entity.Id);
-            }
+            if (entity.IsBlocking) SetOccupant(entity.Position, entity.Id);
 
             switch (entity.Kind)
             {
                 case EntityKind.Player:
                     _playerIds.Add(entity.Id);
-                    _playerIds.Sort(ComparePlayersBySlot);
+                    _playerIds.Sort((a, b) =>
+                        _entitiesById[a].Player.Slot.CompareTo(_entitiesById[b].Player.Slot));
                     break;
-
-                case EntityKind.Box:
-                    _boxIds.Add(entity.Id);
-                    break;
-
-                case EntityKind.CameraEnemy:
-                    _cameraIds.Add(entity.Id);
-                    break;
-
-                case EntityKind.RobotEnemy:
-                    _robotIds.Add(entity.Id);
-                    break;
-
-                case EntityKind.AnimalEnemy:
-                    _animalIds.Add(entity.Id);
-                    break;
+                case EntityKind.Box:         _boxIds.Add(entity.Id); break;
+                case EntityKind.CameraEnemy: _cameraIds.Add(entity.Id); break;
+                case EntityKind.RobotEnemy:  _robotIds.Add(entity.Id); break;
+                case EntityKind.AnimalEnemy: _animalIds.Add(entity.Id); break;
             }
-
             return entity.Id;
         }
 
-        private static EntityState CreateEntityTemplate(SpawnData spawn)
+        private void SetOccupant(GridPos pos, int id)
         {
-            EntityState entity = new EntityState(
-                InvalidEntityId, spawn.Kind, spawn.Position,
-                spawn.Facing, spawn.PlayerSlot);
-
-            switch (spawn.Kind)
-            {
-                case EntityKind.Player:
-                    entity.IsBlocking = true;
-                    entity.BlocksCameraSight = false;
-                    break;
-
-                case EntityKind.Box:
-                    entity.IsBlocking = true;
-                    entity.BlocksCameraSight = true;
-                    entity.BoxOwnership = spawn.BoxOwnership;
-                    break;
-
-                case EntityKind.CameraEnemy:
-                    entity.IsBlocking = true;
-                    entity.BlocksCameraSight = false;
-                    entity.DetectionPattern = spawn.DetectionPattern;
-                    break;
-
-                case EntityKind.RobotEnemy:
-                    entity.IsBlocking = true;
-                    entity.BlocksCameraSight = true;
-                    entity.PatrolRoute = spawn.PatrolRoute ?? Array.Empty<Direction>();
-                    break;
-
-                case EntityKind.AnimalEnemy:
-                    entity.IsBlocking = true;
-                    entity.BlocksCameraSight = false;
-                    break;
-            }
-
-            return entity;
+            int i = ToIndex(pos); CellData c = _cells[i]; c.OccupantId = id; _cells[i] = c;
         }
 
-        private void SetOccupant(GridPos position, int entityId)
+        private void ClearOccupant(GridPos pos)
         {
-            int index = ToIndex(position);
-            CellData cell = _cells[index];
-            cell.OccupantId = entityId;
-            _cells[index] = cell;
+            int i = ToIndex(pos); CellData c = _cells[i]; c.OccupantId = CellData.EmptyOccupantId; _cells[i] = c;
         }
 
-        private void ClearOccupant(GridPos position)
-        {
-            int index = ToIndex(position);
-            CellData cell = _cells[index];
-            cell.OccupantId = CellData.EmptyOccupantId;
-            _cells[index] = cell;
-        }
-
-        private int ToIndex(GridPos position)
-        {
-            return (position.Y * Width) + position.X;
-        }
-
-        private int ComparePlayersBySlot(int leftId, int rightId)
-        {
-            EntityState left = _entitiesById[leftId];
-            EntityState right = _entitiesById[rightId];
-            return left.PlayerSlot.CompareTo(right.PlayerSlot);
-        }
+        private int ToIndex(GridPos pos) { return (pos.Y * Width) + pos.X; }
     }
 }
