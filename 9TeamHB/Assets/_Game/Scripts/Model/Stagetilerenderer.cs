@@ -60,6 +60,8 @@ namespace MyGame2.Stage
 
         private void OnTurnExecuted(TurnOutcome outcome)
         {
+            // 함정 덮임/상자 이동 반영을 위해 타일도 갱신
+            RenderTiles(stageManager.CurrentState);
             RenderDetection(stageManager.CurrentState);
         }
 
@@ -114,7 +116,7 @@ namespace MyGame2.Stage
         {
             List<GridPos> result = new List<GridPos>(16);
 
-            switch (cam.DetectionPattern)
+            switch (cam.Camera.Pattern)
             {
                 case CameraType.LineShort:    AddLine(state, cam, 3, result); break;
                 case CameraType.LineLong:     AddLine(state, cam, 5, result); break;

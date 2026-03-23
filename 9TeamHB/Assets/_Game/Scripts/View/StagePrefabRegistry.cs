@@ -28,10 +28,10 @@ namespace MyGame2.Stage
             switch (entity.Kind)
             {
                 case EntityKind.Player:
-                    return entity.PlayerSlot == 1 ? player1Prefab : player2Prefab;
+                    return entity.Player.Slot == 1 ? player1Prefab : player2Prefab;
 
                 case EntityKind.Box:
-                    switch (entity.BoxOwnership)
+                    switch (entity.Box.Ownership)
                     {
                         case BoxType.Shared:      return boxSharedPrefab;
                         case BoxType.Player1Only:  return boxPlayer1Prefab;

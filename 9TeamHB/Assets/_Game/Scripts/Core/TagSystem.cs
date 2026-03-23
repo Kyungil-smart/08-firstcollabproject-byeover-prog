@@ -1,36 +1,23 @@
 namespace MyGame2.Stage
 {
+    //  플레이어 전환 (Tab 키).
     public sealed class TagSystem
     {
         public void Initialize(StageState state)
         {
-            int player1Id = state.GetPlayerIdBySlot(1);
-            if (player1Id != StageState.InvalidEntityId)
-            {
-                state.SetActivePlayer(player1Id);
-            }
+            int p1 = state.GetPlayerIdBySlot(1);
+            if (p1 != StageState.InvalidEntityId)
+                state.SetActivePlayer(p1);
         }
 
         public bool Switch(StageState state)
         {
-            int player1Id = state.GetPlayerIdBySlot(1);
-            int player2Id = state.GetPlayerIdBySlot(2);
-
-            if (player1Id == StageState.InvalidEntityId || player2Id == StageState.InvalidEntityId)
-            {
+            int p1 = state.GetPlayerIdBySlot(1);
+            int p2 = state.GetPlayerIdBySlot(2);
+            if (p1 == StageState.InvalidEntityId || p2 == StageState.InvalidEntityId)
                 return false;
-            }
 
-            int current = state.ActivePlayerId;
-            if (current == player1Id)
-            {
-                state.SetActivePlayer(player2Id);
-            }
-            else
-            {
-                state.SetActivePlayer(player1Id);
-            }
-
+            state.SetActivePlayer(state.ActivePlayerId == p1 ? p2 : p1);
             return true;
         }
     }

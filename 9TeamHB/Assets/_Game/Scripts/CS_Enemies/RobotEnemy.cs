@@ -23,7 +23,7 @@ namespace MyGame2.Stage
                 state.MoveEntity(robotId, result.To);
             }
 
-            if (robot.PatrolRoute != null && robot.PatrolRoute.Length > 0)
+            if (robot.Patrol.HasRoute)
             {
                 state.AdvancePatrolIndex(robotId);
             }
@@ -39,10 +39,10 @@ namespace MyGame2.Stage
 
         private Direction GetDesiredDirection(EntityState robot)
         {
-            if (robot.PatrolRoute != null && robot.PatrolRoute.Length > 0)
+            if (robot.Patrol.HasRoute)
             {
-                int index = robot.PatrolIndex % robot.PatrolRoute.Length;
-                return robot.PatrolRoute[index];
+                int index = robot.Patrol.Index % robot.Patrol.Route.Length;
+                return robot.Patrol.Route[index];
             }
 
             return robot.Facing == Direction.None ? Direction.Right : robot.Facing;
