@@ -1,59 +1,76 @@
 namespace MyGame2.Stage
 {
+    // 로봇 적 AI.
+    // 웨이포인트를 순서대로 이동하며, 상자/벽에 막히면 역방향으로 전환.
     public sealed class RobotEnemy
     {
         public MoveResult ResolveTurn(StageState state, int robotId, MovementRule movementRule)
         {
             if (!state.TryGetEntity(robotId, out EntityState robot) || !robot.IsAlive)
-            {
                 return MoveResult.Blocked(robotId, new GridPos(0, 0), new GridPos(0, 0), MoveBlockReason.DeadEntity);
-            }
 
-            Direction direction = GetDesiredDirection(robot);
-            if (direction == Direction.None)
-            {
+            if (!robot.Patrol.HasWaypoints)
                 return MoveResult.Blocked(robotId, robot.Position, robot.Position, MoveBlockReason.InvalidDirection);
+
+            // 현재 웨이포인트에 도착했으면 다음으로 전진
+            Direction dir = robot.Patrol.GetDirectionFrom(robot.Position);
+            if (dir == Direction.None)
+            {
+                robot.Patrol.AdvanceToNext();
+                dir = robot.Patrol.GetDirectionFrom(robot.Position);
+                if (dir == Direction.None)
+                    return MoveResult.Blocked(robotId, robot.Position, robot.Position, MoveBlockReason.InvalidDirection);
             }
 
-            MoveResult result = movementRule.TryMove(state, robotId, direction);
-            state.SetFacing(robotId, direction);
+            // 순방향 이동 시도
+            MoveResult result = movementRule.TryMove(state, robotId, dir);
 
             if (result.Succeeded)
             {
+                state.SetFacing(robotId, dir);
                 state.MoveEntity(robotId, result.To);
+
+                // 웨이포인트 도착 확인
+                if (result.To.Equals(robot.Patrol.CurrentTarget))
+                    robot.Patrol.AdvanceToNext();
+
+                return result;
             }
 
-            if (robot.PatrolRoute != null && robot.PatrolRoute.Length > 0)
+            if (result.IsContactKill)
             {
-                state.AdvancePatrolIndex(robotId);
-            }
-            else if (result.BlockReason == MoveBlockReason.OutOfBounds ||
-                     result.BlockReason == MoveBlockReason.BlockedByWall ||
-                     result.BlockReason == MoveBlockReason.BlockedByEntity)
-            {
-                state.SetFacing(robotId, direction.RotateClockwise());
+                state.SetFacing(robotId, dir);
+                return result;
             }
 
+            // 막혔으면 역방향 전환 후 재시도
+            robot.Patrol.Reverse();
+            Direction reverseDir = robot.Patrol.GetDirectionFrom(robot.Position);
+
+            if (reverseDir == Direction.None)
+                return result;
+
+            MoveResult reverseResult = movementRule.TryMove(state, robotId, reverseDir);
+
+            if (reverseResult.Succeeded)
+            {
+                state.SetFacing(robotId, reverseDir);
+                state.MoveEntity(robotId, reverseResult.To);
+
+                if (reverseResult.To.Equals(robot.Patrol.CurrentTarget))
+                    robot.Patrol.AdvanceToNext();
+
+                return reverseResult;
+            }
+
+            if (reverseResult.IsContactKill)
+            {
+                state.SetFacing(robotId, reverseDir);
+                return reverseResult;
+            }
+
+            // 양쪽 다 막힘 → 대기
             return result;
         }
-
-        private Direction GetDesiredDirection(EntityState robot)
-        {
-            if (robot.PatrolRoute != null && robot.PatrolRoute.Length > 0)
-            {
-                int index = robot.PatrolIndex % robot.PatrolRoute.Length;
-                return robot.PatrolRoute[index];
-            }
-
-            return robot.Facing == Direction.None ? Direction.Right : robot.Facing;
-        }
-        
-        // 이동로직
-        // 앵커 리스트, 정방향 - 역방향 정보,  
-        // 현재 위치에서 다음 앵커를 향해 나아가는 로직
-        // 다음 앵커를 바라보고 있지 않다면 - 회전 
-        // 다음 앵커를 바라보고 있다면 한칸 이동
-        // 이동이 불가능하다면 앵커 순회 방향을 변경하고, 다음 앵커를 변경
-        // 앵커에 도달했다면 다음 앵커를 방향에 따라 인덱스에서 찾아 변경
     }
 }

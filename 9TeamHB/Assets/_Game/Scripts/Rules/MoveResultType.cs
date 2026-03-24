@@ -5,7 +5,8 @@ namespace MyGame2.Stage
         None = 0,
         Success = 1,
         Blocked = 2,
-        ContactKill = 3
+        ContactKill = 3,
+        PushAndMove = 4
     }
 
     public enum MoveBlockReason
@@ -27,45 +28,42 @@ namespace MyGame2.Stage
         public readonly GridPos From;
         public readonly GridPos To;
 
-        public bool Succeeded
-        {
-            get { return Type == MoveResultType.Success; }
-        }
+        public bool Succeeded { get { return Type == MoveResultType.Success; } }
+        public bool IsContactKill { get { return Type == MoveResultType.ContactKill; } }
+        public bool IsPushAndMove { get { return Type == MoveResultType.PushAndMove; } }
+        // 이동 가능한가?
+        public bool CanMove { get { return Succeeded || IsPushAndMove; } }
 
-        public bool IsContactKill
+        private MoveResult(MoveResultType type, MoveBlockReason reason,
+            int moverId, int targetId, GridPos from, GridPos to)
         {
-            get { return Type == MoveResultType.ContactKill; }
-        }
-
-        private MoveResult(
-            MoveResultType type,
-            MoveBlockReason blockReason,
-            int moverId,
-            int targetEntityId,
-            GridPos from,
-            GridPos to)
-        {
-            Type = type;
-            BlockReason = blockReason;
-            MoverId = moverId;
-            TargetEntityId = targetEntityId;
-            From = from;
-            To = to;
+            Type = type; BlockReason = reason; MoverId = moverId;
+            TargetEntityId = targetId; From = from; To = to;
         }
 
         public static MoveResult Success(int moverId, GridPos from, GridPos to)
         {
-            return new MoveResult(MoveResultType.Success, MoveBlockReason.None, moverId, StageState.InvalidEntityId, from, to);
+            return new MoveResult(MoveResultType.Success, MoveBlockReason.None,
+                moverId, StageState.InvalidEntityId, from, to);
         }
 
         public static MoveResult Blocked(int moverId, GridPos from, GridPos to, MoveBlockReason reason)
         {
-            return new MoveResult(MoveResultType.Blocked, reason, moverId, StageState.InvalidEntityId, from, to);
+            return new MoveResult(MoveResultType.Blocked, reason,
+                moverId, StageState.InvalidEntityId, from, to);
         }
 
-        public static MoveResult ContactKill(int moverId, int targetEntityId, GridPos from, GridPos to)
+        public static MoveResult ContactKill(int moverId, int targetId, GridPos from, GridPos to)
         {
-            return new MoveResult(MoveResultType.ContactKill, MoveBlockReason.None, moverId, targetEntityId, from, to);
+            return new MoveResult(MoveResultType.ContactKill, MoveBlockReason.None,
+                moverId, targetId, from, to);
+        }
+
+        // 상자 밀기 후 이동 가능. targetBoxId = 밀릴 상자 ID.
+        public static MoveResult PushAndMove(int moverId, int targetBoxId, GridPos from, GridPos to)
+        {
+            return new MoveResult(MoveResultType.PushAndMove, MoveBlockReason.None,
+                moverId, targetBoxId, from, to);
         }
     }
 }

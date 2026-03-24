@@ -9,65 +9,42 @@ namespace MyGame2.Stage
     // 상자를 함정 위에 밀면 함정 비활성화 (덮음)
     // 상자를 골 위에 밀면 골을 막음
     // 연쇄 밀기 불가 (뒤에 상자 있으면 안 밀림)
-   
     public sealed class PushRule
     {
        
-        public bool TryPush(StageState state, int pusherId, int boxId, Direction direction)
+        // 밀기가 가능한지 판정만 한다. 상태를 변경하지 않는다.
+        
+        public bool CanPush(StageState state, int pusherId, int boxId, Direction direction)
         {
-            if (!state.TryGetEntity(pusherId, out EntityState pusher))
-            {
-                return false;
-            }
+            if (!state.TryGetEntity(pusherId, out EntityState pusher)) return false;
+            if (!state.TryGetEntity(boxId, out EntityState box)) return false;
+            if (!box.IsBox || !box.IsAlive) return false;
+            if (!box.Box.CanBePushedBy(pusher.Player.Slot)) return false;
 
-            if (!state.TryGetEntity(boxId, out EntityState box))
-            {
-                return false;
-            }
+            GridPos dest = box.Position.Move(direction);
+            if (!state.IsInside(dest)) return false;
 
-            if (!box.IsBox || !box.IsAlive)
-            {
-                return false;
-            }
-
-            // 소유권 확인: 이 플레이어가 이 상자를 밀 수 있는가?
-            if (!box.CanBePushedBy(pusher.PlayerSlot))
-            {
-                return false;
-            }
-
-            // 상자가 밀릴 목적지
-            GridPos boxDestination = box.Position.Move(direction);
-
-            // 목적지가 맵 밖이면 불가
-            if (!state.IsInside(boxDestination))
-            {
-                return false;
-            }
-
-            // 목적지가 벽이면 불가
-            CellData destCell = state.GetCell(boxDestination);
-            if (destCell.HasWall)
-            {
-                return false;
-            }
-
-            // 목적지에 다른 엔티티가 있으면 불가 (연쇄 밀기 금지)
-            if (destCell.IsOccupied)
-            {
-                return false;
-            }
-
-            // 밀기 실행
-            state.MoveEntity(boxId, boxDestination);
-
-            // 함정 위에 밀었으면 함정 비활성화
-            if (state.HasTrap(boxDestination))
-            {
-                state.DisableTrap(boxDestination);
-            }
+            CellData cell = state.GetCell(dest);
+            if (cell.HasWall) return false;
+            if (cell.IsOccupied) return false;
 
             return true;
+        }
+        
+        // 밀기를 실행한다. CanPush가 true인 상태에서만 호출해야 한다.
+        // 상자를 이동시키고, 함정 위면 함정을 비활성화한다.
+        
+        public void ExecutePush(StageState state, int boxId, Direction direction)
+        {
+            if (!state.TryGetEntity(boxId, out EntityState box)) return;
+
+            GridPos dest = box.Position.Move(direction);
+            state.TryMoveEntity(boxId, dest);
+
+            if (state.HasTrap(dest))
+            {
+                state.DisableTrap(dest);
+            }
         }
     }
 }
