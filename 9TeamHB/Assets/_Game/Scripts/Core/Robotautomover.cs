@@ -11,7 +11,7 @@ namespace MyGame2.Stage
     }
 
     // 로봇을 실시간으로 자동 이동시킨다.
-   
+    
     public sealed class RobotAutoMover : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -103,7 +103,7 @@ namespace MyGame2.Stage
                 stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
         }
 
-        // Patrol: 일반 순찰
+        // Patrol
 
         private bool UpdatePatrol(StageState state, int robotId, float dt)
         {
@@ -111,11 +111,14 @@ namespace MyGame2.Stage
 
             if (_robotEnemy.TryDetect(state, robotId, out int _, out bool fromBehind))
             {
-                // 뒤에서 감지 → 경로 방향 전환
+                // 뒤에서 감지 → Get<PatrolData>()로 접근하여 방향 전환
                 if (fromBehind && state.TryGetEntity(robotId, out EntityState robot))
-                    robot.Patrol.Reverse();
+                {
+                    PatrolData patrol = robot.Get<PatrolData>();
+                    if (patrol != null)
+                        patrol.Reverse();
+                }
 
-                // 앞에서 감지 → 방향 그대로
                 _states[robotId] = RobotAIState.Alert;
                 _timers[robotId] = 0f;
                 return false;
@@ -127,7 +130,7 @@ namespace MyGame2.Stage
             return DoMove(state, robotId);
         }
 
-        // Alert: 0.5초 정지
+        // Alert
 
         private bool UpdateAlert(StageState state, int robotId, float dt)
         {
@@ -142,7 +145,7 @@ namespace MyGame2.Stage
             return false;
         }
 
-        // Chase: 같은 경로, 2배속 순찰 (영구)
+        // Chase
 
         private bool UpdateChase(StageState state, int robotId, float dt)
         {

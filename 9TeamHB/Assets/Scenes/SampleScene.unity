@@ -148,15 +148,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d847d6afff9dafc4986091b48eecc76e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.StagePrefabRegistry
-  player1Prefab: {fileID: 3109778441806663085, guid: 601b687f0fc8a964386103efb7f1515c, type: 3}
-  player2Prefab: {fileID: 3109778441806663085, guid: 12f891459776cc147a48b9ae2ff10238, type: 3}
-  boxSharedPrefab: {fileID: 6531087665428241085, guid: 1c0eb9dd5543d6248b76165fb5135816, type: 3}
-  boxPlayer1Prefab: {fileID: 6042236026587706409, guid: 6ac6ff95c78ba154dbd8e8c793b8b3b5, type: 3}
-  boxPlayer2Prefab: {fileID: 6042236026587706409, guid: 22876567f6ba47b4a947a272d6e87d8d, type: 3}
-  boxIronPrefab: {fileID: 6042236026587706409, guid: c3289e2f554abf841b42a68159d5b647, type: 3}
-  cameraEnemyPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595, type: 3}
-  robotEnemyPrefab: {fileID: 651025039593506988, guid: 055e99416d717bc40bb92d5e9f93bb16, type: 3}
-  animalEnemyPrefab: {fileID: 3093504176251066060, guid: c9c5fe9cd98c64b4d8fd9a4cfb55fcf3, type: 3}
+  player1Prefab: {fileID: 3109778441806663085, guid: 601b687f0fc8a964386103efb7f1515c,
+    type: 3}
+  player2Prefab: {fileID: 3109778441806663085, guid: 12f891459776cc147a48b9ae2ff10238,
+    type: 3}
+  boxSharedPrefab: {fileID: 6531087665428241085, guid: 1c0eb9dd5543d6248b76165fb5135816,
+    type: 3}
+  boxPlayer1Prefab: {fileID: 6042236026587706409, guid: 6ac6ff95c78ba154dbd8e8c793b8b3b5,
+    type: 3}
+  boxPlayer2Prefab: {fileID: 6042236026587706409, guid: 22876567f6ba47b4a947a272d6e87d8d,
+    type: 3}
+  boxIronPrefab: {fileID: 6042236026587706409, guid: c3289e2f554abf841b42a68159d5b647,
+    type: 3}
+  cameraEnemyPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595,
+    type: 3}
+  robotEnemyPrefab: {fileID: 651025039593506988, guid: 055e99416d717bc40bb92d5e9f93bb16,
+    type: 3}
+  animalEnemyPrefab: {fileID: 3093504176251066060, guid: c9c5fe9cd98c64b4d8fd9a4cfb55fcf3,
+    type: 3}
 --- !u!4 &127105791
 Transform:
   m_ObjectHideFlags: 0
@@ -323,7 +332,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 10
+  orthographic size: 8
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -348,7 +357,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 6, y: -7, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -564,15 +573,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d847d6afff9dafc4986091b48eecc76e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.StagePrefabRegistry
-  player1Prefab: {fileID: 3109778441806663085, guid: 601b687f0fc8a964386103efb7f1515c, type: 3}
-  player2Prefab: {fileID: 3109778441806663085, guid: 12f891459776cc147a48b9ae2ff10238, type: 3}
-  boxSharedPrefab: {fileID: 6531087665428241085, guid: 1c0eb9dd5543d6248b76165fb5135816, type: 3}
-  boxPlayer1Prefab: {fileID: 6042236026587706409, guid: 6ac6ff95c78ba154dbd8e8c793b8b3b5, type: 3}
-  boxPlayer2Prefab: {fileID: 6042236026587706409, guid: 22876567f6ba47b4a947a272d6e87d8d, type: 3}
-  boxIronPrefab: {fileID: 6042236026587706409, guid: c3289e2f554abf841b42a68159d5b647, type: 3}
-  cameraEnemyPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595, type: 3}
-  robotEnemyPrefab: {fileID: 651025039593506988, guid: 055e99416d717bc40bb92d5e9f93bb16, type: 3}
-  animalEnemyPrefab: {fileID: 3093504176251066060, guid: c9c5fe9cd98c64b4d8fd9a4cfb55fcf3, type: 3}
+  player1Prefab: {fileID: 3109778441806663085, guid: 601b687f0fc8a964386103efb7f1515c,
+    type: 3}
+  player2Prefab: {fileID: 3109778441806663085, guid: 12f891459776cc147a48b9ae2ff10238,
+    type: 3}
+  boxSharedPrefab: {fileID: 6531087665428241085, guid: 1c0eb9dd5543d6248b76165fb5135816,
+    type: 3}
+  boxPlayer1Prefab: {fileID: 6042236026587706409, guid: 6ac6ff95c78ba154dbd8e8c793b8b3b5,
+    type: 3}
+  boxPlayer2Prefab: {fileID: 6042236026587706409, guid: 22876567f6ba47b4a947a272d6e87d8d,
+    type: 3}
+  boxIronPrefab: {fileID: 6042236026587706409, guid: c3289e2f554abf841b42a68159d5b647,
+    type: 3}
+  cameraEnemyPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595,
+    type: 3}
+  robotEnemyPrefab: {fileID: 651025039593506988, guid: 055e99416d717bc40bb92d5e9f93bb16,
+    type: 3}
+  animalEnemyPrefab: {fileID: 3093504176251066060, guid: c9c5fe9cd98c64b4d8fd9a4cfb55fcf3,
+    type: 3}
 --- !u!4 &899949244
 Transform:
   m_ObjectHideFlags: 0
