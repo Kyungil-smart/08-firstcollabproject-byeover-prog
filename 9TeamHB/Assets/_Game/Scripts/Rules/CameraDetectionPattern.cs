@@ -4,7 +4,6 @@ namespace MyGame2.Stage
 {
     // 카메라 감지 범위 계산의 유일한 출처.
     // CameraEnemy와 StageTileRenderer 양쪽이 이 클래스를 호출한다.
-    // 자체 상태 없음 — 순수 함수 모음.
     public static class CameraDetectionPattern
     {
         // 카메라의 감지 범위 셀 목록을 계산한다.
@@ -12,8 +11,9 @@ namespace MyGame2.Stage
             StageState state, EntityState camera, List<GridPos> outBuffer)
         {
             outBuffer.Clear();
+            CameraData data = camera.Get<CameraData>();
 
-            switch (camera.Camera.Pattern)
+            switch (data.Pattern)
             {
                 case CameraType.LineShort:
                     AddLine(state, camera.Position, camera.Facing, 3, outBuffer);
@@ -27,10 +27,12 @@ namespace MyGame2.Stage
                 case CameraType.PyramidLarge:
                     AddPyramid(state, camera.Position, camera.Facing, 5, outBuffer);
                     break;
+                case CameraType.Fixed3x3:
+                    AddFixed3x3(state, camera.Position, camera.Facing, outBuffer);
+                    break;
             }
         }
 
-        // 직선 감지 (1×range). 벽/시야차단 엔티티에 의해 중단.
         private static void AddLine(
             StageState state, GridPos origin, Direction facing, int range,
             List<GridPos> result)
@@ -40,22 +42,16 @@ namespace MyGame2.Stage
             {
                 cursor = cursor.Move(facing);
                 if (!state.IsInside(cursor)) break;
-
                 CellData cell = state.GetCell(cursor);
                 if (cell.HasWall) break;
-
                 result.Add(cursor);
-
                 if (cell.IsOccupied &&
                     state.TryGetEntity(cell.OccupantId, out EntityState occ) &&
                     occ.BlocksCameraSight && occ.IsAlive)
                     break;
             }
         }
-        
-        // 피라미드 감지 (rows줄).
-        // 1줄째: 1칸, 2줄째: 3칸, 3줄째: 5칸...
-        // 각 칸별 벽 판정은 개별 수행.
+
         private static void AddPyramid(
             StageState state, GridPos origin, Direction facing, int rows,
             List<GridPos> result)
@@ -65,7 +61,6 @@ namespace MyGame2.Stage
 
             for (int row = 0; row < rows; row++)
             {
-                // center = origin에서 forward로 (row+1)칸
                 GridPos center = origin;
                 for (int s = 0; s <= row; s++)
                     center = center.Move(facing);
@@ -74,11 +69,36 @@ namespace MyGame2.Stage
                 for (int off = -half; off <= half; off++)
                 {
                     GridPos cell = center;
-                    if (off < 0)
-                        for (int s = 0; s < -off; s++) cell = cell.Move(left);
-                    else if (off > 0)
-                        for (int s = 0; s < off; s++) cell = cell.Move(right);
+                    if (off < 0) for (int s = 0; s < -off; s++) cell = cell.Move(left);
+                    else if (off > 0) for (int s = 0; s < off; s++) cell = cell.Move(right);
+                    if (!state.IsInside(cell)) continue;
+                    if (state.GetCell(cell).HasWall) continue;
+                    result.Add(cell);
+                }
+            }
+        }
 
+        // 고정형 3×3: 자기 위치(+좌우) + 앞 2줄(각 3칸)
+        private static void AddFixed3x3(
+            StageState state, GridPos origin, Direction facing,
+            List<GridPos> result)
+        {
+            Direction forward = facing;
+            if (forward == Direction.None) forward = Direction.Down;
+            Direction left = forward.RotateClockwise().RotateClockwise().RotateClockwise();
+            Direction right = forward.RotateClockwise();
+
+            for (int row = 0; row < 3; row++)
+            {
+                GridPos center = origin;
+                for (int s = 0; s < row; s++)
+                    center = center.Move(forward);
+
+                for (int off = -1; off <= 1; off++)
+                {
+                    GridPos cell = center;
+                    if (off == -1) cell = cell.Move(left);
+                    else if (off == 1) cell = cell.Move(right);
                     if (!state.IsInside(cell)) continue;
                     if (state.GetCell(cell).HasWall) continue;
                     result.Add(cell);

@@ -5,14 +5,12 @@ using UnityEngine;
 namespace MyGame2.Stage
 {
     // 스테이지의 유일한 상태 소유자.
-    // 모든 변이 메서드는 StageEvents를 통해 이벤트를 발행한다.
 
     public sealed class StageState
     {
         public const int InvalidEntityId = -1;
 
         private readonly CellData[] _cells;
-        // 원본 셀 플래그 (함정 재활성화용). 맵 로드 시 복사해둔다.
         private readonly CellFlags[] _originalFlags;
         private readonly Dictionary<int, EntityState> _entitiesById;
         private readonly List<int> _playerIds;
@@ -38,8 +36,6 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> AnimalIds { get { return _animalIds; } }
         public IEnumerable<EntityState> Entities { get { return _entitiesById.Values; } }
         public StageEvents Events { get { return _events; } }
-
-        // 생성자
 
         private StageState(int width, int height, CellData[] cells,
             CellFlags[] originalFlags, StageEvents events)
@@ -67,7 +63,6 @@ namespace MyGame2.Stage
                 throw new ArgumentNullException(nameof(definition));
 
             CellFlags[] flags = definition.CloneCellFlags();
-            // 원본 플래그 보관 (함정 재활성화용)
             CellFlags[] originalFlags = (CellFlags[])flags.Clone();
 
             CellData[] cells = new CellData[flags.Length];
@@ -128,7 +123,6 @@ namespace MyGame2.Stage
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
-        // 원본에 함정이 있었는지 확인 (재활성화 판단용)
         public bool OriginalHasTrap(GridPos pos)
         {
             return (_originalFlags[ToIndex(pos)] & CellFlags.Trap) != 0;
@@ -144,7 +138,7 @@ namespace MyGame2.Stage
             for (int i = 0; i < _playerIds.Count; i++)
             {
                 EntityState p = _entitiesById[_playerIds[i]];
-                if (p.Player.Slot == slot) return p.Id;
+                if (p.Get<PlayerData>().Slot == slot) return p.Id;
             }
             return InvalidEntityId;
         }
@@ -180,8 +174,6 @@ namespace MyGame2.Stage
             _events?.RaiseActivePlayerChanged(entityId);
         }
 
-        // 엔티티를 이동시킨다.
-        // 상자가 함정 셀에서 벗어나면 함정을 자동 재활성화한다.
         public bool TryMoveEntity(int entityId, GridPos destination)
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
@@ -190,11 +182,8 @@ namespace MyGame2.Stage
             GridPos from = entity.Position;
             ClearOccupant(from);
 
-            // 상자가 떠난 셀이 원래 함정이었으면 재활성화
             if (entity.IsBox && OriginalHasTrap(from))
-            {
                 RestoreTrap(from);
-            }
 
             entity.Position = destination;
             SetOccupant(destination, entity.Id);
@@ -202,7 +191,6 @@ namespace MyGame2.Stage
             return true;
         }
 
-        // 하위 호환용
         public void MoveEntity(int entityId, GridPos destination)
         {
             TryMoveEntity(entityId, destination);
@@ -226,7 +214,6 @@ namespace MyGame2.Stage
             return true;
         }
 
-        // 함정을 비활성화한다 (상자가 위에 올라갔을 때).
         public void DisableTrap(GridPos position)
         {
             if (!IsInside(position)) return;
@@ -237,7 +224,6 @@ namespace MyGame2.Stage
             _cells[idx] = cell;
         }
 
-        // 함정을 재활성화한다 (상자가 치워졌을 때).
         private void RestoreTrap(GridPos position)
         {
             if (!IsInside(position)) return;
@@ -247,7 +233,7 @@ namespace MyGame2.Stage
             _cells[idx] = cell;
         }
 
-        // 모든 카메라를 회전한다. Fixed3x3은 회전하지 않는다.
+        // 모든 카메라를 회전. Fixed3x3은 회전 안 함.
         public void RotateAllCameras()
         {
             for (int i = 0; i < _cameraIds.Count; i++)
@@ -255,10 +241,10 @@ namespace MyGame2.Stage
                 if (!_entitiesById.TryGetValue(_cameraIds[i], out EntityState cam)) continue;
                 if (!cam.IsAlive) continue;
 
-                // 고정형 카메라는 회전 안 함
-                if (cam.Camera.Pattern == CameraType.Fixed3x3) continue;
+                CameraData data = cam.Get<CameraData>();
+                if (data.Pattern == CameraType.Fixed3x3) continue;
 
-                Direction next = cam.Camera.ReverseRotation
+                Direction next = data.ReverseRotation
                     ? cam.Facing.RotateClockwise().RotateClockwise().RotateClockwise()
                     : cam.Facing.RotateClockwise();
 
@@ -267,12 +253,13 @@ namespace MyGame2.Stage
             }
         }
 
-        // 로봇 순찰 인덱스를 1칸 전진 (다른 스테이지용)
         public void AdvancePatrolIndex(int entityId)
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return;
-            if (!entity.Patrol.HasRoute) return;
-            entity.Patrol.AdvanceToNext();
+            // PatrolData는 class이므로 Get으로 참조를 받아 바로 수정 가능
+            PatrolData patrol = entity.Get<PatrolData>();
+            if (patrol == null || !patrol.HasWaypoints) return;
+            patrol.AdvanceToNext();
         }
 
         public void MarkGameOver()
@@ -295,7 +282,7 @@ namespace MyGame2.Stage
             _events?.RaiseTurnAdvanced(TurnIndex);
         }
 
-        // 내부 유틸리티
+        // 내부
 
         private int AddEntity(EntityState entity)
         {
@@ -308,7 +295,8 @@ namespace MyGame2.Stage
                 case EntityKind.Player:
                     _playerIds.Add(entity.Id);
                     _playerIds.Sort((a, b) =>
-                        _entitiesById[a].Player.Slot.CompareTo(_entitiesById[b].Player.Slot));
+                        _entitiesById[a].Get<PlayerData>().Slot
+                            .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
                     break;
                 case EntityKind.Box:         _boxIds.Add(entity.Id); break;
                 case EntityKind.CameraEnemy: _cameraIds.Add(entity.Id); break;
