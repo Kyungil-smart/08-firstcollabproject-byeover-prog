@@ -8,7 +8,8 @@ namespace MyGame2.Stage
     // LineLong: 직선 5칸
     // PyramidSmall: 피라미드 3줄 (1+3+5칸)
     // PyramidLarge: 피라미드 5줄 (1+3+5+7+9칸)
-    // Fixed3x3: 본인 위치 포함 3×3 고정형 (비회전)
+    // Fixed3x3: 자기 위치(+좌우) + 앞 방향 2줄(각 3칸), 비회전
+ 
     public sealed class CameraEnemy
     {
         // 카메라가 플레이어를 감지하는지 판정한다.
@@ -17,19 +18,14 @@ namespace MyGame2.Stage
             detectedPlayerId = StageState.InvalidEntityId;
 
             if (!state.TryGetEntity(cameraId, out EntityState camera) || !camera.IsAlive)
-            {
                 return false;
-            }
 
             List<GridPos> cells = GetDetectionCells(state, camera);
 
             for (int i = 0; i < cells.Count; i++)
             {
                 CellData cell = state.GetCell(cells[i]);
-                if (!cell.IsOccupied)
-                {
-                    continue;
-                }
+                if (!cell.IsOccupied) continue;
 
                 if (state.TryGetEntity(cell.OccupantId, out EntityState occupant) &&
                     occupant.IsPlayer && occupant.IsAlive)
@@ -46,9 +42,7 @@ namespace MyGame2.Stage
         public List<GridPos> CollectSightLine(StageState state, int cameraId)
         {
             if (!state.TryGetEntity(cameraId, out EntityState camera) || !camera.IsAlive)
-            {
                 return new List<GridPos>();
-            }
 
             return GetDetectionCells(state, camera);
         }
@@ -88,94 +82,88 @@ namespace MyGame2.Stage
             for (int i = 0; i < range; i++)
             {
                 cursor = cursor.Move(camera.Facing);
-
-                if (!state.IsInside(cursor))
-                    break;
+                if (!state.IsInside(cursor)) break;
 
                 CellData cell = state.GetCell(cursor);
-                if (cell.HasWall)
-                    break;
+                if (cell.HasWall) break;
 
                 result.Add(cursor);
 
-                // 시야 차단 엔티티 확인 (상자 등)
                 if (cell.IsOccupied &&
                     state.TryGetEntity(cell.OccupantId, out EntityState occupant) &&
                     occupant.BlocksCameraSight && occupant.IsAlive)
-                {
                     break;
-                }
             }
         }
 
         // 피라미드형 감지.
-        // rows줄: 1줄째 1칸, 2줄째 3칸, 3줄째 5칸...
-        // 각 칸별로 벽 판정을 개별 수행한다.
-
         private void AddPyramidCells(StageState state, EntityState camera, int rows, List<GridPos> result)
         {
             Direction forward = camera.Facing;
-            // 반시계 = 시계×3
             Direction left = forward.RotateClockwise().RotateClockwise().RotateClockwise();
             Direction right = forward.RotateClockwise();
 
             for (int row = 0; row < rows; row++)
             {
-                // center = 카메라로부터 forward (row+1)칸
                 GridPos center = camera.Position;
                 for (int step = 0; step <= row; step++)
-                {
                     center = center.Move(forward);
-                }
 
-                // 이 줄의 너비: 1 + 2*row
                 int halfWidth = row;
-
                 for (int offset = -halfWidth; offset <= halfWidth; offset++)
                 {
                     GridPos cell = center;
-
                     if (offset < 0)
-                    {
-                        for (int s = 0; s < -offset; s++)
-                            cell = cell.Move(left);
-                    }
+                        for (int s = 0; s < -offset; s++) cell = cell.Move(left);
                     else if (offset > 0)
-                    {
-                        for (int s = 0; s < offset; s++)
-                            cell = cell.Move(right);
-                    }
+                        for (int s = 0; s < offset; s++) cell = cell.Move(right);
 
-                    if (!state.IsInside(cell))
-                        continue;
-
-                    CellData cellData = state.GetCell(cell);
-                    if (cellData.HasWall)
-                        continue;
-
+                    if (!state.IsInside(cell)) continue;
+                    if (state.GetCell(cell).HasWall) continue;
                     result.Add(cell);
                 }
             }
         }
-
-        // 고정형 3×3 감지.
-        // 본인 위치 포함 주변 9칸. 방향 무관, 회전 안 함.
-        // 벽은 감지 범위에서 제외되지만, 시야 차단은 없음 (전부 인접칸이므로).
+        
         private void AddFixed3x3Cells(StageState state, EntityState camera, List<GridPos> result)
         {
-            GridPos center = camera.Position;
+            Direction forward = camera.Facing;
+            if (forward == Direction.None) forward = Direction.Down;
 
-            for (int dy = -1; dy <= 1; dy++)
+            // 좌우 = forward에 대한 수직 방향
+            Direction left = forward.RotateClockwise().RotateClockwise().RotateClockwise();
+            Direction right = forward.RotateClockwise();
+
+            // 0행: 카메라 행 (좌, 자신, 우)
+            // 1행: 앞 1줄 (좌, 중앙, 우)
+            // 2행: 앞 2줄 (좌, 중앙, 우)
+            for (int row = 0; row < 3; row++)
             {
-                for (int dx = -1; dx <= 1; dx++)
+                GridPos center;
+
+                if (row == 0)
                 {
-                    GridPos cell = new GridPos(center.X + dx, center.Y + dy);
+                    // 카메라 자신의 위치
+                    center = camera.Position;
+                }
+                else
+                {
+                    // 앞 방향으로 row칸
+                    center = camera.Position;
+                    for (int s = 0; s < row; s++)
+                        center = center.Move(forward);
+                }
 
-                    if (!state.IsInside(cell))
-                        continue;
+                // 좌, 중앙, 우
+                for (int offset = -1; offset <= 1; offset++)
+                {
+                    GridPos cell = center;
 
-                    if (state.GetCell(cell).HasWall)
-                        continue;
+                    if (offset == -1) cell = cell.Move(left);
+                    else if (offset == 1) cell = cell.Move(right);
+
+                    if (!state.IsInside(cell)) continue;
+                    if (state.GetCell(cell).HasWall) continue;
 
                     result.Add(cell);
                 }

@@ -3,10 +3,15 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
+    enum RobotAIState
+    {
+        Patrol,  // 일반 순찰 (기본 속도)
+        Alert,   // 감지! 0.5초 정지
+        Chase    // 같은 경로 + 2배속 순찰 (영구)
+    }
+
     // 로봇을 실시간으로 자동 이동시킨다.
-    // 플레이어 턴과 독립적으로 일정 간격마다 1칸씩 이동한다.
-    // 경로는 Stage1Config 등에서 PatrolData로 주입해야 한다.
-  
+   
     public sealed class RobotAutoMover : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -14,13 +19,21 @@ namespace MyGame2.Stage
         [SerializeField] private GameManager gameManager;
 
         [Header("이동 설정")]
-        [Tooltip("로봇 자동 이동 간격 (초)")]
+        [Tooltip("일반 순찰 이동 간격 (초)")]
         [SerializeField] private float moveInterval = 0.2f;
+
+        [Tooltip("감지 후 정지 시간 (초)")]
+        [SerializeField] private float alertDuration = 0.5f;
+
+        [Tooltip("경계 모드 속도 배율")]
+        [SerializeField] private float chaseSpeedMultiplier = 2f;
 
         private RobotEnemy _robotEnemy;
         private MovementRule _movementRule;
         private DeathRule _deathRule;
-        private float _timer;
+
+        private readonly Dictionary<int, RobotAIState> _states = new Dictionary<int, RobotAIState>();
+        private readonly Dictionary<int, float> _timers = new Dictionary<int, float>();
 
         private void Awake()
         {
@@ -43,18 +56,124 @@ namespace MyGame2.Stage
 
         private void OnStageLoaded(int stageIndex)
         {
-            _timer = 0f;
+            _states.Clear();
+            _timers.Clear();
+
+            StageState state = stageManager.CurrentState;
+            if (state == null) return;
+
+            for (int i = 0; i < state.RobotIds.Count; i++)
+            {
+                int id = state.RobotIds[i];
+                _states[id] = RobotAIState.Patrol;
+                _timers[id] = 0f;
+            }
         }
 
         private void Update()
         {
             if (!IsActive()) return;
 
-            _timer += Time.deltaTime;
-            if (_timer < moveInterval) return;
+            StageState state = stageManager.CurrentState;
+            float dt = Time.deltaTime;
+            bool viewDirty = false;
 
-            _timer -= moveInterval;
-            MoveAllRobots();
+            for (int i = 0; i < state.RobotIds.Count; i++)
+            {
+                if (state.IsGameOver) break;
+
+                int robotId = state.RobotIds[i];
+                EnsureRobotTracked(robotId);
+
+                switch (_states[robotId])
+                {
+                    case RobotAIState.Patrol:
+                        viewDirty |= UpdatePatrol(state, robotId, dt);
+                        break;
+                    case RobotAIState.Alert:
+                        viewDirty |= UpdateAlert(state, robotId, dt);
+                        break;
+                    case RobotAIState.Chase:
+                        viewDirty |= UpdateChase(state, robotId, dt);
+                        break;
+                }
+            }
+
+            if (viewDirty)
+                stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
+        }
+
+        // Patrol: 일반 순찰
+
+        private bool UpdatePatrol(StageState state, int robotId, float dt)
+        {
+            _timers[robotId] += dt;
+
+            if (_robotEnemy.TryDetect(state, robotId, out int _, out bool fromBehind))
+            {
+                // 뒤에서 감지 → 경로 방향 전환
+                if (fromBehind && state.TryGetEntity(robotId, out EntityState robot))
+                    robot.Patrol.Reverse();
+
+                // 앞에서 감지 → 방향 그대로
+                _states[robotId] = RobotAIState.Alert;
+                _timers[robotId] = 0f;
+                return false;
+            }
+
+            if (_timers[robotId] < moveInterval) return false;
+            _timers[robotId] -= moveInterval;
+
+            return DoMove(state, robotId);
+        }
+
+        // Alert: 0.5초 정지
+
+        private bool UpdateAlert(StageState state, int robotId, float dt)
+        {
+            _timers[robotId] += dt;
+
+            if (_timers[robotId] >= alertDuration)
+            {
+                _states[robotId] = RobotAIState.Chase;
+                _timers[robotId] = 0f;
+            }
+
+            return false;
+        }
+
+        // Chase: 같은 경로, 2배속 순찰 (영구)
+
+        private bool UpdateChase(StageState state, int robotId, float dt)
+        {
+            _timers[robotId] += dt;
+
+            float chaseInterval = moveInterval / chaseSpeedMultiplier;
+            if (_timers[robotId] < chaseInterval) return false;
+            _timers[robotId] -= chaseInterval;
+
+            return DoMove(state, robotId);
+        }
+
+        // 공통 이동
+
+        private bool DoMove(StageState state, int robotId)
+        {
+            MoveResult result = _robotEnemy.ResolveTurn(state, robotId, _movementRule);
+
+            if (result.IsContactKill)
+                _deathRule.ApplyContactKill(state, result);
+
+            return true;
+        }
+
+        // 유틸리티
+
+        private void EnsureRobotTracked(int robotId)
+        {
+            if (_states.ContainsKey(robotId)) return;
+            _states[robotId] = RobotAIState.Patrol;
+            _timers[robotId] = 0f;
         }
 
         private bool IsActive()
@@ -63,24 +182,6 @@ namespace MyGame2.Stage
             if (stageManager.CurrentState.IsGameOver || stageManager.CurrentState.IsStageClear) return false;
             if (gameManager != null && gameManager.CurrentState != GameFlowState.Playing) return false;
             return stageManager.CurrentState.RobotIds.Count > 0;
-        }
-
-        private void MoveAllRobots()
-        {
-            StageState state = stageManager.CurrentState;
-
-            for (int i = 0; i < state.RobotIds.Count; i++)
-            {
-                if (state.IsGameOver) break;
-
-                MoveResult result = _robotEnemy.ResolveTurn(state, state.RobotIds[i], _movementRule);
-
-                if (result.IsContactKill)
-                    _deathRule.ApplyContactKill(state, result);
-            }
-
-            // View 갱신 트리거
-            stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
         }
     }
 }

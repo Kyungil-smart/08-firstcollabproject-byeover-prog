@@ -620,6 +620,8 @@ MonoBehaviour:
   stageManager: {fileID: 823654580}
   gameManager: {fileID: 1573434693}
   moveInterval: 0.2
+  alertDuration: 0.5
+  chaseSpeedMultiplier: 2
 --- !u!4 &1098185550
 Transform:
   m_ObjectHideFlags: 0
@@ -720,7 +722,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1762845228}
-  - component: {fileID: 1762845227}
+  - component: {fileID: 1762845229}
   m_Layer: 0
   m_Name: TileRenderer
   m_TagString: Untagged
@@ -728,27 +730,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1762845227
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1762845226}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ef3931ceeaa79348bb351729d217c63, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.StageTileRenderer
-  stageManager: {fileID: 823654580}
-  wallColor: {r: 0.15, g: 0.15, b: 0.18, a: 1}
-  floorColor: {r: 0.75, g: 0.78, b: 0.82, a: 1}
-  goalColor: {r: 1, g: 0.84, b: 0, a: 1}
-  trapColor: {r: 0.55, g: 0.15, b: 0.7, a: 1}
-  detectionColor: {r: 1, g: 0.2, b: 0.2, a: 0.25}
-  tileOrder: -1
-  detectionOrder: 0
-  tilePadding: 0.05
 --- !u!4 &1762845228
 Transform:
   m_ObjectHideFlags: 0
@@ -764,6 +745,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1762845229
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1762845226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3221b22327e98647a2f91534eb9d381, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.StageTileRenderer
+  stageManager: {fileID: 823654580}
+  wallColor: {r: 0.15, g: 0.15, b: 0.18, a: 1}
+  floorColor: {r: 0.85, g: 0.87, b: 0.9, a: 1}
+  goalColor: {r: 1, g: 0.84, b: 0, a: 1}
+  trapColor: {r: 0.55, g: 0.15, b: 0.7, a: 1}
+  cameraDetectionColor: {r: 1, g: 0.2, b: 0.2, a: 0.25}
+  robotDetectionColor: {r: 1, g: 0.6, b: 0, a: 0.3}
+  tileOrder: -1
+  detectionOrder: 0
+  tilePadding: 0.05
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
