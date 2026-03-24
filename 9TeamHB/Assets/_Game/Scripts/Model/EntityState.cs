@@ -32,42 +32,6 @@ namespace MyGame2.Stage
         public bool IsBlocking;
         public bool BlocksCameraSight;
 
-        // ── 컴포넌트 저장소 ──
-
-        private readonly Dictionary<Type, IComponentData> _components
-            = new Dictionary<Type, IComponentData>(4);
-
-        // ── 컴포넌트 API ──
-
-        // 컴포넌트가 있는가?
-        public bool Has<T>() where T : IComponentData
-        {
-            return _components.ContainsKey(typeof(T));
-        }
-
-        // 컴포넌트 조회. struct면 복사본, class면 참조.
-        // 없으면 default(T) 반환.
-        public T Get<T>() where T : IComponentData
-        {
-            if (_components.TryGetValue(typeof(T), out IComponentData data))
-                return (T)data;
-            return default;
-        }
-
-        // 컴포넌트 추가/교체.
-        public void Set<T>(T data) where T : IComponentData
-        {
-            _components[typeof(T)] = data;
-        }
-
-        // 컴포넌트 제거.
-        public bool Remove<T>() where T : IComponentData
-        {
-            return _components.Remove(typeof(T));
-        }
-
-        // ── 편의 프로퍼티 (Kind 기반, 변경 없음) ──
-
         public bool IsPlayer { get { return Kind == EntityKind.Player; } }
         public bool IsBox { get { return Kind == EntityKind.Box; } }
         public bool IsCamera { get { return Kind == EntityKind.CameraEnemy; } }
@@ -145,4 +109,6 @@ namespace MyGame2.Stage
 
         private EntityState() { }
     }
+
+    
 }
