@@ -29,6 +29,9 @@ namespace MyGame2.Stage
         public CameraData Camera;
         public PatrolData Patrol;
         
+        // 엔티티의 속성과 기능을 정의하는 SO 
+        public EntitySO Entity;
+        
         public bool IsPlayer { get { return Kind == EntityKind.Player; } }
         public bool IsBox { get { return Kind == EntityKind.Box; } }
         public bool IsCamera { get { return Kind == EntityKind.CameraEnemy; } }

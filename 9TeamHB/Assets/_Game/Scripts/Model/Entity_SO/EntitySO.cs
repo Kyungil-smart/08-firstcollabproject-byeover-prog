@@ -15,7 +15,7 @@ public class EntitySO : ScriptableObject, ISerializationCallbackReceiver
     // 기능을 SO화 해서 리스트로 보유 (기능 단위로 조합 가능)
     private List<EntityFunctionSO> _functions;
 
-    private Dictionary<string, EntityFunctionSO> _funtionCache;
+    private Dictionary<string, EntityFunctionSO> _functionCache;
 
 
     public void OnBeforeSerialize(){ }
@@ -25,13 +25,13 @@ public class EntitySO : ScriptableObject, ISerializationCallbackReceiver
     /// </summary>
     public void OnAfterDeserialize()
     {
-        _funtionCache.Clear();
+        _functionCache.Clear();
         foreach (var func in _functions)
         {
             if (func != null && !string.IsNullOrEmpty(func.Name))
             {
                 // 일단 이름으로 캐시를 했지만 문자열 기반이라 안전성을 위해 변경 가능
-                _funtionCache[func.Name] = func;
+                _functionCache[func.Name] = func;
             }
         }
     }
@@ -39,7 +39,7 @@ public class EntitySO : ScriptableObject, ISerializationCallbackReceiver
     /// null 체크 후 있다면 'is 에셋이름' 으로 다운캐스트하여 사용
     public EntityFunctionSO GetEntityFunc(string name)
     {
-        _funtionCache.TryGetValue(name, out EntityFunctionSO func);
+        _functionCache.TryGetValue(name, out EntityFunctionSO func);
         return func;
     }
 }
