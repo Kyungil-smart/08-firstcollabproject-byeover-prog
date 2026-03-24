@@ -13,15 +13,16 @@ namespace MyGame2.Stage
         public readonly BoxType BoxOwnership;
         public readonly CameraType DetectionPattern;
         public readonly Direction[] PatrolRoute;
+        // true면 카메라가 반시계방향 회전
+        public readonly bool ReverseRotation;
 
         public SpawnData(
-            EntityKind kind,
-            GridPos position,
-            Direction facing,
+            EntityKind kind, GridPos position, Direction facing,
             int playerSlot = 0,
             BoxType boxOwnership = BoxType.Shared,
             CameraType detectionPattern = CameraType.LineShort,
-            Direction[] patrolRoute = null)
+            Direction[] patrolRoute = null,
+            bool reverseRotation = false)
         {
             Kind = kind;
             Position = position;
@@ -30,6 +31,7 @@ namespace MyGame2.Stage
             BoxOwnership = boxOwnership;
             DetectionPattern = detectionPattern;
             PatrolRoute = patrolRoute ?? Array.Empty<Direction>();
+            ReverseRotation = reverseRotation;
         }
     }
 }

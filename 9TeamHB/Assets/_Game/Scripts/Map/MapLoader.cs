@@ -11,15 +11,22 @@ namespace MyGame2.Stage
     // 2 = Player2 시작 위치
     // G = 골
     // T = 함정 (보라)
-    // B = 공용 상자 (녹색, 양쪽 다 밀기 가능)
-    // Y = P2 전용 상자 (노랑)
-    // O = P1 전용 상자 (주황)
-    // a = 카메라 타입A (직선 1×3)
-    // b = 카메라 타입B (직선 1×5)
-    // c = 카메라 타입C (피라미드 3줄)
-    // d = 카메라 타입D (피라미드 5줄)
-    // 모든 카메라 초기 방향: Up
-    //
+    // B = 공용 상자 (녹색)
+    // Y = P1 전용 상자 (노란색)
+    // O = P2 전용 상자 (주황색)
+    // X = 철 상자 (빨간색, 아무도 못 밂)
+    // a = 카메라 타입A (직선 1×3, 시계방향)
+    // b = 카메라 타입B (직선 1×5, 시계방향)
+    // c = 카메라 타입C (피라미드 3줄, 시계방향)
+    // d = 카메라 타입D (피라미드 5줄, 시계방향)
+    // e = 카메라 타입A (직선 1×3, 반시계방향)
+    // f = 카메라 타입B (직선 1×5, 반시계방향)
+    // g = 카메라 타입C (피라미드 3줄, 반시계방향)
+    // h = 카메라 타입D (피라미드 5줄, 반시계방향)
+    // s = 카메라 고정형 3×3 (본인 위치 포함, 비회전)
+    // R = 로봇 적 (경로는 코드로 지정)
+    // A = 동물 적
+    // >, <, ^, v = 방향 지정 카메라 (시계방향 직선1×3)
     public sealed class MapLoader
     {
         public MapDefinition Load(TextAsset textAsset)
@@ -38,7 +45,7 @@ namespace MyGame2.Stage
             {
                 throw new ArgumentException("맵 텍스트가 비어있습니다.");
             }
-            
+
             if (rawText.Length > 0 && rawText[0] == '\uFEFF')
             {
                 rawText = rawText.Substring(1);
@@ -115,21 +122,28 @@ namespace MyGame2.Stage
                                 boxOwnership: BoxType.Shared));
                             break;
 
-                        case 'O':
+                        case 'Y':
                             cellFlags[index] = CellFlags.None;
                             spawns.Add(new SpawnData(
                                 EntityKind.Box, position, Direction.None,
                                 boxOwnership: BoxType.Player1Only));
                             break;
 
-                        case 'Y':
+                        case 'O':
                             cellFlags[index] = CellFlags.None;
                             spawns.Add(new SpawnData(
                                 EntityKind.Box, position, Direction.None,
                                 boxOwnership: BoxType.Player2Only));
                             break;
 
-                        // ── 카메라 (초기 방향: Up) ──
+                        case 'X':
+                            cellFlags[index] = CellFlags.None;
+                            spawns.Add(new SpawnData(
+                                EntityKind.Box, position, Direction.None,
+                                boxOwnership: BoxType.Iron));
+                            break;
+
+                        // ── 카메라 시계방향 (초기 방향: Up) ──
                         case 'a':
                             cellFlags[index] = CellFlags.None;
                             spawns.Add(new SpawnData(
@@ -158,7 +172,56 @@ namespace MyGame2.Stage
                                 detectionPattern: CameraType.PyramidLarge));
                             break;
 
-                        // ── 로봇/동물 적 (다른 스테이지용) ──
+                        // ── 카메라 반시계방향 (초기 방향: Up) ──
+                        case 'e':
+                            cellFlags[index] = CellFlags.None;
+                            spawns.Add(new SpawnData(
+                                EntityKind.CameraEnemy, position, Direction.Up,
+                                detectionPattern: CameraType.LineShort,
+                                reverseRotation: true));
+                            break;
+
+                        case 'f':
+                            cellFlags[index] = CellFlags.None;
+                            spawns.Add(new SpawnData(
+                                EntityKind.CameraEnemy, position, Direction.Up,
+                                detectionPattern: CameraType.LineLong,
+                                reverseRotation: true));
+                            break;
+
+                        case 'g':
+                            cellFlags[index] = CellFlags.None;
+                            spawns.Add(new SpawnData(
+                                EntityKind.CameraEnemy, position, Direction.Up,
+                                detectionPattern: CameraType.PyramidSmall,
+                                reverseRotation: true));
+                            break;
+
+                        case 'h':
+                            cellFlags[index] = CellFlags.None;
+                            spawns.Add(new SpawnData(
+                                EntityKind.CameraEnemy, position, Direction.Up,
+                                detectionPattern: CameraType.PyramidLarge,
+                                reverseRotation: true));
+                            break;
+
+                        // ── 카메라 고정형 3×3 (비회전) ──
+                        case 's':
+                            cellFlags[index] = CellFlags.None;
+                            spawns.Add(new SpawnData(
+                                EntityKind.CameraEnemy, position, Direction.None,
+                                detectionPattern: CameraType.Fixed3x3));
+                            break;
+                        
+                        // S = 고정형 3×3 (위 방향)
+                        case 'S':
+                            cellFlags[index] = CellFlags.None;
+                            spawns.Add(new SpawnData(
+                                EntityKind.CameraEnemy, position, Direction.Up,
+                                detectionPattern: CameraType.Fixed3x3));
+                            break;
+
+                        // ── 로봇/동물 적 ──
                         case 'R':
                             cellFlags[index] = CellFlags.None;
                             spawns.Add(new SpawnData(
@@ -171,7 +234,7 @@ namespace MyGame2.Stage
                                 EntityKind.AnimalEnemy, position, Direction.Right));
                             break;
 
-                        // ── 방향 지정 카메라 (>, <, ^, v) ──
+                        // ── 방향 지정 카메라 (시계방향 직선1×3) ──
                         case '>':
                             cellFlags[index] = CellFlags.None;
                             spawns.Add(new SpawnData(
@@ -217,7 +280,6 @@ namespace MyGame2.Stage
             return new MapDefinition(width, height, cellFlags, spawns);
         }
 
-        // 줄 정규화: 빈 줄과 주석(//) 제거.
         private static string[] NormalizeLines(string rawText)
         {
             string normalized = rawText.Replace("\r\n", "\n").Replace('\r', '\n');

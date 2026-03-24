@@ -1,51 +1,150 @@
+using System.Collections.Generic;
+
 namespace MyGame2.Stage
 {
+    // 로봇 적 AI.
+    // 웨이포인트를 순서대로 이동, 상자/벽에 막히면 역방향 전환.
+    // 감지 범위: Facing 앞 2칸 + 뒤 2칸 (경고용, 즉사 아님)
     public sealed class RobotEnemy
     {
+        // 순찰 이동
+
         public MoveResult ResolveTurn(StageState state, int robotId, MovementRule movementRule)
         {
             if (!state.TryGetEntity(robotId, out EntityState robot) || !robot.IsAlive)
-            {
                 return MoveResult.Blocked(robotId, new GridPos(0, 0), new GridPos(0, 0), MoveBlockReason.DeadEntity);
-            }
 
-            Direction direction = GetDesiredDirection(robot);
-            if (direction == Direction.None)
-            {
+            PatrolData patrol = robot.Get<PatrolData>();
+            if (patrol == null || !patrol.HasWaypoints)
                 return MoveResult.Blocked(robotId, robot.Position, robot.Position, MoveBlockReason.InvalidDirection);
+
+            Direction dir = patrol.GetDirectionFrom(robot.Position);
+            if (dir == Direction.None)
+            {
+                patrol.AdvanceToNext();
+                dir = patrol.GetDirectionFrom(robot.Position);
+                if (dir == Direction.None)
+                    return MoveResult.Blocked(robotId, robot.Position, robot.Position, MoveBlockReason.InvalidDirection);
             }
 
-            MoveResult result = movementRule.TryMove(state, robotId, direction);
-            state.SetFacing(robotId, direction);
+            MoveResult result = movementRule.TryMove(state, robotId, dir);
 
             if (result.Succeeded)
             {
+                state.SetFacing(robotId, dir);
                 state.MoveEntity(robotId, result.To);
+                if (result.To.Equals(patrol.CurrentTarget))
+                    patrol.AdvanceToNext();
+                return result;
             }
 
-            if (robot.PatrolRoute != null && robot.PatrolRoute.Length > 0)
+            if (result.IsContactKill)
             {
-                state.AdvancePatrolIndex(robotId);
+                state.SetFacing(robotId, dir);
+                return result;
             }
-            else if (result.BlockReason == MoveBlockReason.OutOfBounds ||
-                     result.BlockReason == MoveBlockReason.BlockedByWall ||
-                     result.BlockReason == MoveBlockReason.BlockedByEntity)
+
+            // 막혔으면 역방향 전환
+            patrol.Reverse();
+            Direction reverseDir = patrol.GetDirectionFrom(robot.Position);
+            if (reverseDir == Direction.None) return result;
+
+            MoveResult rev = movementRule.TryMove(state, robotId, reverseDir);
+            if (rev.Succeeded)
             {
-                state.SetFacing(robotId, direction.RotateClockwise());
+                state.SetFacing(robotId, reverseDir);
+                state.MoveEntity(robotId, rev.To);
+                if (rev.To.Equals(patrol.CurrentTarget))
+                    patrol.AdvanceToNext();
+                return rev;
+            }
+            if (rev.IsContactKill)
+            {
+                state.SetFacing(robotId, reverseDir);
+                return rev;
             }
 
             return result;
         }
 
-        private Direction GetDesiredDirection(EntityState robot)
+        // 감지 (경고용, 즉사 아님)
+
+        public bool TryDetect(StageState state, int robotId,
+            out int detectedPlayerId, out bool detectedFromBehind)
         {
-            if (robot.PatrolRoute != null && robot.PatrolRoute.Length > 0)
+            detectedPlayerId = StageState.InvalidEntityId;
+            detectedFromBehind = false;
+
+            if (!state.TryGetEntity(robotId, out EntityState robot) || !robot.IsAlive)
+                return false;
+
+            if (robot.Facing == Direction.None)
+                return false;
+
+            if (ScanLine(state, robot.Position, robot.Facing, 2, out detectedPlayerId))
             {
-                int index = robot.PatrolIndex % robot.PatrolRoute.Length;
-                return robot.PatrolRoute[index];
+                detectedFromBehind = false;
+                return true;
             }
 
-            return robot.Facing == Direction.None ? Direction.Right : robot.Facing;
+            if (ScanLine(state, robot.Position, robot.Facing.Opposite(), 2, out detectedPlayerId))
+            {
+                detectedFromBehind = true;
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool ScanLine(StageState state, GridPos origin, Direction dir,
+            int range, out int detectedPlayerId)
+        {
+            detectedPlayerId = StageState.InvalidEntityId;
+            GridPos cursor = origin;
+
+            for (int i = 0; i < range; i++)
+            {
+                cursor = cursor.Move(dir);
+                if (!state.IsInside(cursor)) break;
+                CellData cell = state.GetCell(cursor);
+                if (cell.HasWall) break;
+                if (cell.IsOccupied && state.TryGetEntity(cell.OccupantId, out EntityState occ))
+                {
+                    if (occ.IsPlayer && occ.IsAlive) { detectedPlayerId = occ.Id; return true; }
+                    if (occ.BlocksCameraSight && occ.IsAlive) break;
+                }
+            }
+
+            return false;
+        }
+
+        // 감지 범위 셀 목록 (시각화용)
+        public List<GridPos> CollectDetectionCells(StageState state, int robotId)
+        {
+            List<GridPos> result = new List<GridPos>(4);
+            if (!state.TryGetEntity(robotId, out EntityState robot) || !robot.IsAlive) return result;
+            if (robot.Facing == Direction.None) return result;
+
+            CollectLineCells(state, robot.Position, robot.Facing, 2, result);
+            CollectLineCells(state, robot.Position, robot.Facing.Opposite(), 2, result);
+            return result;
+        }
+
+        private void CollectLineCells(StageState state, GridPos origin, Direction dir,
+            int range, List<GridPos> result)
+        {
+            GridPos cursor = origin;
+            for (int i = 0; i < range; i++)
+            {
+                cursor = cursor.Move(dir);
+                if (!state.IsInside(cursor)) break;
+                CellData cell = state.GetCell(cursor);
+                if (cell.HasWall) break;
+                result.Add(cursor);
+                if (cell.IsOccupied &&
+                    state.TryGetEntity(cell.OccupantId, out EntityState occ) &&
+                    occ.BlocksCameraSight && occ.IsAlive) break;
+            }
         }
     }
 }
