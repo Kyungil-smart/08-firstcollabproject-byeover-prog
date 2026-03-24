@@ -1,6 +1,5 @@
 namespace MyGame2.Stage
 {
-    // 엔티티 종류.
     public enum EntityKind
     {
         None = 0,
@@ -11,20 +10,25 @@ namespace MyGame2.Stage
         AnimalEnemy = 5
     }
 
-    // 상자 소유권 타입.
     public enum BoxType
     {
+        // 녹색 — 양쪽 다 밀기 가능
         Shared = 0,
+        // 노란색 — Player1만 밀기 가능
         Player1Only = 1,
-        Player2Only = 2
+        // 주황색 — Player2만 밀기 가능
+        Player2Only = 2,
+        // 빨간색 — 아무도 못 밂 (철 상자)
+        Iron = 3
     }
 
-    // 카메라 감지 패턴 타입.
     public enum CameraType
     {
         LineShort = 0,
         LineLong = 1,
         PyramidSmall = 2,
-        PyramidLarge = 3
+        PyramidLarge = 3,
+        // 본인 위치 포함 3×3 고정형 (비회전)
+        Fixed3x3 = 4
     }
 }

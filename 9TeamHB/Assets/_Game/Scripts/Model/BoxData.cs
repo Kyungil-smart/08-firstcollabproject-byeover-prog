@@ -16,6 +16,7 @@ namespace MyGame2.Stage
                 case BoxType.Shared:      return true;
                 case BoxType.Player1Only: return playerSlot == 1;
                 case BoxType.Player2Only: return playerSlot == 2;
+                case BoxType.Iron:        return false;
                 default:                  return false;
             }
         }

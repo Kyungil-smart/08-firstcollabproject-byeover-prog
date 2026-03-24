@@ -106,3 +106,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.GridEntityView
   rotateWithFacing: 1
   selectedMarker: {fileID: 0}
+  slideSpeed: 12
+  snapThreshold: 0.01

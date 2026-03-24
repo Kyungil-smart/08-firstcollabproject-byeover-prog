@@ -4,6 +4,7 @@ using UnityEngine;
 namespace MyGame2.Stage
 {
     // 스테이지 로드 시 그리드 타일 + 카메라 감시 범위를 시각화한다.
+    // 감시 범위 계산은 CameraEnemy.CollectSightLine에 위임한다.
     // 카메라가 매 턴 회전하므로 감시 범위도 매 턴 갱신된다.
     public sealed class StageTileRenderer : MonoBehaviour
     {
@@ -24,10 +25,18 @@ namespace MyGame2.Stage
         [SerializeField] private int detectionOrder = 0;
         [SerializeField] private float tilePadding = 0.05f;
 
-        private readonly List<GameObject> _tiles = new List<GameObject>(128);
+        private readonly List<GameObject> _tiles = new List<GameObject>(256);
         private readonly List<GameObject> _detections = new List<GameObject>(64);
         private Transform _tileRoot;
         private Transform _detRoot;
+
+        // 감시 범위 계산은 이 인스턴스에 위임 (중복 코드 제거)
+        private CameraEnemy _cameraEnemy;
+
+        private void Awake()
+        {
+            _cameraEnemy = new CameraEnemy();
+        }
 
         private void OnEnable()
         {
@@ -60,7 +69,7 @@ namespace MyGame2.Stage
 
         private void OnTurnExecuted(TurnOutcome outcome)
         {
-            // 함정 덮임/상자 이동 반영을 위해 타일도 갱신
+            // 함정 재활성화/상자 이동 반영을 위해 타일도 갱신
             RenderTiles(stageManager.CurrentState);
             RenderDetection(stageManager.CurrentState);
         }
@@ -89,7 +98,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // ── 카메라 감시 범위 ──
+        // ── 카메라 감시 범위 — CameraEnemy.CollectSightLine에 위임 ──
 
         private void RenderDetection(StageState state)
         {
@@ -99,82 +108,15 @@ namespace MyGame2.Stage
 
             for (int i = 0; i < state.CameraIds.Count; i++)
             {
-                if (!state.TryGetEntity(state.CameraIds[i], out EntityState cam)) continue;
-                if (!cam.IsAlive) continue;
+                // CollectSightLine이 Fixed3x3 포함 모든 타입을 처리한다
+                List<GridPos> cells = _cameraEnemy.CollectSightLine(
+                    state, state.CameraIds[i]);
 
-                List<GridPos> cells = GetDetectionCells(state, cam);
                 for (int j = 0; j < cells.Count; j++)
                 {
                     _detections.Add(MakeSprite(
-                        $"D_{cam.Id}_{j}", _detRoot,
+                        $"D_{state.CameraIds[i]}_{j}", _detRoot,
                         cells[j].ToWorld(1f), scale, detectionColor, detectionOrder));
-                }
-            }
-        }
-
-        private List<GridPos> GetDetectionCells(StageState state, EntityState cam)
-        {
-            List<GridPos> result = new List<GridPos>(16);
-
-            switch (cam.Camera.Pattern)
-            {
-                case CameraType.LineShort:    AddLine(state, cam, 3, result); break;
-                case CameraType.LineLong:     AddLine(state, cam, 5, result); break;
-                case CameraType.PyramidSmall: AddPyramid(state, cam, 3, result); break;
-                case CameraType.PyramidLarge: AddPyramid(state, cam, 5, result); break;
-            }
-
-            return result;
-        }
-
-        // 직선 감지 (1×range)
-        private void AddLine(StageState state, EntityState cam, int range, List<GridPos> result)
-        {
-            GridPos cursor = cam.Position;
-            for (int i = 0; i < range; i++)
-            {
-                cursor = cursor.Move(cam.Facing);
-                if (!state.IsInside(cursor)) break;
-
-                CellData cell = state.GetCell(cursor);
-                if (cell.HasWall) break;
-
-                result.Add(cursor);
-
-                if (cell.IsOccupied &&
-                    state.TryGetEntity(cell.OccupantId, out EntityState occ) &&
-                    occ.BlocksCameraSight && occ.IsAlive)
-                    break;
-            }
-        }
-
-        // 피라미드 감지 (rows줄: 1, 3, 5, 7, 9칸...)
-        private void AddPyramid(StageState state, EntityState cam, int rows, List<GridPos> result)
-        {
-            Direction fwd = cam.Facing;
-            Direction left = fwd.RotateClockwise().RotateClockwise().RotateClockwise();
-            Direction right = fwd.RotateClockwise();
-
-            for (int row = 0; row < rows; row++)
-            {
-                // center = 카메라로부터 forward (row+1)칸
-                GridPos center = cam.Position;
-                for (int s = 0; s <= row; s++)
-                    center = center.Move(fwd);
-
-                int half = row;
-                for (int off = -half; off <= half; off++)
-                {
-                    GridPos cell = center;
-                    if (off < 0)
-                        for (int s = 0; s < -off; s++) cell = cell.Move(left);
-                    else if (off > 0)
-                        for (int s = 0; s < off; s++) cell = cell.Move(right);
-
-                    if (!state.IsInside(cell)) continue;
-                    if (state.GetCell(cell).HasWall) continue;
-
-                    result.Add(cell);
                 }
             }
         }

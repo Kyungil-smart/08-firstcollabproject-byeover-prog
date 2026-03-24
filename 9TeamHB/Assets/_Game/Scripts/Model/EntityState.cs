@@ -69,7 +69,8 @@ namespace MyGame2.Stage
             };
         }
 
-        public static EntityState CreateCamera(GridPos position, Direction facing, CameraType pattern)
+        public static EntityState CreateCamera(GridPos position, Direction facing,
+            CameraType pattern, bool reverseRotation = false)
         {
             return new EntityState
             {
@@ -80,11 +81,11 @@ namespace MyGame2.Stage
                 IsAlive = true,
                 IsBlocking = true,
                 BlocksCameraSight = false,
-                Camera = new CameraData(pattern)
+                Camera = new CameraData(pattern, reverseRotation)
             };
         }
 
-        public static EntityState CreateRobot(GridPos position, Direction facing, Direction[] patrolRoute)
+        public static EntityState CreateRobot(GridPos position, Direction facing, GridPos[] waypoints = null)
         {
             return new EntityState
             {
@@ -95,7 +96,7 @@ namespace MyGame2.Stage
                 IsAlive = true,
                 IsBlocking = true,
                 BlocksCameraSight = true,
-                Patrol = new PatrolData(patrolRoute)
+                Patrol = new PatrolData(waypoints)
             };
         }
 
