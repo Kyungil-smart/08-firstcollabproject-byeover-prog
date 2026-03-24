@@ -31,4 +31,10 @@ namespace MyGame2.Stage
         // 본인 위치 포함 3×3 고정형 (비회전)
         Fixed3x3 = 4
     }
+
+    public enum PlayerType
+    {
+        Robot = 0,
+        Animal = 1
+    }
 }

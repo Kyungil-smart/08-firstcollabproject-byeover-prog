@@ -116,4 +116,6 @@ namespace MyGame2.Stage
         
         private EntityState() { }
     }
+
+    
 }
