@@ -3,8 +3,8 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    // 스테이지 로드 시 그리드 타일 + 카메라 감시 범위를 시각화한다.
-    // 카메라가 매 턴 회전하므로 감시 범위도 매 턴 갱신된다.
+    // 스테이지 로드 시 그리드 타일 + 카메라/로봇 감시 범위를 시각화한다.
+
     public sealed class StageTileRenderer : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -17,17 +17,31 @@ namespace MyGame2.Stage
         [SerializeField] private Color trapColor = new Color(0.55f, 0.15f, 0.70f, 1f);
 
         [Header("카메라 감시 범위")]
-        [SerializeField] private Color detectionColor = new Color(1f, 0.2f, 0.2f, 0.25f);
+        [SerializeField] private Color cameraDetectionColor = new Color(1f, 0.2f, 0.2f, 0.25f);
+
+        [Header("로봇 감지 범위")]
+        [SerializeField] private Color robotDetectionColor = new Color(1f, 0.6f, 0f, 0.3f);
 
         [Header("렌더링")]
         [SerializeField] private int tileOrder = -1;
         [SerializeField] private int detectionOrder = 0;
         [SerializeField] private float tilePadding = 0.05f;
 
-        private readonly List<GameObject> _tiles = new List<GameObject>(128);
-        private readonly List<GameObject> _detections = new List<GameObject>(64);
+        private readonly List<GameObject> _tiles = new List<GameObject>(256);
+        private readonly List<GameObject> _camDetections = new List<GameObject>(64);
+        private readonly List<GameObject> _robotDetections = new List<GameObject>(16);
         private Transform _tileRoot;
-        private Transform _detRoot;
+        private Transform _camDetRoot;
+        private Transform _robotDetRoot;
+
+        private CameraEnemy _cameraEnemy;
+        private RobotEnemy _robotEnemy;
+
+        private void Awake()
+        {
+            _cameraEnemy = new CameraEnemy();
+            _robotEnemy = new RobotEnemy();
+        }
 
         private void OnEnable()
         {
@@ -46,21 +60,24 @@ namespace MyGame2.Stage
         private void Start()
         {
             if (stageManager != null && stageManager.CurrentState != null)
-            {
-                RenderTiles(stageManager.CurrentState);
-                RenderDetection(stageManager.CurrentState);
-            }
+                RefreshAll(stageManager.CurrentState);
         }
 
         private void OnStageLoaded(int idx)
         {
-            RenderTiles(stageManager.CurrentState);
-            RenderDetection(stageManager.CurrentState);
+            RefreshAll(stageManager.CurrentState);
         }
 
         private void OnTurnExecuted(TurnOutcome outcome)
         {
-            RenderDetection(stageManager.CurrentState);
+            RefreshAll(stageManager.CurrentState);
+        }
+
+        private void RefreshAll(StageState state)
+        {
+            RenderTiles(state);
+            RenderCameraDetection(state);
+            RenderRobotDetection(state);
         }
 
         // ── 타일 ──
@@ -89,90 +106,44 @@ namespace MyGame2.Stage
 
         // ── 카메라 감시 범위 ──
 
-        private void RenderDetection(StageState state)
+        private void RenderCameraDetection(StageState state)
         {
-            Clear(_detections);
-            EnsureRoot(ref _detRoot, "_DetRoot");
+            Clear(_camDetections);
+            EnsureRoot(ref _camDetRoot, "_CamDetRoot");
             float scale = 1f - tilePadding;
 
             for (int i = 0; i < state.CameraIds.Count; i++)
             {
-                if (!state.TryGetEntity(state.CameraIds[i], out EntityState cam)) continue;
-                if (!cam.IsAlive) continue;
+                List<GridPos> cells = _cameraEnemy.CollectSightLine(
+                    state, state.CameraIds[i]);
 
-                List<GridPos> cells = GetDetectionCells(state, cam);
                 for (int j = 0; j < cells.Count; j++)
                 {
-                    _detections.Add(MakeSprite(
-                        $"D_{cam.Id}_{j}", _detRoot,
-                        cells[j].ToWorld(1f), scale, detectionColor, detectionOrder));
+                    _camDetections.Add(MakeSprite(
+                        $"CD_{state.CameraIds[i]}_{j}", _camDetRoot,
+                        cells[j].ToWorld(1f), scale, cameraDetectionColor, detectionOrder));
                 }
             }
         }
 
-        private List<GridPos> GetDetectionCells(StageState state, EntityState cam)
+        // ── 로봇 감지 범위 (앞 2칸 + 뒤 2칸) ──
+
+        private void RenderRobotDetection(StageState state)
         {
-            List<GridPos> result = new List<GridPos>(16);
+            Clear(_robotDetections);
+            EnsureRoot(ref _robotDetRoot, "_RobotDetRoot");
+            float scale = 1f - tilePadding;
 
-            switch (cam.DetectionPattern)
+            for (int i = 0; i < state.RobotIds.Count; i++)
             {
-                case CameraType.LineShort:    AddLine(state, cam, 3, result); break;
-                case CameraType.LineLong:     AddLine(state, cam, 5, result); break;
-                case CameraType.PyramidSmall: AddPyramid(state, cam, 3, result); break;
-                case CameraType.PyramidLarge: AddPyramid(state, cam, 5, result); break;
-            }
+                List<GridPos> cells = _robotEnemy.CollectDetectionCells(
+                    state, state.RobotIds[i]);
 
-            return result;
-        }
-
-        // 직선 감지 (1×range)
-        private void AddLine(StageState state, EntityState cam, int range, List<GridPos> result)
-        {
-            GridPos cursor = cam.Position;
-            for (int i = 0; i < range; i++)
-            {
-                cursor = cursor.Move(cam.Facing);
-                if (!state.IsInside(cursor)) break;
-
-                CellData cell = state.GetCell(cursor);
-                if (cell.HasWall) break;
-
-                result.Add(cursor);
-
-                if (cell.IsOccupied &&
-                    state.TryGetEntity(cell.OccupantId, out EntityState occ) &&
-                    occ.BlocksCameraSight && occ.IsAlive)
-                    break;
-            }
-        }
-
-        // 피라미드 감지 (rows줄: 1, 3, 5, 7, 9칸...)
-        private void AddPyramid(StageState state, EntityState cam, int rows, List<GridPos> result)
-        {
-            Direction fwd = cam.Facing;
-            Direction left = fwd.RotateClockwise().RotateClockwise().RotateClockwise();
-            Direction right = fwd.RotateClockwise();
-
-            for (int row = 0; row < rows; row++)
-            {
-                // center = 카메라로부터 forward (row+1)칸
-                GridPos center = cam.Position;
-                for (int s = 0; s <= row; s++)
-                    center = center.Move(fwd);
-
-                int half = row;
-                for (int off = -half; off <= half; off++)
+                for (int j = 0; j < cells.Count; j++)
                 {
-                    GridPos cell = center;
-                    if (off < 0)
-                        for (int s = 0; s < -off; s++) cell = cell.Move(left);
-                    else if (off > 0)
-                        for (int s = 0; s < off; s++) cell = cell.Move(right);
-
-                    if (!state.IsInside(cell)) continue;
-                    if (state.GetCell(cell).HasWall) continue;
-
-                    result.Add(cell);
+                    _robotDetections.Add(MakeSprite(
+                        $"RD_{state.RobotIds[i]}_{j}", _robotDetRoot,
+                        cells[j].ToWorld(1f), scale, robotDetectionColor, detectionOrder));
                 }
             }
         }
