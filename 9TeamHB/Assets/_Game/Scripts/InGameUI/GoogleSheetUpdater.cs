@@ -27,8 +27,7 @@ public class GoogleSheetDownloader : MonoBehaviour
                 // Assets/Resources 폴더 안에 LocalizationTable.csv 라는 이름으로 덮어쓰기 저장
                 string path = Application.dataPath + "/Resources/LocalizationTable.csv";
                 File.WriteAllText(path, www.downloadHandler.text);
-
-                // 유니티 에디터에게 "새 파일 들어왔으니 새로고침 해줘!" 라고 알림
+                
 #if UNITY_EDITOR
                 UnityEditor.AssetDatabase.Refresh();
 #endif
