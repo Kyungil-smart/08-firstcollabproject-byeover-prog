@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MyGame2.Stage;
 using UnityEngine;
@@ -16,6 +17,7 @@ public class EntitySO : ScriptableObject, ISerializationCallbackReceiver
     private List<EntityFunctionSO> _functions;
 
     private Dictionary<string, EntityFunctionSO> _functionCache;
+
 
 
     public void OnBeforeSerialize(){ }

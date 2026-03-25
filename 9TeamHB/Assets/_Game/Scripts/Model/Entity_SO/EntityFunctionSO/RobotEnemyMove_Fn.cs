@@ -2,7 +2,7 @@ using MyGame2.Stage;
 using UnityEngine;
  
 [CreateAssetMenu(fileName = "RobotEnemyMove_Fn", menuName = "Scriptable Objects/EntityFunction/RobotEnemyMove_Fn")]
-public class RobotEnemyMove_Fn : EntityFunctionSO
+public class RobotEnemyMove_Fn : EntityFunctionSO, IUpdate
 {
     public MoveResult ResolveTurn(StageState state, int robotId, MovementRule movementRule)
         {
@@ -72,4 +72,9 @@ public class RobotEnemyMove_Fn : EntityFunctionSO
             // 양쪽 다 막힘 → 대기
             return result;
         }
+
+    public void Update()
+    {
+        // 업데이트시 호출 되어야할 로직
+    }
 }
