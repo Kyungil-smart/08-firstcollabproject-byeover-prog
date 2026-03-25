@@ -16,7 +16,7 @@ public class EntitySO : ScriptableObject, ISerializationCallbackReceiver
     // 기능을 SO화 해서 리스트로 보유 (기능 단위로 조합 가능)
     private List<EntityFunctionSO> _functions;
 
-    private Dictionary<string, EntityFunctionSO> _functionCache;
+    private Dictionary<string, EntityFunctionSO> _functionCache = new();
 
 
 
@@ -27,6 +27,10 @@ public class EntitySO : ScriptableObject, ISerializationCallbackReceiver
     /// </summary>
     public void OnAfterDeserialize()
     {
+        if (_functionCache == null)
+        {
+            _functionCache = new Dictionary<string, EntityFunctionSO>();
+        }
         _functionCache.Clear();
         foreach (var func in _functions)
         {
