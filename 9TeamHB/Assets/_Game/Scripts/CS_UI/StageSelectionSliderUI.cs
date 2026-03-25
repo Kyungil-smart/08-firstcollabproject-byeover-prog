@@ -27,7 +27,7 @@ public class StageSelectionSliderUI : MonoBehaviour
     [SerializeField] private Button backButton;
 
     [Header("Scene Settings")]
-    [SerializeField] private string targetSceneName = "Test_Scene"; //추후에 GamePlay_Scene 등으로 변경할 필요 있음
+    [SerializeField] private string targetSceneName = "Game_Scenes"; //추후에 GamePlay_Scene 등으로 변경할 필요 있음
     [SerializeField] private string backSceneName = "Title_Scene"; //맨 처음 시작화면
 
     [Header("Stage Data")]
