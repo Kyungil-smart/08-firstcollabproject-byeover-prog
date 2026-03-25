@@ -78,7 +78,7 @@ public class StageSelectionSliderUI : MonoBehaviour
             stageThumbnail.sprite = currentData.thumbnail;
         }
 
-        // 양쪽 화살표는 항상 켜질 수 있도록 제작
+        // 양쪽 화살표는 항상 켜질 수 있도록 제작함
         if (prevButton != null) prevButton.interactable = true;
         if (nextButton != null) nextButton.interactable = true;
 
@@ -103,10 +103,10 @@ public class StageSelectionSliderUI : MonoBehaviour
         SceneManager.LoadScene(targetSceneName);
     }
 
+    // back 버튼
     public void OnClickBack()
     {
         if (useDebugLog) Debug.Log($"{backSceneName}으로 복귀.");
         SceneManager.LoadScene(backSceneName);
     }
 }
-

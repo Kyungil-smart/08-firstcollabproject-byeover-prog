@@ -6,7 +6,7 @@ public class TitleUIManager : MonoBehaviour
 {
     [Header("Panels")]
     [SerializeField] private GameObject keyboardPanel;
-    // optionPanel 추후에 추가할 곳
+    // optionPanel을 추후에 추가할 곳
 
     [Header("Scene Settings")]
     [SerializeField] private string startSceneName = "UI_Scene";
