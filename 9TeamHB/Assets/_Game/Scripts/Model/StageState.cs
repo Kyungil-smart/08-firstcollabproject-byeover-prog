@@ -36,6 +36,7 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> AnimalIds { get { return _animalIds; } }
         public IEnumerable<EntityState> Entities { get { return _entitiesById.Values; } }
         public StageEvents Events { get { return _events; } }
+        public bool IsViewDirty { get; private set; } // view 갱신 필요 여부
 
         private StageState(int width, int height, CellData[] cells,
             CellFlags[] originalFlags, StageEvents events)
@@ -53,6 +54,7 @@ namespace MyGame2.Stage
             _animalIds = new List<int>(8);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
+            IsViewDirty = false;
         }
 
         // 팩토리
@@ -280,6 +282,17 @@ namespace MyGame2.Stage
         {
             TurnIndex++;
             _events?.RaiseTurnAdvanced(TurnIndex);
+        }
+        
+        // view 갱신 필요 표시
+        public void SetViewDirty()
+        {
+            IsViewDirty = true;
+        }
+        // view 갱신 필요 여부 초기화
+        public void ClearViewDirty()
+        {
+            IsViewDirty = false;
         }
 
         // 내부

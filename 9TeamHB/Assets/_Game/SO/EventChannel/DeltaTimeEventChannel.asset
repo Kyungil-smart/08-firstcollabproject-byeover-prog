@@ -9,8 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c10143f4d98d7e4490b487f62b6f2f4, type: 3}
-  m_Name: CanPushRobot
-  m_EditorClassIdentifier: Assembly-CSharp::Pushable_Fn
-  _name: CanPushRobot
-  CanPushPlayer: 00000000
+  m_Script: {fileID: 11500000, guid: 5792bf8aaae1c4d4cb05b87d5d8cdfc0, type: 3}
+  m_Name: DeltaTimeEventChannel
+  m_EditorClassIdentifier: Assembly-CSharp::FloatEventChannelSO

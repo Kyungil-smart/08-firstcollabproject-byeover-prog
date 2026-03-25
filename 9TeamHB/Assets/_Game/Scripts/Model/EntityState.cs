@@ -20,6 +20,7 @@ namespace MyGame2.Stage
         public bool IsAlive;
         public bool IsBlocking;
         public bool BlocksCameraSight;
+        public EntitySO Definition;
 
         // 컴포넌트 저장소
 
@@ -50,6 +51,8 @@ namespace MyGame2.Stage
             return _components.Remove(typeof(T));
         }
 
+        public IEnumerable<IComponentData> Components => _components.Values;
+
         // 편의 프로퍼티
 
         public bool IsPlayer { get { return Kind == EntityKind.Player; } }
@@ -60,6 +63,25 @@ namespace MyGame2.Stage
         public bool IsMovingEnemy { get { return IsRobot || IsAnimal; } }
         public bool IsLethalMover { get { return IsRobot || IsAnimal; } }
 
+        
+        // 생성자.
+        public EntityState(int id, EntitySO definition, GridPos position)
+        {
+            Id = id;
+            Definition = definition;
+            Position = position;
+            _components = new Dictionary<Type, IComponentData>();
+
+            // SO(정의)를 기반으로 컴포넌트를 생성하여 저장
+            foreach (var funcDef in definition.Functions) // Functions는 EntitySO의 기능 목록
+            {
+                if (funcDef != null)
+                {
+                    var component = funcDef.CreateComponent(this); // 인스턴스 생성
+                    Set(component); // 딕셔너리에 저장
+                }
+            }
+        }
         // 팩토리
 
         public static EntityState CreatePlayer(GridPos position, Direction facing, int slot)

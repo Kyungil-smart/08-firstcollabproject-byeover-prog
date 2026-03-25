@@ -9,4 +9,5 @@ public abstract class EntityFunctionSO : ScriptableObject
 {
     [Tooltip("SO에셋과 같은 이름으로 작성해주세요")][SerializeField] private string _name;
     public string Name { get; private set; }
+    public abstract IComponentData CreateComponent(EntityState owner);
 }

@@ -9,8 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c10143f4d98d7e4490b487f62b6f2f4, type: 3}
-  m_Name: CanPushAnimal
-  m_EditorClassIdentifier: Assembly-CSharp::Pushable_Fn
-  _name: CanPushAnimal
-  CanPushPlayer: 01000000
+  m_Script: {fileID: 11500000, guid: 33137b2c8fdb7754cab782a4bfbd3637, type: 3}
+  m_Name: StageState
+  m_EditorClassIdentifier: Assembly-CSharp::StageStateReferenceSO
