@@ -1,7 +1,7 @@
 namespace MyGame2.Stage
 {
-    // Box 전용 데이터. Kind == Box일 때만 유효.
-    public struct BoxData
+    // Box 전용 데이터.
+    public struct BoxData : IComponentData
     {
         // 이 상자를 밀 수 있는 플레이어 제한
         public BoxType Ownership;

@@ -212,6 +212,14 @@ namespace MyGame2.Stage
                                 EntityKind.CameraEnemy, position, Direction.None,
                                 detectionPattern: CameraType.Fixed3x3));
                             break;
+                        
+                        // S = 고정형 3×3 (위 방향)
+                        case 'S':
+                            cellFlags[index] = CellFlags.None;
+                            spawns.Add(new SpawnData(
+                                EntityKind.CameraEnemy, position, Direction.Up,
+                                detectionPattern: CameraType.Fixed3x3));
+                            break;
 
                         // ── 로봇/동물 적 ──
                         case 'R':

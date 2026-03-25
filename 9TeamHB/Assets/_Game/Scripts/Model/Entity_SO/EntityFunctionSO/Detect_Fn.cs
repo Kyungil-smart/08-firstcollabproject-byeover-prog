@@ -6,13 +6,15 @@ using UnityEngine;
 public class Detect_Fn: EntityFunctionSO
 {
     
-    /// 해당 GridPos에 DetectionBlocker 속성이 있는지 확인 후 결과 반환
+    // 해당 GridPos에 DetectionBlocker 속성이 있는지 확인 후 결과 반환
+   
     private bool CellBlocked(StageState state, GridPos pos)
     {
         int id = state.GetCell(pos).OccupantId;
         if (state.TryGetEntity(id, out EntityState entity))
         {
-            if (entity.Entity.GetEntityFunc("DetectionBlocker") != null)
+            // BlocksCameraSight가 true인 엔티티 (상자 등)가 시야를 차단
+            if (entity.BlocksCameraSight && entity.IsAlive)
                 return true;
         }
         return false;
