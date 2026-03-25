@@ -6,7 +6,9 @@
   <component name="ChangeListManager">
     <list default="true" id="ad9db203-504a-417a-9c76-0db89dac3435" name="변경" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.9TeamHB/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.9TeamHB/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/_Game/Scripts/CS_Enemies/RobotEnemy.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/_Game/Scripts/CS_Enemies/RobotEnemy.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/Scenes/JSW_Scenes.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/JSW_Scenes.unity" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/_Game/Prefabs/PF_Player/Player_1.prefab" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/_Game/Prefabs/PF_Player/Player_1.prefab" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assets/_Game/Scripts/View/GridEntityView.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/_Game/Scripts/View/GridEntityView.cs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,7 +73,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;KSH&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;JSW2-Stage1&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -132,6 +134,7 @@
       <workItem from="1774151622228" duration="16464000" />
       <workItem from="1774224801506" duration="10225000" />
       <workItem from="1774235414905" duration="11093000" />
+      <workItem from="1774402222724" duration="1553000" />
     </task>
     <servers />
   </component>
