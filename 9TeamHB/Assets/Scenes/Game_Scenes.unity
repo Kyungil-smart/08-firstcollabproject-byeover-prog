@@ -824,7 +824,7 @@ MonoBehaviour:
   - {fileID: 4900000, guid: 9a0b763351ddac247bedade0cad3b1db, type: 3}
   startStageIndex: 0
   cellSize: 1
-  symbolRegistry: {fileID: 0}
+  symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
 --- !u!4 &823654581
 Transform:
   m_ObjectHideFlags: 0

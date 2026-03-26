@@ -40,7 +40,7 @@ MonoBehaviour:
   - symbol: 49
     description: Player1
     cellFlags: 0
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: eb252a6d354ccda4cb68a10fb5090c79, type: 2}
     facing: 3
   - symbol: 50
