@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="829ba162-c724-4ae3-a008-35f5892cad28" name="변경" comment="">
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/InGameUIScene.unity" beforeDir="false" afterPath="$PROJECT_DIR$/Assets/Scenes/InGameUIScene.unity" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Title_Scenes.unity" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assets/Scenes/Title_Scenes.unity.meta" beforeDir="false" />
-    </list>
+    <list default="true" id="829ba162-c724-4ae3-a008-35f5892cad28" name="변경" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -19,7 +15,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "git-widget-placeholder": "Develop"
+    "git-widget-placeholder": "Stage1__Jsw",
+    "node.js.selected.package.tslint": "(autodetect)"
   }
 }]]></component>
   <component name="TaskManager">
