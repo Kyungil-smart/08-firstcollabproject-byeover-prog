@@ -8,8 +8,13 @@ public class TitleUIManager : MonoBehaviour
     [SerializeField] private GameObject keyboardPanel;
     // optionPanel을 추후에 추가할 곳
 
+    
+    // 환경설정 버튼 눌렀을때 생성되는 세팅 캔버스 프리펩
+    [SerializeField] private GameObject settingPrefab; 
+    private GameObject activeSetting; // 프리펩으로 생성된 세팅 캔버스 오브젝트를 저장.
+    
     [Header("Scene Settings")]
-    [SerializeField] private string startSceneName = "UI_Scene";
+    [SerializeField] private string startSceneName = "Stage_Scene";
 
     [Header("Debug")]
     [SerializeField] private bool useDebugLog = false;
@@ -46,5 +51,18 @@ public class TitleUIManager : MonoBehaviour
         if (useDebugLog) Debug.Log("게임을 종료.");
         
         Application.Quit();
+    }
+    
+    public void OnClickOption()
+    {
+        // 한 번도 연 적이 없으면 프리팹을 복제해서 화면에 띄움
+        if (activeSetting == null)
+        {
+            activeSetting = Instantiate(settingPrefab);
+        }
+        else // 이미 만들어둔 게 있다면 활성화만 .
+        {
+            activeSetting.SetActive(true);
+        }
     }
 }
