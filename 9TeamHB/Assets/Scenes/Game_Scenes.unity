@@ -168,7 +168,7 @@ Transform:
   m_GameObject: {fileID: 42561337}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 68.46333, y: 50.69973, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -693,7 +693,7 @@ Transform:
   m_GameObject: {fileID: 796616004}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 68.46333, y: 50.69973, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -822,6 +822,11 @@ MonoBehaviour:
   prefabRegistry: {fileID: 127105790}
   stageFiles:
   - {fileID: 4900000, guid: 9a0b763351ddac247bedade0cad3b1db, type: 3}
+  - {fileID: 4900000, guid: 80ac11f4fd3ff064fbc8efde2f36cb5e, type: 3}
+  - {fileID: 4900000, guid: de45bba8dafd6ba4ab7f186f5b3bf485, type: 3}
+  - {fileID: 4900000, guid: 8840970b8569b154a9d9de8a17bcff07, type: 3}
+  - {fileID: 4900000, guid: d288560c58df5684c976270f845f5128, type: 3}
+  - {fileID: 4900000, guid: 6461e17077d48804bb1546e688b80a88, type: 3}
   startStageIndex: 0
   cellSize: 1
   symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
