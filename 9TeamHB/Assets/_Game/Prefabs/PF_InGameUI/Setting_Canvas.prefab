@@ -692,6 +692,7 @@ GameObject:
   - component: {fileID: 5887513407148290369}
   - component: {fileID: 8239230438976463491}
   - component: {fileID: 4304038686720209600}
+  - component: {fileID: -1502634102599091908}
   m_Layer: 5
   m_Name: Setting_Canvas
   m_TagString: Untagged
@@ -754,10 +755,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
   m_PhysicalUnit: 3
@@ -818,6 +819,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b2b5a793c827bb84582ab987fff4cb64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AutoBasicButtonSoundConnector
+--- !u!114 &-1502634102599091908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1339347349397469600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b5eb59e39c22bc4abe277fbc8415c98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SettingSync
+  bgmSlider: {fileID: 5631462226820179028}
+  sfxSlider: {fileID: 6478742846298520199}
 --- !u!1 &1614535742089086554
 GameObject:
   m_ObjectHideFlags: 0
@@ -3492,7 +3507,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 5887513407148290369}
         m_TargetAssemblyTypeName: SettingUIController, Assembly-CSharp
-        m_MethodName: OnClickReturnButton
+        m_MethodName: CloseSetting
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

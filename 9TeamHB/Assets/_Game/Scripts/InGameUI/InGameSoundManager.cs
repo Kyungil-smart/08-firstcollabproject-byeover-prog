@@ -27,7 +27,10 @@ public class InGameSoundManager : MonoBehaviour
 
     private void Start()
     {
-        
+        if (mainBGM != null)
+        {
+            PlayBGM(mainBGM);
+        }
     }
 
     
