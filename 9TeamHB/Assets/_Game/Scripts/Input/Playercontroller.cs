@@ -20,6 +20,9 @@ namespace MyGame2.Stage
         [Tooltip("게임 흐름 상태 확인용 (null이면 StageState에서 직접 확인)")]
         [SerializeField] private GameManager gameManager;
 
+        [Tooltip("워프 연출 중 입력 차단용")]
+        [SerializeField] private StageWarpEffect warpEffect;
+
         [Header("입력 설정")]
         [Tooltip("이동 반복 간격 (초)")]
         [SerializeField] private float moveRepeatInterval = 0.2f;
@@ -207,6 +210,12 @@ namespace MyGame2.Stage
                 return;
             }
 
+            // 워프 중에는 태그 전환도 차단
+            if (warpEffect != null && warpEffect.IsWarping)
+            {
+                return;
+            }
+
             bool switched = stageManager.SwitchActivePlayer();
             if (switched)
             {
@@ -216,6 +225,12 @@ namespace MyGame2.Stage
         
         private bool IsPlayable()
         {
+            // 워프 연출 중에는 입력 차단
+            if (warpEffect != null && warpEffect.IsWarping)
+            {
+                return false;
+            }
+
             if (gameManager != null)
             {
                 return gameManager.CurrentState == GameFlowState.Playing;
