@@ -634,6 +634,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.PlayerController
   stageManager: {fileID: 823654580}
   gameManager: {fileID: 1573434693}
+  warpEffect: {fileID: 960270564}
   moveRepeatInterval: 0.2
 --- !u!4 &651220626
 Transform:
@@ -823,6 +824,7 @@ MonoBehaviour:
   - {fileID: 4900000, guid: 9a0b763351ddac247bedade0cad3b1db, type: 3}
   startStageIndex: 0
   cellSize: 1
+  symbolRegistry: {fileID: 0}
 --- !u!4 &823654581
 Transform:
   m_ObjectHideFlags: 0
