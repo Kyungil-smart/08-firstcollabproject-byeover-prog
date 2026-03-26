@@ -7,9 +7,13 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "EntitySO", menuName = "Scriptable Objects/EntitySO")]
 public class EntitySO : ScriptableObject
 {
-    [SerializeField]
-    private EntityKind _kind;
+    // ---설정---
+    [Header("설정")]
+    [SerializeField] private EntityKind _kind;
+    [SerializeField] private GridEntityView _viewPrefab;
+    // 프로퍼티
     public EntityKind Kind { get; private set; }
+    public GridEntityView Prefab { get { return _viewPrefab; } }
 
 
     [SerializeReference] 

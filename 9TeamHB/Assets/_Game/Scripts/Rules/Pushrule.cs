@@ -9,8 +9,8 @@ namespace MyGame2.Stage
         {
             if (!state.TryGetEntity(pusherId, out EntityState pusher)) return false;
             if (!state.TryGetEntity(boxId, out EntityState box)) return false;
-            if (!box.IsBox || !box.IsAlive) return false;
-            if (!box.Get<BoxData>().CanBePushedBy(pusher.Get<PlayerData>().Slot)) return false;
+            if (!box.IsPushable || !box.IsAlive) return false;
+            if (!box.CanBePushedBy(pusher.Get<PlayerData>().Slot)) return false;
 
             GridPos dest = box.Position.Move(direction);
             if (!state.IsInside(dest)) return false;

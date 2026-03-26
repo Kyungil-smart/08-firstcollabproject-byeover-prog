@@ -5,7 +5,7 @@ using UnityEngine;
 public class RobotEnemyMove_Fn : EntityFunctionSO
 {
     
-    // --- 설정값 (Definition) ---
+    // --- 설정 ---
     [Header("이동 설정")]
     [SerializeField] private float moveInterval = 0.2f;
     [SerializeField] private float alertDuration = 0.5f;

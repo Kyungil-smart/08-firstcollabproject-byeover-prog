@@ -102,7 +102,7 @@ namespace MyGame2.Stage
                         // ── 플레이어 ──
                         case '1':
                             cellFlags[index] = CellFlags.None;
-                            spawns.Add(new SpawnData(
+                            spawns.Add(new SpawnDataa(
                                 EntityKind.Player, position, Direction.Down, playerSlot: 1));
                             hasPlayer1 = true;
                             break;

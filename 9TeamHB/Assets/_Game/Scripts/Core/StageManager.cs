@@ -155,7 +155,7 @@ namespace MyGame2.Stage
             if (prefabRegistry == null) return;
             foreach (EntityState e in CurrentState.Entities)
             {
-                GridEntityView prefab = prefabRegistry.GetPrefab(e);
+                GridEntityView prefab = e.Prefab;
                 if (prefab == null) continue;
                 GridEntityView view = Instantiate(prefab, entityRoot);
                 view.name = $"{e.Kind}_{e.Id}";

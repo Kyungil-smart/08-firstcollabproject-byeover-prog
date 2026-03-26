@@ -43,7 +43,7 @@ namespace MyGame2.Stage
                         return MoveResult.ContactKill(moverId, occupant.Id, from, target);
 
                     // 플레이어가 상자를 밀려는 경우 → 판정만
-                    if (mover.IsPlayer && occupant.IsBox)
+                    if (mover.IsPlayer && occupant.IsPushable)
                     {
                         if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);

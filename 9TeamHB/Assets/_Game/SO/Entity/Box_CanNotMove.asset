@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
+  m_Name: Box_CanNotMove
+  m_EditorClassIdentifier: Assembly-CSharp::EntitySO
+  _kind: 2
+  _viewPrefab: {fileID: 6042236026587706409, guid: c3289e2f554abf841b42a68159d5b647,
+    type: 3}
+  _functions: []

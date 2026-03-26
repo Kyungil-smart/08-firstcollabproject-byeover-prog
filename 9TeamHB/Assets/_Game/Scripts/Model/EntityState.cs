@@ -61,18 +61,37 @@ namespace MyGame2.Stage
         public bool IsRobot { get { return Kind == EntityKind.RobotEnemy; } }
         public bool IsAnimal { get { return Kind == EntityKind.AnimalEnemy; } }
         public bool IsMovingEnemy { get { return IsRobot || IsAnimal; } }
-        public bool IsLethalMover { get { return IsRobot || IsAnimal; } }
+        public bool IsLethalMover { get { return IsRobot || IsAnimal; } } // todo lethal 컴포넌트 
+        public bool IsPushable { get { return IsPushableObject(); } }
+        public GridEntityView Prefab { get { return Definition.Prefab; } }
 
+        /// <summary>
+        /// 해당 엔티티가 특정 플레이어 슬롯에 의해 밀릴 수 있는지 여부를 반환한다.
+        /// </summary>
+        public bool CanBePushedBy(int playerSlot)
+        {
+            if(!Has<InteractionTag>()) 
+                return false;
+            InteractionTag tag = Get<InteractionTag>();
+            if (playerSlot == 1) 
+                return tag.A;
+            if (playerSlot == 2) 
+                return tag.B;
+            return false;
+        }
+        
         
         // 생성자.
-        public EntityState(int id, EntitySO definition, GridPos position)
+        public EntityState(EntitySO definition, GridPos position, Direction facing)
         {
-            Id = id;
             Definition = definition;
+            Kind = definition.Kind; 
             Position = position;
+            Facing = facing;
+            IsAlive = true;
             _components = new Dictionary<Type, IComponentData>();
 
-            // SO(정의)를 기반으로 컴포넌트를 생성하여 저장
+            // SO(정의 def)를 기반으로 컴포넌트를 생성하여 저장
             foreach (var funcDef in definition.Functions) // Functions는 EntitySO의 기능 목록
             {
                 if (funcDef != null)
@@ -150,5 +169,13 @@ namespace MyGame2.Stage
         }
 
         private EntityState() { }
+        
+        //--- 내부 로직 ---
+        private bool IsPushableObject()
+        {
+            if (!Has<Pushable>())
+                return false;
+            return Get<Pushable>().CanBePushed;
+        }
     }
 }
