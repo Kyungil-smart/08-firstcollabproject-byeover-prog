@@ -38,6 +38,9 @@ namespace MyGame2.Stage
 
         // 새 스테이지가 로드/리빌드된 직후. (stageIndex)
         public event Action<int> StageLoaded;
+
+        // 워프 연출 완료 후 다음 스테이지 로드 트리거.
+        public event Action WarpComplete;
         
         // 발행 메서드 (StageState, TurnSystem 등이 호출)
         
@@ -86,6 +89,11 @@ namespace MyGame2.Stage
             StageLoaded?.Invoke(stageIndex);
         }
 
+        public void RaiseWarpComplete()
+        {
+            WarpComplete?.Invoke();
+        }
+
        
         // 모든 구독자를 해제한다.
         // 스테이지 전환 시 이전 구독을 깨끗하게 정리할 때 사용.
@@ -100,6 +108,7 @@ namespace MyGame2.Stage
             TurnAdvanced = null;
             TurnExecuted = null;
             StageLoaded = null;
+            WarpComplete = null;
         }
     }
 }

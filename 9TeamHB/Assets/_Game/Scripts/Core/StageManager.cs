@@ -18,11 +18,14 @@ namespace MyGame2.Stage
         [SerializeField] private int startStageIndex;
         [SerializeField] private float cellSize = 1f;
 
+        [Header("기호 레지스트리")]
+        [Tooltip("맵 텍스트의 문자 매핑 SO")]
+        [SerializeField] private MapSymbolRegistrySO symbolRegistry;
 
+        private MapLoader _mapLoader;
+        
         // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
-
-        private readonly MapLoader _mapLoader = new MapLoader();
         private readonly TagSystem _tagSystem = new TagSystem();
         private TurnSystem _turnSystem;
 
@@ -42,6 +45,7 @@ namespace MyGame2.Stage
 
         private void Awake()
         {
+            _mapLoader = new MapLoader(symbolRegistry);
             if (entityRoot == null) entityRoot = transform;
             _turnSystem = TurnSystemBuilder.Default().Build();
             LastOutcome = TurnOutcome.None();

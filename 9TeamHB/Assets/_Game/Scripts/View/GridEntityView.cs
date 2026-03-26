@@ -7,36 +7,60 @@ namespace MyGame2.Stage
     public class GridEntityView : MonoBehaviour
     {
         [Header("시각 설정")]
-        [Tooltip("Facing 방향으로 스프라이트를 회전할지 여부")]
         [SerializeField] private bool rotateWithFacing = true;
-
-        [Tooltip("활성 플레이어 표시용 자식 오브젝트 (없으면 비워둠)")]
         [SerializeField] private GameObject selectedMarker;
 
         [Header("슬라이딩 이동")]
-        [Tooltip("이동 보간 속도 (높을수록 빠르게 도착)")]
         [SerializeField] private float slideSpeed = 12f;
-
-        [Tooltip("목표 위치와의 거리가 이 값 이하면 즉시 도착 처리")]
         [SerializeField] private float snapThreshold = 0.01f;
-        
+
+        [Header("방향 애니메이션")]
+        [SerializeField] private bool useDirectionAnim = false;
+        [SerializeField] private Animator targetAnimator;
+
+        private static readonly int AnimDirection = Animator.StringToHash("Direction");
+        private static readonly int AnimIsMoving = Animator.StringToHash("IsMoving");
+
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
         private bool _isSliding;
         private Coroutine _moveCoroutine;
         private Coroutine _rotateCoroutine;
+        private Animator _animator;
+        private Direction _lastFacing;
 
         public int EntityId { get; private set; }
         public EntityKind Kind { get; private set; }
-
-        // 현재 슬라이딩 중인가?
         public bool IsSliding { get { return _isSliding; } }
-        
+
+        private void Awake()
+        {
+            _animator = targetAnimator != null
+                ? targetAnimator
+                : GetComponentInChildren<Animator>();
+
+            // ── 디버그: Animator 연결 확인 ──
+            if (useDirectionAnim)
+            {
+                if (_animator == null)
+                    Debug.LogError($"[GridEntityView] {name}: useDirectionAnim이 켜져있는데 Animator를 찾을 수 없음!", this);
+                else
+                    Debug.Log($"[GridEntityView] {name}: Animator 연결됨 → {_animator.name}", this);
+            }
+        }
+
         public void Bind(EntityState entity, float cellSize)
         {
             EntityId = entity.Id;
             Kind = entity.Kind;
-            
+
+            if (_animator == null)
+            {
+                _animator = targetAnimator != null
+                    ? targetAnimator
+                    : GetComponentInChildren<Animator>();
+            }
+
             Vector3 worldPos = entity.Position.ToWorld(cellSize);
             transform.position = worldPos;
             _targetPosition = worldPos;
@@ -48,45 +72,59 @@ namespace MyGame2.Stage
                 _targetRotation = rot;
             }
 
+            _lastFacing = entity.Facing;
+            UpdateDirectionAnim(entity.Facing);
+            UpdateMovingAnim(false);
+
             gameObject.SetActive(entity.IsAlive);
             _isSliding = false;
+
+            // ── 디버그: Bind 확인 ──
+            Debug.Log($"[GridEntityView] Bind: {name}, Kind={entity.Kind}, Facing={entity.Facing}, Pos={entity.Position}", this);
         }
 
-        // 상태 동기화. 목표 위치를 갱신하면 자동으로 슬라이딩 시작.
         public void Sync(EntityState entity, float cellSize)
         {
-            // 사망 처리
             if (!entity.IsAlive)
             {
                 gameObject.SetActive(false);
                 _isSliding = false;
+                UpdateMovingAnim(false);
                 return;
             }
 
             gameObject.SetActive(true);
 
-            // 목표 위치 갱신
             Vector3 newTarget = entity.Position.ToWorld(cellSize);
             if ((_targetPosition - newTarget).sqrMagnitude > snapThreshold * snapThreshold)
             {
                 _targetPosition = newTarget;
                 _isSliding = true;
+                UpdateMovingAnim(true);
+
+                // ── 디버그: 이동 시작 ──
+                Debug.Log($"[GridEntityView] {name}: 이동 시작 → {entity.Position}, Facing={entity.Facing}", this);
             }
 
-            // 회전 목표 갱신
             if (rotateWithFacing)
             {
                 _targetRotation = Quaternion.Euler(0f, 0f, entity.Facing.ToZRotation());
             }
+
+            if (entity.Facing != _lastFacing)
+            {
+                // ── 디버그: 방향 변경 ──
+                Debug.Log($"[GridEntityView] {name}: 방향 변경 {_lastFacing} → {entity.Facing}", this);
+
+                _lastFacing = entity.Facing;
+                UpdateDirectionAnim(entity.Facing);
+            }
         }
 
-        // 선택 마커 표시/숨김.
         public void SyncSelection(bool isSelected)
         {
             if (selectedMarker != null)
-            {
                 selectedMarker.SetActive(isSelected);
-            }
         }
 
         public void ViewMove()
@@ -107,28 +145,24 @@ namespace MyGame2.Stage
         private void Update()
         {
             if (!_isSliding && !rotateWithFacing)
-            {
                 return;
-            }
 
             float dt = Time.deltaTime;
 
-            // 위치 보간 (슬라이딩)
             if (_isSliding)
             {
                 transform.position = Vector3.Lerp(
                     transform.position, _targetPosition, slideSpeed * dt);
 
-                // 도착 판정
                 if ((transform.position - _targetPosition).sqrMagnitude <=
                     snapThreshold * snapThreshold)
                 {
                     transform.position = _targetPosition;
                     _isSliding = false;
+                    UpdateMovingAnim(false);
                 }
             }
 
-            // 회전 보간
             if (rotateWithFacing)
             {
                 transform.rotation = Quaternion.Lerp(
@@ -164,6 +198,33 @@ namespace MyGame2.Stage
                     transform.rotation, _targetRotation, slideSpeed * dt);
                 yield return null;
             }
+        private void UpdateDirectionAnim(Direction facing)
+        {
+            if (!useDirectionAnim || _animator == null) return;
+
+            int dirValue;
+            switch (facing)
+            {
+                case Direction.Up:    dirValue = 1; break;
+                case Direction.Left:  dirValue = 2; break;
+                case Direction.Right: dirValue = 3; break;
+                case Direction.Down:  dirValue = 0; break;
+                default:              dirValue = 0; break;
+            }
+
+            _animator.SetInteger(AnimDirection, dirValue);
+
+            // ── 디버그: Direction 파라미터 설정 ──
+            Debug.Log($"[GridEntityView] {name}: Animator.Direction = {dirValue} ({facing})", this);
+        }
+
+        private void UpdateMovingAnim(bool isMoving)
+        {
+            if (!useDirectionAnim || _animator == null) return;
+            _animator.SetBool(AnimIsMoving, isMoving);
+
+            // ── 디버그: IsMoving 파라미터 설정 ──
+            Debug.Log($"[GridEntityView] {name}: Animator.IsMoving = {isMoving}", this);
         }
     }
 }
