@@ -18,5 +18,5 @@ MonoBehaviour:
   isLethal: 0
   _viewPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595,
     type: 3}
-  _functions:
+  Functions:
   - {fileID: 11400000, guid: 5c6fbd0f32f237c43859c2d95af9d7bb, type: 2}
