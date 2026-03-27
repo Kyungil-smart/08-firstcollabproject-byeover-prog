@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    // 스테이지의 유일한 상태 소유자.
-
     public sealed class StageState
     {
         public const int InvalidEntityId = -1;
@@ -18,6 +16,9 @@ namespace MyGame2.Stage
         private readonly List<int> _cameraIds;
         private readonly List<int> _robotIds;
         private readonly List<int> _animalIds;
+        private readonly List<int> _patrolCameraIds;
+        private readonly List<int> _summonerIds;
+        private readonly List<int> _chaserIds;
 
         private int _nextEntityId;
         private readonly StageEvents _events;
@@ -34,9 +35,12 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> CameraIds { get { return _cameraIds; } }
         public IReadOnlyList<int> RobotIds { get { return _robotIds; } }
         public IReadOnlyList<int> AnimalIds { get { return _animalIds; } }
+        public IReadOnlyList<int> PatrolCameraIds { get { return _patrolCameraIds; } }
+        public IReadOnlyList<int> SummonerIds { get { return _summonerIds; } }
+        public IReadOnlyList<int> ChaserIds { get { return _chaserIds; } }
         public IEnumerable<EntityState> Entities { get { return _entitiesById.Values; } }
         public StageEvents Events { get { return _events; } }
-        public bool IsViewDirty { get; private set; } // view 갱신 필요 여부
+        public bool IsViewDirty { get; private set; }
 
         private StageState(int width, int height, CellData[] cells,
             CellFlags[] originalFlags, StageEvents events)
@@ -52,6 +56,9 @@ namespace MyGame2.Stage
             _cameraIds = new List<int>(8);
             _robotIds = new List<int>(8);
             _animalIds = new List<int>(8);
+            _patrolCameraIds = new List<int>(4);
+            _summonerIds = new List<int>(4);
+            _chaserIds = new List<int>(4);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
             IsViewDirty = false;
@@ -96,23 +103,6 @@ namespace MyGame2.Stage
         private static EntityState CreateEntity(SpawnData spawn)
         {
             return new EntityState(spawn.Def, spawn.Position, spawn.Facing);
-            //---Legacy
-            // switch (spawn.Kind)
-            // {
-            //     case EntityKind.Player:
-            //         return EntityState.CreatePlayer(spawn.Position, spawn.Facing, spawn.PlayerSlot);
-            //     case EntityKind.Box:
-            //         return EntityState.CreateBox(spawn.Position, spawn.BoxOwnership);
-            //     case EntityKind.CameraEnemy:
-            //         return EntityState.CreateCamera(spawn.Position, spawn.Facing,
-            //             spawn.DetectionPattern, spawn.ReverseRotation);
-            //     case EntityKind.RobotEnemy:
-            //         return EntityState.CreateRobot(spawn.Position, spawn.Facing);
-            //     case EntityKind.AnimalEnemy:
-            //         return EntityState.CreateAnimal(spawn.Position, spawn.Facing);
-            //     default:
-            //         throw new ArgumentException($"Unknown EntityKind: {spawn.Kind}");
-            // }
         }
 
         // 읽기 전용 쿼리
@@ -125,6 +115,7 @@ namespace MyGame2.Stage
         public CellData GetCell(GridPos pos) { return _cells[ToIndex(pos)]; }
         public bool HasGoal(GridPos pos) { return GetCell(pos).HasGoal; }
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
+        public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
         public bool OriginalHasTrap(GridPos pos)
@@ -237,7 +228,6 @@ namespace MyGame2.Stage
             _cells[idx] = cell;
         }
 
-        // 모든 카메라를 회전. Fixed3x3은 회전 안 함.
         public void RotateAllCameras()
         {
             for (int i = 0; i < _cameraIds.Count; i++)
@@ -260,7 +250,6 @@ namespace MyGame2.Stage
         public void AdvancePatrolIndex(int entityId)
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return;
-            // PatrolData는 class이므로 Get으로 참조를 받아 바로 수정 가능
             PatrolData patrol = entity.Get<PatrolData>();
             if (patrol == null || !patrol.HasWaypoints) return;
             patrol.AdvanceToNext();
@@ -285,16 +274,34 @@ namespace MyGame2.Stage
             TurnIndex++;
             _events?.RaiseTurnAdvanced(TurnIndex);
         }
-        
-        // view 갱신 필요 표시
-        public void SetViewDirty()
+
+        public void SetViewDirty() { IsViewDirty = true; }
+        public void ClearViewDirty() { IsViewDirty = false; }
+
+        // 런타임 엔티티 소환 (추격 감시자 등)
+        public int SpawnEntity(EntitySO definition, GridPos position, Direction facing)
         {
-            IsViewDirty = true;
+            EntityState entity = new EntityState(definition, position, facing);
+            return AddEntity(entity);
         }
-        // view 갱신 필요 여부 초기화
-        public void ClearViewDirty()
+
+        // 런타임 엔티티 제거 (추격 감시자 소멸 등)
+        public bool RemoveEntity(int entityId)
         {
-            IsViewDirty = false;
+            if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
+            entity.IsAlive = false;
+            ClearOccupant(entity.Position);
+
+            switch (entity.Kind)
+            {
+                case EntityKind.ChaserEnemy:        _chaserIds.Remove(entityId); break;
+                case EntityKind.SummonerEnemy:       _summonerIds.Remove(entityId); break;
+                case EntityKind.PatrolCameraEnemy:   _patrolCameraIds.Remove(entityId); break;
+            }
+
+            _entitiesById.Remove(entityId);
+            _events?.RaiseEntityKilled(entityId);
+            return true;
         }
 
         // 내부
@@ -313,26 +320,31 @@ namespace MyGame2.Stage
                         _entitiesById[a].Get<PlayerData>().Slot
                             .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
                     break;
-                case EntityKind.Box:         _boxIds.Add(entity.Id); break;
-                case EntityKind.CameraEnemy: _cameraIds.Add(entity.Id); break;
-                case EntityKind.RobotEnemy:  _robotIds.Add(entity.Id); break;
-                case EntityKind.AnimalEnemy: _animalIds.Add(entity.Id); break;
+                case EntityKind.Box:                _boxIds.Add(entity.Id); break;
+                case EntityKind.CameraEnemy:         _cameraIds.Add(entity.Id); break;
+                case EntityKind.RobotEnemy:          _robotIds.Add(entity.Id); break;
+                case EntityKind.AnimalEnemy:          _animalIds.Add(entity.Id); break;
+                case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Add(entity.Id); break;
+                case EntityKind.SummonerEnemy:        _summonerIds.Add(entity.Id); break;
+                case EntityKind.ChaserEnemy:          _chaserIds.Add(entity.Id); break;
             }
             return entity.Id;
         }
 
         private void SetOccupant(GridPos pos, int id)
         {
-            int i = ToIndex(pos); 
-            CellData c = _cells[i]; 
-            c.OccupantId = id; 
+            int i = ToIndex(pos);
+            CellData c = _cells[i];
+            c.OccupantId = id;
             _cells[i] = c;
         }
 
         private void ClearOccupant(GridPos pos)
         {
-            int i = ToIndex(pos); CellData c = _cells[i];
-            c.OccupantId = CellData.EmptyOccupantId; _cells[i] = c;
+            int i = ToIndex(pos);
+            CellData c = _cells[i];
+            c.OccupantId = CellData.EmptyOccupantId;
+            _cells[i] = c;
         }
 
         private int ToIndex(GridPos pos) { return (pos.Y * Width) + pos.X; }

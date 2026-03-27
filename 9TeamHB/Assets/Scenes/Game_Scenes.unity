@@ -488,7 +488,7 @@ Camera:
   far clip plane: 1000
   field of view: 34
   orthographic: 1
-  orthographic size: 8
+  orthographic size: 14
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -513,7 +513,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6, y: -7, z: -10}
+  m_LocalPosition: {x: 14, y: -8, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -799,6 +799,8 @@ GameObject:
   m_Component:
   - component: {fileID: 823654581}
   - component: {fileID: 823654580}
+  - component: {fileID: 823654583}
+  - component: {fileID: 823654582}
   m_Layer: 0
   m_Name: StageManager
   m_TagString: Untagged
@@ -827,7 +829,8 @@ MonoBehaviour:
   - {fileID: 4900000, guid: 8840970b8569b154a9d9de8a17bcff07, type: 3}
   - {fileID: 4900000, guid: d288560c58df5684c976270f845f5128, type: 3}
   - {fileID: 4900000, guid: 6461e17077d48804bb1546e688b80a88, type: 3}
-  startStageIndex: 0
+  - {fileID: 4900000, guid: 16b7cb031633a0448986424904aaf6c2, type: 3}
+  startStageIndex: 6
   cellSize: 1
   symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
 --- !u!4 &823654581
@@ -845,6 +848,35 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &823654582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 823654579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4371019f0bdae7b448f8ade8671cbf20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.BushVisualHandler
+  stageManager: {fileID: 823654580}
+  hiddenAlpha: 0.4
+  fadeSpeed: 8
+--- !u!114 &823654583
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 823654579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 126dce9c5b7fa7142b2dfddef1eb1f71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceSlideProcessor
+  stageManager: {fileID: 823654580}
+  slideInterval: 0.07
 --- !u!1 &899949242
 GameObject:
   m_ObjectHideFlags: 0

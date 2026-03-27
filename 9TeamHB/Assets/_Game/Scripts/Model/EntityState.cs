@@ -61,14 +61,21 @@ namespace MyGame2.Stage
         public bool IsCamera { get { return Kind == EntityKind.CameraEnemy; } }
         public bool IsRobot { get { return Kind == EntityKind.RobotEnemy; } }
         public bool IsAnimal { get { return Kind == EntityKind.AnimalEnemy; } }
-        public bool IsMovingEnemy { get { return IsRobot || IsAnimal; } }
-        public bool IsLethalMover { get { return IsRobot || IsAnimal; } } // todo lethal 컴포넌트 
+        
+        public bool IsPatrolCameraEnemy { get { return Kind == EntityKind.PatrolCameraEnemy; } }
+        public bool IsSummonerEnemy { get { return Kind == EntityKind.SummonerEnemy; } }
+        public bool IsChaserEnemy { get { return Kind == EntityKind.ChaserEnemy; } }
+        public bool IsGap { get { return Kind == EntityKind.Gap; } }
+        public bool IsBush { get { return Kind == EntityKind.Bush; } }
+
+        public bool IsMovingEnemy { get { return IsRobot || IsAnimal || IsPatrolCameraEnemy || IsSummonerEnemy || IsChaserEnemy; } }
+        public bool IsLethalMover { get { return IsRobot || IsAnimal || IsPatrolCameraEnemy || IsChaserEnemy; } }
+
         public bool IsPushable { get { return IsPushableObject(); } }
         public GridEntityView Prefab { get { return Definition.Prefab; } }
-
-        /// <summary>
-        /// 해당 엔티티가 특정 플레이어 슬롯에 의해 밀릴 수 있는지 여부를 반환한다.
-        /// </summary>
+        
+        // 해당 엔티티가 특정 플레이어 슬롯에 의해 밀릴 수 있는지 여부를 반환한다.
+       
         public bool CanBePushedBy(int playerSlot)
         {
             if(!Has<InteractionTag>()) 
@@ -170,7 +177,7 @@ namespace MyGame2.Stage
 
         private EntityState() { }
         
-        //--- 내부 로직 ---
+        // 내부 로직
         private bool IsPushableObject()
         {
             if (!Has<Pushable>())
