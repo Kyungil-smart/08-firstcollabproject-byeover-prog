@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: Box_CanNotMove
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
   _kind: 2
+  isBlocking: 1
+  blocksCameraSight: 1
+  isLethal: 0
   _viewPrefab: {fileID: 6042236026587706409, guid: c3289e2f554abf841b42a68159d5b647,
     type: 3}
   _functions: []

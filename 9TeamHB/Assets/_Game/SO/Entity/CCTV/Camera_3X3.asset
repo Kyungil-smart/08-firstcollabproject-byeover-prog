@@ -10,14 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
-  m_Name: Box_PlayerA
+  m_Name: Camera_3X3
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 2
+  _kind: 3
   isBlocking: 1
-  blocksCameraSight: 1
+  blocksCameraSight: 0
   isLethal: 0
-  _viewPrefab: {fileID: 6042236026587706409, guid: 6ac6ff95c78ba154dbd8e8c793b8b3b5,
+  _viewPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595,
     type: 3}
   Functions:
-  - {fileID: 11400000, guid: 5da8af1216947c3428c3f0d49d931735, type: 2}
-  - {fileID: 11400000, guid: c230dc5c49743834a8ae84628059461a, type: 2}
+  - {fileID: 11400000, guid: 5a42282899e1270488724e53cdace300, type: 2}

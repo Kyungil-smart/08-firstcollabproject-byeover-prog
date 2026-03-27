@@ -323,7 +323,10 @@ namespace MyGame2.Stage
 
         private void SetOccupant(GridPos pos, int id)
         {
-            int i = ToIndex(pos); CellData c = _cells[i]; c.OccupantId = id; _cells[i] = c;
+            int i = ToIndex(pos); 
+            CellData c = _cells[i]; 
+            c.OccupantId = id; 
+            _cells[i] = c;
         }
 
         private void ClearOccupant(GridPos pos)

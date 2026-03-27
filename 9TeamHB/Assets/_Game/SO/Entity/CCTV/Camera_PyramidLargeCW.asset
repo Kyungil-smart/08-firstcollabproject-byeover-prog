@@ -10,10 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
-  m_Name: Camera_3X3
+  m_Name: Camera_PyramidLargeCW
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
   _kind: 3
+  isBlocking: 1
+  blocksCameraSight: 0
+  isLethal: 0
   _viewPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595,
     type: 3}
   _functions:
-  - {fileID: 11400000, guid: 5a42282899e1270488724e53cdace300, type: 2}
+  - {fileID: 11400000, guid: b2e9211ed8d2b264fa1fb29194bfd41e, type: 2}

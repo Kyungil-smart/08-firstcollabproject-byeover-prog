@@ -13,8 +13,11 @@ MonoBehaviour:
   m_Name: Box_Shared
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
   _kind: 2
+  isBlocking: 1
+  blocksCameraSight: 1
+  isLethal: 0
   _viewPrefab: {fileID: 6531087665428241085, guid: 1c0eb9dd5543d6248b76165fb5135816,
     type: 3}
-  _functions:
+  Functions:
   - {fileID: 11400000, guid: 5da8af1216947c3428c3f0d49d931735, type: 2}
   - {fileID: 11400000, guid: 82815105112f30f428f7e1f341c4ae79, type: 2}

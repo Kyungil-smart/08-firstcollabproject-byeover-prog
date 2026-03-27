@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MyGame2.Stage
 {
@@ -43,7 +44,7 @@ namespace MyGame2.Stage
 
         public void Set<T>(T data) where T : IComponentData
         {
-            _components[typeof(T)] = data;
+            _components[data.GetType()] = data;
         }
 
         public bool Remove<T>() where T : IComponentData
@@ -89,19 +90,18 @@ namespace MyGame2.Stage
             Position = position;
             Facing = facing;
             IsAlive = true;
+            IsBlocking = definition.isBlocking;
+            BlocksCameraSight = definition.blocksCameraSight;
+
             _components = new Dictionary<Type, IComponentData>();
 
             // SO(정의 def)를 기반으로 컴포넌트를 생성하여 저장
             foreach (var funcDef in definition.Functions) // Functions는 EntitySO의 기능 목록
             {
-                if (funcDef != null)
-                {
-                    var component = funcDef.CreateComponent(this); // 인스턴스 생성
-                    Set(component); // 딕셔너리에 저장
-                }
+                Set(funcDef.CreateComponent(this)); // 딕셔너리에 저장
             }
         }
-        // 팩토리
+        // 팩토리  -- entitySO 기준에서는 사용하지 않음
 
         public static EntityState CreatePlayer(GridPos position, Direction facing, int slot)
         {
@@ -174,7 +174,10 @@ namespace MyGame2.Stage
         private bool IsPushableObject()
         {
             if (!Has<Pushable>())
+            {
+                Debug.Log("주입 로직 실패");
                 return false;
+            }
             return Get<Pushable>().CanBePushed;
         }
     }

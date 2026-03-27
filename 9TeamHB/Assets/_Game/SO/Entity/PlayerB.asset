@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: PlayerB
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
   _kind: 1
+  isBlocking: 1
+  blocksCameraSight: 0
+  isLethal: 0
   _viewPrefab: {fileID: 3109778441806663085, guid: 12f891459776cc147a48b9ae2ff10238,
     type: 3}
-  _functions:
+  Functions:
   - {fileID: 11400000, guid: a12c54c76a24b264cafadbe6ae4cbd66, type: 2}
