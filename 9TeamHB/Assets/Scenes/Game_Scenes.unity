@@ -168,7 +168,7 @@ Transform:
   m_GameObject: {fileID: 42561337}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 68.46333, y: 50.69973, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -634,6 +634,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.PlayerController
   stageManager: {fileID: 823654580}
   gameManager: {fileID: 1573434693}
+  warpEffect: {fileID: 960270564}
   moveRepeatInterval: 0.2
 --- !u!4 &651220626
 Transform:
@@ -692,7 +693,7 @@ Transform:
   m_GameObject: {fileID: 796616004}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 68.46333, y: 50.69973, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -821,8 +822,14 @@ MonoBehaviour:
   prefabRegistry: {fileID: 127105790}
   stageFiles:
   - {fileID: 4900000, guid: 9a0b763351ddac247bedade0cad3b1db, type: 3}
+  - {fileID: 4900000, guid: 80ac11f4fd3ff064fbc8efde2f36cb5e, type: 3}
+  - {fileID: 4900000, guid: de45bba8dafd6ba4ab7f186f5b3bf485, type: 3}
+  - {fileID: 4900000, guid: 8840970b8569b154a9d9de8a17bcff07, type: 3}
+  - {fileID: 4900000, guid: d288560c58df5684c976270f845f5128, type: 3}
+  - {fileID: 4900000, guid: 6461e17077d48804bb1546e688b80a88, type: 3}
   startStageIndex: 0
   cellSize: 1
+  symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
 --- !u!4 &823654581
 Transform:
   m_ObjectHideFlags: 0
@@ -895,6 +902,66 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 4.46121, y: -3.8951, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &960270563
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 960270565}
+  - component: {fileID: 960270564}
+  m_Layer: 0
+  m_Name: StageWarpEffect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &960270564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 960270563}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e64ecc701ab6bd144800e0926f89340e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.StageWarpEffect
+  stageManager: {fileID: 823654580}
+  warpColor: {r: 0.3, g: 0.7, b: 1, a: 1}
+  particleLeadDuration: 1
+  spawnFadeInDuration: 0.8
+  spawnColorRestoreDuration: 0.3
+  startDelay: 0.8
+  colorShiftDuration: 0.3
+  shatterDuration: 1.5
+  particleTrailDuration: 0.6
+  pauseBetween: 0.5
+  chunkPixelSize: 4
+  shatterRiseHeight: 5
+  shatterDrift: 0.3
+  particleCount: 40
+  particleSpeed: 4
+  particleSize: 0.1
+--- !u!4 &960270565
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 960270563}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.67218, y: 43.8978, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1098,3 +1165,4 @@ SceneRoots:
   - {fileID: 798416400}
   - {fileID: 42561339}
   - {fileID: 796616006}
+  - {fileID: 960270565}
