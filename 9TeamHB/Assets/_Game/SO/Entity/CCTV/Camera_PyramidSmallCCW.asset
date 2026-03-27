@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
+  m_Name: Camera_PyramidSmallCCW
+  m_EditorClassIdentifier: Assembly-CSharp::EntitySO
+  _kind: 3
+  isBlocking: 1
+  blocksCameraSight: 0
+  isLethal: 0
+  _viewPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595,
+    type: 3}
+  _functions:
+  - {fileID: 11400000, guid: 25b9b1e598afdec4d8524e0f1049733d, type: 2}

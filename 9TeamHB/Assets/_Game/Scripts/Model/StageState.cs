@@ -36,6 +36,7 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> AnimalIds { get { return _animalIds; } }
         public IEnumerable<EntityState> Entities { get { return _entitiesById.Values; } }
         public StageEvents Events { get { return _events; } }
+        public bool IsViewDirty { get; private set; } // view 갱신 필요 여부
 
         private StageState(int width, int height, CellData[] cells,
             CellFlags[] originalFlags, StageEvents events)
@@ -53,6 +54,7 @@ namespace MyGame2.Stage
             _animalIds = new List<int>(8);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
+            IsViewDirty = false;
         }
 
         // 팩토리
@@ -93,22 +95,24 @@ namespace MyGame2.Stage
 
         private static EntityState CreateEntity(SpawnData spawn)
         {
-            switch (spawn.Kind)
-            {
-                case EntityKind.Player:
-                    return EntityState.CreatePlayer(spawn.Position, spawn.Facing, spawn.PlayerSlot);
-                case EntityKind.Box:
-                    return EntityState.CreateBox(spawn.Position, spawn.BoxOwnership);
-                case EntityKind.CameraEnemy:
-                    return EntityState.CreateCamera(spawn.Position, spawn.Facing,
-                        spawn.DetectionPattern, spawn.ReverseRotation);
-                case EntityKind.RobotEnemy:
-                    return EntityState.CreateRobot(spawn.Position, spawn.Facing);
-                case EntityKind.AnimalEnemy:
-                    return EntityState.CreateAnimal(spawn.Position, spawn.Facing);
-                default:
-                    throw new ArgumentException($"Unknown EntityKind: {spawn.Kind}");
-            }
+            return new EntityState(spawn.Def, spawn.Position, spawn.Facing);
+            //---Legacy
+            // switch (spawn.Kind)
+            // {
+            //     case EntityKind.Player:
+            //         return EntityState.CreatePlayer(spawn.Position, spawn.Facing, spawn.PlayerSlot);
+            //     case EntityKind.Box:
+            //         return EntityState.CreateBox(spawn.Position, spawn.BoxOwnership);
+            //     case EntityKind.CameraEnemy:
+            //         return EntityState.CreateCamera(spawn.Position, spawn.Facing,
+            //             spawn.DetectionPattern, spawn.ReverseRotation);
+            //     case EntityKind.RobotEnemy:
+            //         return EntityState.CreateRobot(spawn.Position, spawn.Facing);
+            //     case EntityKind.AnimalEnemy:
+            //         return EntityState.CreateAnimal(spawn.Position, spawn.Facing);
+            //     default:
+            //         throw new ArgumentException($"Unknown EntityKind: {spawn.Kind}");
+            // }
         }
 
         // 읽기 전용 쿼리
@@ -281,6 +285,17 @@ namespace MyGame2.Stage
             TurnIndex++;
             _events?.RaiseTurnAdvanced(TurnIndex);
         }
+        
+        // view 갱신 필요 표시
+        public void SetViewDirty()
+        {
+            IsViewDirty = true;
+        }
+        // view 갱신 필요 여부 초기화
+        public void ClearViewDirty()
+        {
+            IsViewDirty = false;
+        }
 
         // 내부
 
@@ -308,7 +323,10 @@ namespace MyGame2.Stage
 
         private void SetOccupant(GridPos pos, int id)
         {
-            int i = ToIndex(pos); CellData c = _cells[i]; c.OccupantId = id; _cells[i] = c;
+            int i = ToIndex(pos); 
+            CellData c = _cells[i]; 
+            c.OccupantId = id; 
+            _cells[i] = c;
         }
 
         private void ClearOccupant(GridPos pos)

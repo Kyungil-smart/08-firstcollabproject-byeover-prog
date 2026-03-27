@@ -5,5 +5,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "Poo", menuName = "Scriptable Objects/EntityFunction/Poo")]
 public class Poo: EntityFunctionSO
 {
-    
+    public override IComponentData CreateComponent(EntityState owner)
+    {
+        throw new System.NotImplementedException();
+    }
 }

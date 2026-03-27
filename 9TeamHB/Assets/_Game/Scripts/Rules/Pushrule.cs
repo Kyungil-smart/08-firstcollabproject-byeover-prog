@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace MyGame2.Stage
 {
     // 상자 밀기 규칙.
@@ -7,10 +9,11 @@ namespace MyGame2.Stage
         // 밀기 가능 여부 판정. 상태 변경 없음.
         public bool CanPush(StageState state, int pusherId, int boxId, Direction direction)
         {
+            Debug.Log("Check Push");
             if (!state.TryGetEntity(pusherId, out EntityState pusher)) return false;
             if (!state.TryGetEntity(boxId, out EntityState box)) return false;
-            if (!box.IsBox || !box.IsAlive) return false;
-            if (!box.Get<BoxData>().CanBePushedBy(pusher.Get<PlayerData>().Slot)) return false;
+            if (!box.IsPushable || !box.IsAlive) return false;
+            if (!box.CanBePushedBy(pusher.Get<PlayerData>().Slot)) return false;
 
             GridPos dest = box.Position.Move(direction);
             if (!state.IsInside(dest)) return false;

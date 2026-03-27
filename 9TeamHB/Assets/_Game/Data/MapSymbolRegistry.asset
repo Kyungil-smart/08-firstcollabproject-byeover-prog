@@ -41,119 +41,119 @@ MonoBehaviour:
     description: Player1
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: eb252a6d354ccda4cb68a10fb5090c79, type: 2}
+    entityConfig: {fileID: 11400000, guid: 574756ab6833eb84faeaa8be80a630ca, type: 2}
     facing: 3
   - symbol: 50
     description: Player2
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: fc50e2cf4928c594a858704c3c441efd, type: 2}
+    entityConfig: {fileID: 11400000, guid: ba89e765c3f668b43b0743d6f26853a3, type: 2}
     facing: 3
   - symbol: 66
     description: Box
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 0ae54fb6eec1e21439ed8da5405f99e7, type: 2}
+    entityConfig: {fileID: 11400000, guid: 48a0fdc8dc0094740a474b12349ccdf7, type: 2}
     facing: 0
   - symbol: 89
     description: "P1\uC804\uC6A9 \uC0C1\uC790"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 41f797736bcc46a479f8a4de58a4f1ff, type: 2}
+    entityConfig: {fileID: 11400000, guid: 46c84c3c4c3af4648899f9fd1f20b726, type: 2}
     facing: 0
   - symbol: 79
     description: "P2\uC804\uC6A9 \uC0C1\uC790"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 19b01f8daca38a841af9c41f647d01af, type: 2}
+    entityConfig: {fileID: 11400000, guid: 104ba441a03c8764e9d7574512baa91a, type: 2}
     facing: 0
   - symbol: 88
     description: "\uCCA0 \uC0C1\uC790"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 2edc3de41de8117408294ff5c276ec7b, type: 2}
+    entityConfig: {fileID: 11400000, guid: ad0888a1b380af64ebece3dfeeaa32b7, type: 2}
     facing: 0
   - symbol: 97
     description: "\uCE74\uBA54\uB77C LineShortCW"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: c835aab1016553a41ae89d3f1a7eb212, type: 2}
+    entityConfig: {fileID: 11400000, guid: 65f754c5b879d9842905228bda784fb1, type: 2}
     facing: 1
   - symbol: 98
     description: "\uCE74\uBA54\uB77C LineLongCW"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 111fdf88c86486c43b3b1ac42e676b0f, type: 2}
+    entityConfig: {fileID: 11400000, guid: 65f754c5b879d9842905228bda784fb1, type: 2}
     facing: 1
   - symbol: 99
     description: "\uCE74\uBA54\uB77C PyramidSmall CW"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: d58bf8db08319054393501b99b255922, type: 2}
+    entityConfig: {fileID: 11400000, guid: 64299b53225cb274195306bad7d44043, type: 2}
     facing: 1
   - symbol: 100
     description: "\uCE74\uBA54\uB77C PyramidLargeCW"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 602d0184c60e9884f92bd05a5d78c04e, type: 2}
+    entityConfig: {fileID: 11400000, guid: b7a9726ac1218dc47b3a2d72cd180d71, type: 2}
     facing: 1
   - symbol: 101
     description: "\uCE74\uBA54\uB77C LineShortCCW"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 123884862946fbf4387a573cddb8711f, type: 2}
+    entityConfig: {fileID: 11400000, guid: 60e08fe9f78da63419698eca7a3f3e37, type: 2}
     facing: 1
   - symbol: 102
     description: "\uCE74\uBA54\uB77C LineLongCCW"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 02499ae68805aa34c892d7f4db798125, type: 2}
+    entityConfig: {fileID: 11400000, guid: 020217e4a2bd9504e9c53e13cc5befea, type: 2}
     facing: 1
   - symbol: 103
     description: "\uCE74\uBA54\uB77C PyramidSmallCCW"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 70c52d0e64ad6cb4382c2e121480a9b6, type: 2}
+    entityConfig: {fileID: 11400000, guid: 38955e2f841f4a64b82e210833bb53a4, type: 2}
     facing: 1
   - symbol: 104
     description: "\uCE74\uBA54\uB77C PyramidLargeCCW"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: f0c57871905e6b44b96b7734915bff1d, type: 2}
+    entityConfig: {fileID: 11400000, guid: 604b1aa4e269f3d49bcb0db6deaabde0, type: 2}
     facing: 1
   - symbol: 115
     description: "\uACE0\uC815 3\xD73(\uC544\uB798)"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 5ef983770548ed8438292b3830ce91c5, type: 2}
+    entityConfig: {fileID: 11400000, guid: 0293eb5fba550e041ab17a951fcae344, type: 2}
     facing: 0
   - symbol: 83
     description: "\uACE0\uC815 3\xD73 (\uC704)"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 5ef983770548ed8438292b3830ce91c5, type: 2}
+    entityConfig: {fileID: 11400000, guid: 0293eb5fba550e041ab17a951fcae344, type: 2}
     facing: 1
   - symbol: 62
     description: "\uCE74\uBA54\uB77CR"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 5ef983770548ed8438292b3830ce91c5, type: 2}
+    entityConfig: {fileID: 11400000, guid: 0293eb5fba550e041ab17a951fcae344, type: 2}
     facing: 4
   - symbol: 60
     description: "\uCE74\uBA54\uB77CL"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 5ef983770548ed8438292b3830ce91c5, type: 2}
+    entityConfig: {fileID: 11400000, guid: 0293eb5fba550e041ab17a951fcae344, type: 2}
     facing: 2
   - symbol: 82
     description: "\uB85C\uBD07"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: 4b8c3f1206c8e854793ca48737b35ab2, type: 2}
+    entityConfig: {fileID: 11400000, guid: 45cf2c5584060c248ab75179db099c5d, type: 2}
     facing: 4
   - symbol: 65
     description: "\uB3D9\uBB3C"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: d09e803fc241124409d4e3ff0e6bd3f7, type: 2}
+    entityConfig: {fileID: 11400000, guid: fe699ce4ae355834f8a230066d5037ea, type: 2}
     facing: 4

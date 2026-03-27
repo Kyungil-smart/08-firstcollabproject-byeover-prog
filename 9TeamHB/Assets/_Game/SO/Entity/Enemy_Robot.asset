@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
+  m_Name: Enemy_Robot
+  m_EditorClassIdentifier: Assembly-CSharp::EntitySO
+  _kind: 4
+  isBlocking: 1
+  blocksCameraSight: 0
+  isLethal: 1
+  _viewPrefab: {fileID: 651025039593506988, guid: 055e99416d717bc40bb92d5e9f93bb16,
+    type: 3}
+  Functions:
+  - {fileID: 11400000, guid: 09acc74c87713c24cb22cef184827dee, type: 2}
