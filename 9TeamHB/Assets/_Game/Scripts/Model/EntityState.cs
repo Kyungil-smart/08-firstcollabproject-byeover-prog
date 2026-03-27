@@ -22,6 +22,7 @@ namespace MyGame2.Stage
         public bool IsBlocking;
         public bool BlocksCameraSight;
         public EntitySO Definition;
+        public GridEntityView View;
 
         // 컴포넌트 저장소
 
@@ -62,7 +63,7 @@ namespace MyGame2.Stage
         public bool IsRobot { get { return Kind == EntityKind.RobotEnemy; } }
         public bool IsAnimal { get { return Kind == EntityKind.AnimalEnemy; } }
         public bool IsMovingEnemy { get { return IsRobot || IsAnimal; } }
-        public bool IsLethalMover { get { return IsRobot || IsAnimal; } } // todo lethal 컴포넌트 
+        public bool IsLethalMover { get { return Definition.isLethal; } }  
         public bool IsPushable { get { return IsPushableObject(); } }
         public GridEntityView Prefab { get { return Definition.Prefab; } }
 
@@ -175,7 +176,6 @@ namespace MyGame2.Stage
         {
             if (!Has<Pushable>())
             {
-                Debug.Log("주입 로직 실패");
                 return false;
             }
             return Get<Pushable>().CanBePushed;

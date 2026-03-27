@@ -33,14 +33,13 @@ namespace MyGame2.Stage
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.OutOfBounds);
 
             CellData cell = state.GetCell(target);
-            if (cell.HasWall)
+            if (cell.HasWall||cell.HasCrack)
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
 
             if (cell.IsOccupied)
             {
                 if (state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
                 {
-                    Debug.Log(occupant.IsPushable);
                     // 적이 플레이어 위치로 이동 → ContactKill
                     if (mover.IsLethalMover && occupant.IsPlayer)
                         return MoveResult.ContactKill(moverId, occupant.Id, from, target);
@@ -52,7 +51,6 @@ namespace MyGame2.Stage
                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
                     }
                 }
-                Debug.Log("점유지역 이동 막힘");
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
             }
 

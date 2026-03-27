@@ -162,6 +162,7 @@ namespace MyGame2.Stage
                 GridEntityView prefab = e.Prefab;
                 if (prefab == null) continue;
                 GridEntityView view = Instantiate(prefab, entityRoot);
+                e.View = view;
                 view.name = $"{e.Kind}_{e.Id}";
                 view.Bind(e, cellSize);
                 _views[e.Id] = view;

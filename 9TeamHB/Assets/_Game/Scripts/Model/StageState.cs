@@ -125,6 +125,7 @@ namespace MyGame2.Stage
         public CellData GetCell(GridPos pos) { return _cells[ToIndex(pos)]; }
         public bool HasGoal(GridPos pos) { return GetCell(pos).HasGoal; }
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
+        public bool HasCrack(GridPos pos) { return GetCell(pos).HasCrack; }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
         public bool OriginalHasTrap(GridPos pos)
@@ -235,6 +236,26 @@ namespace MyGame2.Stage
             CellData cell = _cells[idx];
             cell.Flags |= CellFlags.Trap;
             _cells[idx] = cell;
+        }
+
+        public void SetCrackMovable(GridPos position, int boxId)
+        {
+            if (!IsInside(position)) return;
+            int idx = ToIndex(position);
+            CellData cell = _cells[idx];
+            if (!cell.HasCrack) return;
+            cell.Flags &= ~CellFlags.Crack;
+            cell.OccupantId = -1;
+            _cells[idx] = cell;
+
+            if (TryGetEntity(boxId, out EntityState box))
+            {
+                if (!box.Has<Fallable>())
+                {
+                    return;
+                }
+                box.Get<Fallable>().StartFallAnimation(box.View);
+            }
         }
 
         // 모든 카메라를 회전. Fixed3x3은 회전 안 함.

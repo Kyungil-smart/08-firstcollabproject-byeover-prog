@@ -9,7 +9,6 @@ namespace MyGame2.Stage
         // 밀기 가능 여부 판정. 상태 변경 없음.
         public bool CanPush(StageState state, int pusherId, int boxId, Direction direction)
         {
-            Debug.Log("Check Push");
             if (!state.TryGetEntity(pusherId, out EntityState pusher)) return false;
             if (!state.TryGetEntity(boxId, out EntityState box)) return false;
             if (!box.IsPushable || !box.IsAlive) return false;
@@ -32,6 +31,8 @@ namespace MyGame2.Stage
 
             GridPos dest = box.Position.Move(direction);
             state.TryMoveEntity(boxId, dest);
+            if(state.HasCrack(dest))
+                state.SetCrackMovable(dest, boxId);
 
             if (state.HasTrap(dest))
                 state.DisableTrap(dest);

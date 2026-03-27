@@ -41,6 +41,7 @@ namespace MyGame2.Stage
 
         // 워프 연출 완료 후 다음 스테이지 로드 트리거.
         public event Action WarpComplete;
+
         
         // 발행 메서드 (StageState, TurnSystem 등이 호출)
         

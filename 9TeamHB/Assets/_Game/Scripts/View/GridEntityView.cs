@@ -24,8 +24,6 @@ namespace MyGame2.Stage
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
         private bool _isSliding;
-        private Coroutine _moveCoroutine;
-        private Coroutine _rotateCoroutine;
         private Animator _animator;
         private Direction _lastFacing;
 
@@ -127,21 +125,6 @@ namespace MyGame2.Stage
                 selectedMarker.SetActive(isSelected);
         }
 
-        public void ViewMove()
-        {
-            if(_moveCoroutine != null)
-                StopCoroutine(_moveCoroutine);
-            _moveCoroutine = StartCoroutine(MoveRoutine());
-        }
-
-        public void ViewRotate()
-        {
-            if(_rotateCoroutine != null)
-                StopCoroutine(_rotateCoroutine);
-            _rotateCoroutine = StartCoroutine(RotateRoutine());
-        }
-        
-
         private void Update()
         {
             if (!_isSliding && !rotateWithFacing)
@@ -167,37 +150,6 @@ namespace MyGame2.Stage
             {
                 transform.rotation = Quaternion.Lerp(
                     transform.rotation, _targetRotation, slideSpeed * dt);
-            }
-        }
-
-        IEnumerator MoveRoutine()
-        {
-            float dt = Time.deltaTime;
-            while (_isSliding)
-            {
-                transform.position = Vector3.Lerp(
-                    transform.position, _targetPosition, slideSpeed * dt);
-
-                if ((transform.position - _targetPosition).sqrMagnitude <=
-                    snapThreshold * snapThreshold)
-                {
-                    transform.position = _targetPosition;
-                    _isSliding = false;
-                    UpdateMovingAnim(false);
-                }
-
-                yield return null;
-            }
-        }
-
-        IEnumerator RotateRoutine()
-        {
-            float dt = Time.deltaTime;
-            while (rotateWithFacing)
-            {
-                transform.rotation = Quaternion.Lerp(
-                    transform.rotation, _targetRotation, slideSpeed * dt);
-                yield return null;
             }
         }
 
