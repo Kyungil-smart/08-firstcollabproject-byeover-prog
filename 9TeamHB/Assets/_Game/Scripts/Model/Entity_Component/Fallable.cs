@@ -6,15 +6,23 @@ public class Fallable : IComponentData
 {
     private float _fallDuration;
     private float _fallDistance;
+    private EntityState _owner;
 
-    public Fallable(float duration, float distance)
+    public Fallable(float duration, float distance, EntityState owner)
     {
         _fallDuration = duration;
         _fallDistance = distance;
+        _owner = owner;
     }
-    public void StartFallAnimation(GridEntityView view)
+    public void StartFallAnimation(StageState state)
     {
-        view.StartCoroutine(FallAnimation(view));
+        var request = new ViewRequest
+        {
+            Id = _owner.Id,
+            Callback = (v) => v.StartCoroutine(FallAnimation(v))
+        };
+
+        state.Events.RaiseViewRequest(request);
     }
 
     IEnumerator FallAnimation(GridEntityView view)

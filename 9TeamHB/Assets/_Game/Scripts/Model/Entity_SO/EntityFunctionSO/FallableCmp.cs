@@ -11,6 +11,6 @@ public class FallableCmp: EntityFunctionSO
     
     public override IComponentData CreateComponent(EntityState owner)
     {
-        return new Fallable(_fallDuration, _fallDistance);
+        return new Fallable(_fallDuration, _fallDistance, owner);
     }
 }

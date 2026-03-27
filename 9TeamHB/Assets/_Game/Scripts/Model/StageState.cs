@@ -254,7 +254,7 @@ namespace MyGame2.Stage
                 {
                     return;
                 }
-                box.Get<Fallable>().StartFallAnimation(box.View);
+                box.Get<Fallable>().StartFallAnimation(this);
             }
         }
 

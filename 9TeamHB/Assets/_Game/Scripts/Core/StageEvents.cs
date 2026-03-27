@@ -42,6 +42,15 @@ namespace MyGame2.Stage
         // 워프 연출 완료 후 다음 스테이지 로드 트리거.
         public event Action WarpComplete;
 
+        // ID로 view 콜백을 위한 이벤트 딕셔너리
+        private Dictionary<int, Action<ViewRequest>> _viewRequests = new();
+
+        public void ViewRequestSubscribe(int id, Action<ViewRequest> request)
+        {
+            _viewRequests[id] = request;
+        }
+        
+
         
         // 발행 메서드 (StageState, TurnSystem 등이 호출)
         
@@ -95,6 +104,14 @@ namespace MyGame2.Stage
             WarpComplete?.Invoke();
         }
 
+        public void RaiseViewRequest(ViewRequest request)
+        { 
+            if(_viewRequests.TryGetValue(request.Id, out var callback))
+            {
+                callback?.Invoke(request);
+            }
+        }
+
        
         // 모든 구독자를 해제한다.
         // 스테이지 전환 시 이전 구독을 깨끗하게 정리할 때 사용.
@@ -110,6 +127,13 @@ namespace MyGame2.Stage
             TurnExecuted = null;
             StageLoaded = null;
             WarpComplete = null;
+            _viewRequests.Clear();
         }
+    }
+
+    public struct ViewRequest
+    {
+        public int Id;
+        public Action<GridEntityView> Callback;
     }
 }

@@ -22,7 +22,6 @@ namespace MyGame2.Stage
         public bool IsBlocking;
         public bool BlocksCameraSight;
         public EntitySO Definition;
-        public GridEntityView View;
 
         // 컴포넌트 저장소
 

@@ -181,5 +181,10 @@ namespace MyGame2.Stage
             // ── 디버그: IsMoving 파라미터 설정 ──
             //Debug.Log($"[GridEntityView] {name}: Animator.IsMoving = {isMoving}", this);
         }
+
+        public void OnRequestView(ViewRequest request)
+        {
+            request.Callback(this);
+        }
     }
 }
