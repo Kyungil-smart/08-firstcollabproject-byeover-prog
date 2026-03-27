@@ -7,12 +7,12 @@ public class HUDController : MonoBehaviour
     
     public void Start()
     {
-        // 시작할 때 브금 재생 시작.
+        // 인게임 시작할 때 브금 재생 시작. 
         // 브금 재생
-        if (InGameSoundManager.Instance.mainBGM != null)
-        {
-            InGameSoundManager.Instance.PlayBGM(InGameSoundManager.Instance.mainBGM);
-        }
+        // if (InGameSoundManager.Instance.mainBGM != null)
+        // {
+        //     InGameSoundManager.Instance.PlayBGM(InGameSoundManager.Instance.mainBGM);
+        // }
         // 시작 시 타이머 재생
         
     }

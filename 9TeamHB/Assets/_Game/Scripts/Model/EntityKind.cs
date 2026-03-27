@@ -19,7 +19,9 @@ namespace MyGame2.Stage
         // 주황색 — Player2만 밀기 가능
         Player2Only = 2,
         // 빨간색 — 아무도 못 밂 (철 상자)
-        Iron = 3
+        Iron = 3,
+        // 파란색 — 밀면 벽이나 오브젝트에 닿을 때까지 미끄러짐
+        Ice = 4
     }
 
     public enum CameraType

@@ -2,19 +2,10 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    /// <summary>
-    /// 엔티티 설정 템플릿 (ScriptableObject).
-    /// 인스펙터에서 엔티티의 종류, 속성, 컴포넌트를 조합할 수 있다.
-    /// 런타임에 CreateEntity()로 EntityState를 생성한다.
-    ///
-    /// [생성 방법]
-    /// Project 창 우클릭 → Create → Stage → Entity Config
-    ///
-    /// [사용 예시]
-    /// - 새 적 타입을 코드 없이 만들 때
-    /// - 기존 엔티티의 속성을 인스펙터에서 조정할 때
-    /// - 프리팹과 함께 관리할 때
-    /// </summary>
+    // 엔티티 설정 템플릿 (ScriptableObject).
+    // 인스펙터에서 엔티티의 종류, 속성, 컴포넌트를 조합할 수 있다.
+    // 런타임에 CreateEntity()로 EntityState를 생성한다.
+   
     [CreateAssetMenu(
         fileName = "NewEntityConfig",
         menuName = "Stage/Entity Config",
@@ -33,10 +24,8 @@ namespace MyGame2.Stage
 
         [Tooltip("접촉 시 플레이어를 죽이는가?")]
         public bool isLethal = false;
-
-        // ─────────────────────────────────────────────
+        
         // 컴포넌트 설정 (체크한 것만 EntityState에 부착)
-        // ─────────────────────────────────────────────
 
         [Header("Player 컴포넌트")]
         [Tooltip("체크하면 PlayerData 부착")]
@@ -51,6 +40,10 @@ namespace MyGame2.Stage
 
         [Tooltip("상자 소유권")]
         public BoxType boxOwnership = BoxType.Shared;
+
+        [Header("얼음 미끄러짐 컴포넌트")]
+        [Tooltip("체크하면 IceSlideData 부착 — 밀었을 때 벽/오브젝트에 닿을 때까지 미끄러짐")]
+        public bool useIceSlide;
 
         [Header("Camera 컴포넌트")]
         [Tooltip("체크하면 CameraData 부착")]
@@ -69,15 +62,11 @@ namespace MyGame2.Stage
         [Header("View 연결")]
         [Tooltip("이 엔티티의 프리팹 (GridEntityView 부착된 것)")]
         public GridEntityView viewPrefab;
-
-        // ─────────────────────────────────────────────
+        
         // 런타임 변환
-        // ─────────────────────────────────────────────
-
-        /// <summary>
-        /// SO 설정으로부터 EntityState를 생성한다.
-        /// position, facing은 맵 로드 시 결정되므로 파라미터로 받는다.
-        /// </summary>
+        // SO 설정으로부터 EntityState를 생성한다.
+        // position, facing은 맵 로드 시 결정되므로 파라미터로 받는다.
+      
         public EntityState CreateEntity(GridPos position, Direction facing)
         {
             // 기본 팩토리로 생성
@@ -122,6 +111,9 @@ namespace MyGame2.Stage
 
             if (useBoxData && !entity.Has<BoxData>())
                 entity.Set(new BoxData(boxOwnership));
+
+            if (useIceSlide && !entity.Has<IceSlideData>())
+                entity.Set(new IceSlideData(false, Direction.None));
 
             if (useCameraData && !entity.Has<CameraData>())
                 entity.Set(new CameraData(cameraPattern, reverseRotation));

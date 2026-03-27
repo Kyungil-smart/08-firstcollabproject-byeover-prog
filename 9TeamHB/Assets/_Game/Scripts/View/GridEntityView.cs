@@ -1,3 +1,5 @@
+using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace MyGame2.Stage
@@ -22,6 +24,8 @@ namespace MyGame2.Stage
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
         private bool _isSliding;
+        private Coroutine _moveCoroutine;
+        private Coroutine _rotateCoroutine;
         private Animator _animator;
         private Direction _lastFacing;
 
@@ -36,13 +40,13 @@ namespace MyGame2.Stage
                 : GetComponentInChildren<Animator>();
 
             // ── 디버그: Animator 연결 확인 ──
-            if (useDirectionAnim)
-            {
-                if (_animator == null)
-                    Debug.LogError($"[GridEntityView] {name}: useDirectionAnim이 켜져있는데 Animator를 찾을 수 없음!", this);
-                else
-                    Debug.Log($"[GridEntityView] {name}: Animator 연결됨 → {_animator.name}", this);
-            }
+            // if (useDirectionAnim)
+            // {
+            //     if (_animator == null)
+            //         Debug.LogError($"[GridEntityView] {name}: useDirectionAnim이 켜져있는데 Animator를 찾을 수 없음!", this);
+            //     else
+            //         Debug.Log($"[GridEntityView] {name}: Animator 연결됨 → {_animator.name}", this);
+            // }
         }
 
         public void Bind(EntityState entity, float cellSize)
@@ -99,7 +103,7 @@ namespace MyGame2.Stage
                 UpdateMovingAnim(true);
 
                 // ── 디버그: 이동 시작 ──
-                Debug.Log($"[GridEntityView] {name}: 이동 시작 → {entity.Position}, Facing={entity.Facing}", this);
+                //Debug.Log($"[GridEntityView] {name}: 이동 시작 → {entity.Position}, Facing={entity.Facing}", this);
             }
 
             if (rotateWithFacing)
@@ -110,7 +114,7 @@ namespace MyGame2.Stage
             if (entity.Facing != _lastFacing)
             {
                 // ── 디버그: 방향 변경 ──
-                Debug.Log($"[GridEntityView] {name}: 방향 변경 {_lastFacing} → {entity.Facing}", this);
+                //Debug.Log($"[GridEntityView] {name}: 방향 변경 {_lastFacing} → {entity.Facing}", this);
 
                 _lastFacing = entity.Facing;
                 UpdateDirectionAnim(entity.Facing);
@@ -122,6 +126,21 @@ namespace MyGame2.Stage
             if (selectedMarker != null)
                 selectedMarker.SetActive(isSelected);
         }
+
+        public void ViewMove()
+        {
+            if(_moveCoroutine != null)
+                StopCoroutine(_moveCoroutine);
+            _moveCoroutine = StartCoroutine(MoveRoutine());
+        }
+
+        public void ViewRotate()
+        {
+            if(_rotateCoroutine != null)
+                StopCoroutine(_rotateCoroutine);
+            _rotateCoroutine = StartCoroutine(RotateRoutine());
+        }
+        
 
         private void Update()
         {
@@ -151,6 +170,37 @@ namespace MyGame2.Stage
             }
         }
 
+        IEnumerator MoveRoutine()
+        {
+            float dt = Time.deltaTime;
+            while (_isSliding)
+            {
+                transform.position = Vector3.Lerp(
+                    transform.position, _targetPosition, slideSpeed * dt);
+
+                if ((transform.position - _targetPosition).sqrMagnitude <=
+                    snapThreshold * snapThreshold)
+                {
+                    transform.position = _targetPosition;
+                    _isSliding = false;
+                    UpdateMovingAnim(false);
+                }
+
+                yield return null;
+            }
+        }
+
+        IEnumerator RotateRoutine()
+        {
+            float dt = Time.deltaTime;
+            while (rotateWithFacing)
+            {
+                transform.rotation = Quaternion.Lerp(
+                    transform.rotation, _targetRotation, slideSpeed * dt);
+                yield return null;
+            }
+        }
+
         private void UpdateDirectionAnim(Direction facing)
         {
             if (!useDirectionAnim || _animator == null) return;
@@ -168,7 +218,7 @@ namespace MyGame2.Stage
             _animator.SetInteger(AnimDirection, dirValue);
 
             // ── 디버그: Direction 파라미터 설정 ──
-            Debug.Log($"[GridEntityView] {name}: Animator.Direction = {dirValue} ({facing})", this);
+            //Debug.Log($"[GridEntityView] {name}: Animator.Direction = {dirValue} ({facing})", this);
         }
 
         private void UpdateMovingAnim(bool isMoving)
@@ -177,7 +227,7 @@ namespace MyGame2.Stage
             _animator.SetBool(AnimIsMoving, isMoving);
 
             // ── 디버그: IsMoving 파라미터 설정 ──
-            Debug.Log($"[GridEntityView] {name}: Animator.IsMoving = {isMoving}", this);
+            //Debug.Log($"[GridEntityView] {name}: Animator.IsMoving = {isMoving}", this);
         }
     }
 }

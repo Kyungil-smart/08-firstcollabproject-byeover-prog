@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace MyGame2.Stage
 {
     // 이동 가능 여부를 판정한다. 상태를 변경하지 않는다.
@@ -38,18 +40,19 @@ namespace MyGame2.Stage
             {
                 if (state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
                 {
+                    Debug.Log(occupant.IsPushable);
                     // 적이 플레이어 위치로 이동 → ContactKill
                     if (mover.IsLethalMover && occupant.IsPlayer)
                         return MoveResult.ContactKill(moverId, occupant.Id, from, target);
 
                     // 플레이어가 상자를 밀려는 경우 → 판정만
-                    if (mover.IsPlayer && occupant.IsBox)
+                    if (mover.IsPlayer && occupant.IsPushable)
                     {
                         if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
                     }
                 }
-
+                Debug.Log("점유지역 이동 막힘");
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
             }
 
