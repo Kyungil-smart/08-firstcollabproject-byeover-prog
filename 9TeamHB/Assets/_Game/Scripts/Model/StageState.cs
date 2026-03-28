@@ -228,6 +228,42 @@ namespace MyGame2.Stage
             _cells[idx] = cell;
         }
 
+        // 지정 셀에 함정 플래그 켜기 (TrapifyCells 내부용)
+        private void EnableTrap(GridPos position)
+        {
+            if (!IsInside(position)) return;
+            int idx = ToIndex(position);
+            CellData cell = _cells[idx];
+            cell.Flags |= CellFlags.Trap;
+            _cells[idx] = cell;
+        }
+
+        // 감시영역 함정화 (CCTV / PatrolCamera 적발 후 사용)
+     
+        public void TrapifyCells(List<GridPos> cells)
+        {
+            for (int i = 0; i < cells.Count; i++)
+            {
+                GridPos pos = cells[i];
+                if (!IsInside(pos)) continue;
+
+                // 함정 플래그 켜기
+                EnableTrap(pos);
+
+                // 이 셀에 플레이어가 서 있으면 즉사
+                int idx = ToIndex(pos);
+                CellData cell = _cells[idx];
+                if (cell.IsOccupied &&
+                    TryGetEntity(cell.OccupantId, out EntityState occupant) &&
+                    occupant.IsPlayer && occupant.IsAlive)
+                {
+                    KillEntity(occupant.Id);
+                    MarkGameOver();
+                }
+            }
+            SetViewDirty();
+        }
+
         public void RotateAllCameras()
         {
             for (int i = 0; i < _cameraIds.Count; i++)
@@ -277,15 +313,19 @@ namespace MyGame2.Stage
 
         public void SetViewDirty() { IsViewDirty = true; }
         public void ClearViewDirty() { IsViewDirty = false; }
-
-        // 런타임 엔티티 소환 (추격 감시자 등)
+        
+        // SummonerEnemy가 적발 시 ChaserEnemy를 동적 생성할 때 사용.
+     
         public int SpawnEntity(EntitySO definition, GridPos position, Direction facing)
         {
             EntityState entity = new EntityState(definition, position, facing);
             return AddEntity(entity);
         }
-
-        // 런타임 엔티티 제거 (추격 감시자 소멸 등)
+        
+        // 추격 종료, 길 막힘, 함정 밟음, 투사체 피격 등
+        // ChaserEnemy가 소멸할 때 호출한다.
+        // 엔티티를 사망 처리하고 추적 리스트에서 제거한다.
+        
         public bool RemoveEntity(int entityId)
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;

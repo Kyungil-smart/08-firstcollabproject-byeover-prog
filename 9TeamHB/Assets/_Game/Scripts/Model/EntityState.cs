@@ -56,45 +56,60 @@ namespace MyGame2.Stage
 
         // 편의 프로퍼티
 
+        // 기본 엔티티
         public bool IsPlayer { get { return Kind == EntityKind.Player; } }
         public bool IsBox { get { return Kind == EntityKind.Box; } }
         public bool IsCamera { get { return Kind == EntityKind.CameraEnemy; } }
         public bool IsRobot { get { return Kind == EntityKind.RobotEnemy; } }
         public bool IsAnimal { get { return Kind == EntityKind.AnimalEnemy; } }
-        
+
+        // 새 감시자 유형
         public bool IsPatrolCameraEnemy { get { return Kind == EntityKind.PatrolCameraEnemy; } }
+        // SummonerEnemy (새 감시자B): 이동형 + 적발 시 추격자 소환 (본체 피격 판정 없음)
         public bool IsSummonerEnemy { get { return Kind == EntityKind.SummonerEnemy; } }
+        // ChaserEnemy (추격 감시자): SummonerEnemy가 소환, A*로 직접 추격, 조건 충족 시 소멸
         public bool IsChaserEnemy { get { return Kind == EntityKind.ChaserEnemy; } }
         public bool IsGap { get { return Kind == EntityKind.Gap; } }
         public bool IsBush { get { return Kind == EntityKind.Bush; } }
 
-        public bool IsMovingEnemy { get { return IsRobot || IsAnimal || IsPatrolCameraEnemy || IsSummonerEnemy || IsChaserEnemy; } }
-        public bool IsLethalMover { get { return IsRobot || IsAnimal || IsPatrolCameraEnemy || IsChaserEnemy; } }
+        // 이동하는 적인가? (실시간 자동 이동 대상)
+        public bool IsMovingEnemy
+        {
+            get { return IsRobot || IsAnimal || IsPatrolCameraEnemy || IsSummonerEnemy || IsChaserEnemy; }
+        }
+
+        // 접촉 시 플레이어를 즉사시키는 이동형 적인가?
+        public bool IsLethalMover
+        {
+            get { return IsRobot || IsAnimal || IsPatrolCameraEnemy || IsChaserEnemy; }
+        }
 
         public bool IsPushable { get { return IsPushableObject(); } }
         public GridEntityView Prefab { get { return Definition.Prefab; } }
-        
+
         // 해당 엔티티가 특정 플레이어 슬롯에 의해 밀릴 수 있는지 여부를 반환한다.
-       
         public bool CanBePushedBy(int playerSlot)
         {
-            if(!Has<InteractionTag>()) 
+            if (!Has<InteractionTag>())
                 return false;
             InteractionTag tag = Get<InteractionTag>();
-            if (playerSlot == 1) 
+            if (playerSlot == 1)
                 return tag.A;
-            if (playerSlot == 2) 
+            if (playerSlot == 2)
                 return tag.B;
             return false;
         }
         
+        // EntitySO 기반 생성자 (런타임 표준)
+        // SO의 Functions 리스트에 등록된 EntityFunctionSO들이
+        // CreateComponent()를 통해 자동으로 컴포넌트를 부착한다.
         
-        // 생성자.
         public EntityState(EntitySO definition, GridPos position, Direction facing)
         {
             Definition = definition;
-            Kind = definition.Kind; 
+            Kind = definition.Kind;
             Position = position;
+            SpawnPosition = position;
             Facing = facing;
             IsAlive = true;
             IsBlocking = definition.isBlocking;
@@ -103,12 +118,11 @@ namespace MyGame2.Stage
             _components = new Dictionary<Type, IComponentData>();
 
             // SO(정의 def)를 기반으로 컴포넌트를 생성하여 저장
-            foreach (var funcDef in definition.Functions) // Functions는 EntitySO의 기능 목록
+            foreach (var funcDef in definition.Functions)
             {
-                Set(funcDef.CreateComponent(this)); // 딕셔너리에 저장
+                Set(funcDef.CreateComponent(this));
             }
         }
-        // 팩토리  -- entitySO 기준에서는 사용하지 않음
 
         public static EntityState CreatePlayer(GridPos position, Direction facing, int slot)
         {
@@ -176,7 +190,7 @@ namespace MyGame2.Stage
         }
 
         private EntityState() { }
-        
+
         // 내부 로직
         private bool IsPushableObject()
         {
