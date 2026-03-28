@@ -2,13 +2,8 @@ using System.Collections.Generic;
 
 namespace MyGame2.Stage
 {
-    // 로봇 적 AI.
-    // 웨이포인트를 순서대로 이동, 상자/벽에 막히면 역방향 전환.
-    // 감지 범위: Facing 앞 2칸 + 뒤 2칸 (경고용, 즉사 아님)
     public sealed class RobotEnemy
     {
-        // 순찰 이동
-
         public MoveResult ResolveTurn(StageState state, int robotId, MovementRule movementRule)
         {
             if (!state.TryGetEntity(robotId, out EntityState robot) || !robot.IsAlive)
@@ -44,7 +39,6 @@ namespace MyGame2.Stage
                 return result;
             }
 
-            // 막혔으면 역방향 전환
             patrol.Reverse();
             Direction reverseDir = patrol.GetDirectionFrom(robot.Position);
             if (reverseDir == Direction.None) return result;
@@ -66,8 +60,6 @@ namespace MyGame2.Stage
 
             return result;
         }
-
-        // 감지 (경고용, 즉사 아님)
 
         public bool TryDetect(StageState state, int robotId,
             out int detectedPlayerId, out bool detectedFromBehind)
@@ -108,9 +100,17 @@ namespace MyGame2.Stage
                 if (!state.IsInside(cursor)) break;
                 CellData cell = state.GetCell(cursor);
                 if (cell.HasWall) break;
+
+                // 부쉬는 시야를 차단하고, 안의 플레이어를 감지 불가
+                if (cell.HasBush) break;
+
                 if (cell.IsOccupied && state.TryGetEntity(cell.OccupantId, out EntityState occ))
                 {
-                    if (occ.IsPlayer && occ.IsAlive) { detectedPlayerId = occ.Id; return true; }
+                    if (occ.IsPlayer && occ.IsAlive)
+                    {
+                        detectedPlayerId = occ.Id;
+                        return true;
+                    }
                     if (occ.BlocksCameraSight && occ.IsAlive) break;
                 }
             }
@@ -118,7 +118,6 @@ namespace MyGame2.Stage
             return false;
         }
 
-        // 감지 범위 셀 목록 (시각화용)
         public List<GridPos> CollectDetectionCells(StageState state, int robotId)
         {
             List<GridPos> result = new List<GridPos>(4);
@@ -140,6 +139,10 @@ namespace MyGame2.Stage
                 if (!state.IsInside(cursor)) break;
                 CellData cell = state.GetCell(cursor);
                 if (cell.HasWall) break;
+
+                // 부쉬 시야 차단
+                if (cell.HasBush) break;
+
                 result.Add(cursor);
                 if (cell.IsOccupied &&
                     state.TryGetEntity(cell.OccupantId, out EntityState occ) &&

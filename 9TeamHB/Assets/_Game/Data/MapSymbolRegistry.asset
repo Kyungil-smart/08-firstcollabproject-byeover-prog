@@ -163,3 +163,21 @@ MonoBehaviour:
     spawnsEntity: 0
     entityConfig: {fileID: 0}
     facing: 0
+  - symbol: 73
+    description: "\uC5BC\uC74C\uC0C1\uC790"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 391143331ac251e4a9e72b67f657b00b, type: 2}
+    facing: 0
+  - symbol: 87
+    description: "\uBD80\uC26C"
+    cellFlags: 8
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 7ca25059189f21e4e8f55b50dcd528d4, type: 2}
+    facing: 0
+  - symbol: 77
+    description: "\uAC10\uC2DC\uC790B"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: cd0d27f8c20ef1749bd03d1df40d4954, type: 2}
+    facing: 4
