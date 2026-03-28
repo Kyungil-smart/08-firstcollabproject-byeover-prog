@@ -196,7 +196,6 @@ namespace MyGame2.Stage
         {
             if (!Has<Pushable>())
             {
-                Debug.Log("주입 로직 실패");
                 return false;
             }
             return Get<Pushable>().CanBePushed;

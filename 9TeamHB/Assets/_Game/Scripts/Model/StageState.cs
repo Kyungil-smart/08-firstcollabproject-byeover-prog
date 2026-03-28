@@ -115,6 +115,7 @@ namespace MyGame2.Stage
         public CellData GetCell(GridPos pos) { return _cells[ToIndex(pos)]; }
         public bool HasGoal(GridPos pos) { return GetCell(pos).HasGoal; }
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
+        public bool HasCrack(GridPos pos) { return GetCell(pos).HasCrack; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
@@ -262,6 +263,26 @@ namespace MyGame2.Stage
                 }
             }
             SetViewDirty();
+        }
+        // 틈새에 상자가 올라갔을 때 - 틈새 타일 flag변경 및 box 낙하 이동 코루틴 시행
+        public void SetCrackMovable(GridPos position, int boxId)
+        {
+            if (!IsInside(position)) return;
+            int idx = ToIndex(position);
+            CellData cell = _cells[idx];
+            if (!cell.HasCrack) return;
+            cell.Flags &= ~CellFlags.Crack;
+            cell.OccupantId = -1;
+            _cells[idx] = cell;
+
+            if (TryGetEntity(boxId, out EntityState box))
+            {
+                if (!box.Has<Fallable>())
+                {
+                    return;
+                }
+                box.Get<Fallable>().StartFallAnimation(this);
+            }
         }
 
         public void RotateAllCameras()
