@@ -10,12 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
-  m_Name: Enemy_Animal
+  m_Name: Box_Ice
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 5
+  _kind: 2
   isBlocking: 1
   blocksCameraSight: 0
-  isLethal: 1
-  _viewPrefab: {fileID: 3093504176251066060, guid: c9c5fe9cd98c64b4d8fd9a4cfb55fcf3,
+  isLethal: 0
+  _viewPrefab: {fileID: 6531087665428241085, guid: 152b7bee7ec55014580799221d79d59d,
     type: 3}
-  Functions: []
+  Functions:
+  - {fileID: 11400000, guid: 5da8af1216947c3428c3f0d49d931735, type: 2}
+  - {fileID: 11400000, guid: 82815105112f30f428f7e1f341c4ae79, type: 2}
+  - {fileID: 11400000, guid: 4d4b69675ce7c4a4a927204e29110b7a, type: 2}
