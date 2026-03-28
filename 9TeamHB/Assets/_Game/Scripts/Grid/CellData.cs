@@ -41,7 +41,14 @@ namespace MyGame2.Stage
         public bool HasCrack
         {
             get { return (Flags & CellFlags.Crack) != 0; }
-        } 
+        }
+        
+        // 텔레포트 타일인가?
+        public bool HasTeleport
+        {
+            get { return (Flags & CellFlags.Teleport) != 0; }
+        }
+
 
 
         // 엔티티가 점유 중인가?

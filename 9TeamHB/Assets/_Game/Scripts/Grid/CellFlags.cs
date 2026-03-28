@@ -24,6 +24,9 @@ namespace MyGame2.Stage
         Bush = 1 << 3,
             
         //틈새 타일 - 이동 불가 상자가 올라가면 이동 가능
-        Crack = 1 << 4
+        Crack = 1 << 4,
+            
+        //텔레포트 타일 - 플레이어가 올라가면 정해진 위치로 이동
+        Teleport = 1 << 5
     }
 }
