@@ -6,7 +6,8 @@ namespace MyGame2.Stage
         Success = 1,
         Blocked = 2,
         ContactKill = 3,
-        PushAndMove = 4
+        PushAndMove = 4,
+        Teleport = 5
     }
 
     public enum MoveBlockReason

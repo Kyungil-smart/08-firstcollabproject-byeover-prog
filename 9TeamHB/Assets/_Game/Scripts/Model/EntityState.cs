@@ -62,6 +62,7 @@ namespace MyGame2.Stage
         public bool IsCamera { get { return Kind == EntityKind.CameraEnemy; } }
         public bool IsRobot { get { return Kind == EntityKind.RobotEnemy; } }
         public bool IsAnimal { get { return Kind == EntityKind.AnimalEnemy; } }
+        public bool CanTeleport { get { return Has<Teleportable>();  } }
 
         // 새 감시자 유형
         public bool IsPatrolCameraEnemy { get { return Kind == EntityKind.PatrolCameraEnemy; } }
