@@ -6,8 +6,6 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
 {
     public EntityFunctionSO Definition { get; }
 
-    // 핵심 수정: StageState를 직접 캐싱하지 않고 SO 참조를 보유
-    // 엔티티 생성 시점에는 Instance가 null이므로, 매 프레임 .Instance로 접근
     private readonly StageStateReferenceSO _stageStateRef;
     private readonly EntityState _entityState;
     private readonly FloatEventChannelSO _eventChannel;
@@ -19,15 +17,12 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
 
     private readonly float _moveInterval;
     private readonly float _alertDuration;
+    private readonly int _patrolRadius;
     private readonly EntitySO _chaserDefinition;
+    private readonly GridPos _spawnPosition;
 
     private static readonly DetectionArea3x3 _detector = new DetectionArea3x3();
     private static readonly MovementRule _movementRule = new MovementRule(new PushRule());
-
-    private static readonly Direction[] PatrolPriority =
-    {
-        Direction.Right, Direction.Down, Direction.Left, Direction.Up
-    };
 
     public SummonerEnemyMoveComponent(
         SummonerEnemyMove_Fn definition, StageStateReferenceSO stageStateRef,
@@ -36,9 +31,11 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         Definition = definition;
         _stageStateRef = stageStateRef;
         _entityState = entityState;
+        _spawnPosition = entityState.Position; // 스폰 위치 기록
 
         _moveInterval = definition.MoveInterval;
         _alertDuration = definition.AlertDuration;
+        _patrolRadius = definition.PatrolRadius;
         _chaserDefinition = definition.ChaserDefinition;
 
         _eventChannel = eventChannel;
@@ -51,7 +48,6 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
 
     public void OnUpdate(float dt)
     {
-        // 매 프레임 Instance 접근 (생성 시점에는 null이었을 수 있음)
         StageState state = _stageStateRef.Instance;
         if (state == null) return;
         if (!_entityState.IsAlive) return;
@@ -65,7 +61,9 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
             case EnemyAIState.Frozen:  UpdateFrozen(state, dt); break;
         }
     }
-
+    
+    //  Patrol — 우측벽 따라가기 + 순찰 범위 제한
+    
     private void UpdatePatrol(StageState state, float dt)
     {
         _timer += dt;
@@ -78,7 +76,6 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
 
             _currentState = EnemyAIState.Alert;
             _timer = 0f;
-            Debug.Log($"[SummonerEnemy {_entityState.Id}] 감지! → Alert");
             return;
         }
 
@@ -88,11 +85,29 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         DoPatrolMove(state);
     }
 
+    // 우측벽 따라가기 (Right-Hand Rule) + 순찰 반경 제한
+    // 이동 결과가 스폰 위치에서 patrolRadius를 초과하면 해당 방향 건너뜀
+    
     private void DoPatrolMove(StageState state)
     {
-        for (int i = 0; i < PatrolPriority.Length; i++)
+        Direction facing = _entityState.Facing;
+        if (facing == Direction.None) facing = Direction.Right;
+
+        Direction right = facing.RotateClockwise();
+        Direction left = facing.RotateClockwise().RotateClockwise().RotateClockwise();
+        Direction back = facing.Opposite();
+
+        Direction[] tryOrder = { right, facing, left, back };
+
+        for (int i = 0; i < tryOrder.Length; i++)
         {
-            Direction dir = PatrolPriority[i];
+            Direction dir = tryOrder[i];
+
+            // 이동 목표 칸이 순찰 범위 안인지 먼저 체크
+            GridPos target = _entityState.Position.Move(dir);
+            if (!IsWithinPatrolZone(target))
+                continue;
+
             MoveResult result = _movementRule.TryMove(state, _entityState.Id, dir);
 
             if (result.Succeeded)
@@ -103,7 +118,17 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
                 return;
             }
         }
+        // 사방 다 범위 밖이거나 막힘
     }
+
+    // 스폰 위치 기준 맨해튼 거리 체크
+    private bool IsWithinPatrolZone(GridPos pos)
+    {
+        int dist = Math.Abs(pos.X - _spawnPosition.X) + Math.Abs(pos.Y - _spawnPosition.Y);
+        return dist <= _patrolRadius;
+    }
+    
+    //  Alert
 
     private void UpdateAlert(StageState state, float dt)
     {
@@ -113,10 +138,9 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         {
             _currentState = EnemyAIState.Summon;
             _timer = 0f;
-            Debug.Log($"[SummonerEnemy {_entityState.Id}] Alert 종료 → Summon");
         }
     }
-
+    
     private void UpdateSummon(StageState state, float dt)
     {
         if (_chaserDefinition == null)
@@ -140,7 +164,6 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         _currentState = EnemyAIState.Frozen;
         _timer = 0f;
         state.SetViewDirty();
-        Debug.Log($"[SummonerEnemy {_entityState.Id}] 추격자 {_spawnedChaserId} 소환 → Frozen");
     }
 
     private void UpdateFrozen(StageState state, float dt)
@@ -157,13 +180,14 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
             ReturnToPatrol();
         }
     }
-
+    
+    //  유틸리티
+    
     private void ReturnToPatrol()
     {
         _currentState = EnemyAIState.Patrol;
         _timer = 0f;
         _spawnedChaserId = StageState.InvalidEntityId;
-        Debug.Log($"[SummonerEnemy {_entityState.Id}] 추격자 소멸 → Patrol 복귀");
     }
 
     private GridPos FindSpawnPosition(StageState state, GridPos target)
@@ -175,9 +199,10 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
                 return target;
         }
 
-        for (int i = 0; i < PatrolPriority.Length; i++)
+        Direction[] dirs = { Direction.Right, Direction.Down, Direction.Left, Direction.Up };
+        for (int i = 0; i < dirs.Length; i++)
         {
-            GridPos adj = target.Move(PatrolPriority[i]);
+            GridPos adj = target.Move(dirs[i]);
             if (!state.IsInside(adj)) continue;
             CellData adjCell = state.GetCell(adj);
             if (!adjCell.HasWall && !adjCell.IsOccupied)
