@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MyGame2.Stage
 {
@@ -12,6 +13,8 @@ namespace MyGame2.Stage
 
         public CellFlags Flags;
         public int OccupantId;
+
+        
 
         // 벽인가? (이동 불가, 시야 차단)
         public bool HasWall

@@ -27,6 +27,7 @@ namespace MyGame2.Stage
         {
             if (stageIndex != 0) return;
             ConfigureRobotPatrols();
+            ConfiqureVentPair();
         }
 
         private void ConfigureRobotPatrols()
@@ -60,6 +61,12 @@ namespace MyGame2.Stage
             if (state == null) return;
             // pos 기준으로 셀을 찾고 pair 할당
             // 정의 할때 모든 텔레포트 스팟 위치를 정확히 알고있는 상태로 부여해주어야한다.
+            BindPair(new GridPos(1, 4), new GridPos(12, 11), state);
+        }
+
+        private void BindPair(GridPos a, GridPos b, StageState state)
+        {
+            state.SetCellPair(a, b);
         }
     }
 }

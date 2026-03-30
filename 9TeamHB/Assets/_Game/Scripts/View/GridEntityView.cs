@@ -94,6 +94,16 @@ namespace MyGame2.Stage
             gameObject.SetActive(true);
 
             Vector3 newTarget = entity.Position.ToWorld(cellSize);
+            
+            // 텔레포트
+            if (entity.CanTeleport && entity.Get<Teleportable>().IsTeleporting)
+            {
+                _targetPosition = newTarget;
+                transform.position = _targetPosition;
+                entity.Get<Teleportable>().IsTeleporting = false;
+            }
+            
+            // 일반 이동
             if ((_targetPosition - newTarget).sqrMagnitude > snapThreshold * snapThreshold)
             {
                 _targetPosition = newTarget;

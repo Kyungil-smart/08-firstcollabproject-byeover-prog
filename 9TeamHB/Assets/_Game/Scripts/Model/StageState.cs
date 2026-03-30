@@ -19,6 +19,7 @@ namespace MyGame2.Stage
         private readonly List<int> _patrolCameraIds;
         private readonly List<int> _summonerIds;
         private readonly List<int> _chaserIds;
+        private readonly Dictionary<GridPos,GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
 
         private int _nextEntityId;
         private readonly StageEvents _events;
@@ -59,6 +60,7 @@ namespace MyGame2.Stage
             _patrolCameraIds = new List<int>(4);
             _summonerIds = new List<int>(4);
             _chaserIds = new List<int>(4);
+            _cellPairs = new Dictionary<GridPos, GridPos>(16);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
             IsViewDirty = false;
@@ -158,6 +160,16 @@ namespace MyGame2.Stage
                 if (d < best) { best = d; bestPos = p.Position; }
             }
             return bestPos;
+        }
+
+        public void SetCellPair(GridPos a, GridPos b)
+        {
+            _cellPairs[a] = b;
+            _cellPairs[b] = a;
+        }
+        public bool TryGetCellPair(GridPos a, out GridPos b)
+        {
+            return _cellPairs.TryGetValue(a, out b);
         }
 
         // 변이 메서드
