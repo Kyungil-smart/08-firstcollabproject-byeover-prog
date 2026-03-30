@@ -5,14 +5,18 @@ using UnityEngine;
 public class SummonerEnemyMove_Fn : EntityFunctionSO
 {
     [Header("이동 설정")]
+    [Tooltip("순찰 이동 간격 (초)")]
     [SerializeField] private float moveInterval = 0.2f;
+
+    [Tooltip("적발 후 정지 시간 (초)")]
     [SerializeField] private float alertDuration = 0.5f;
 
     [Header("순찰 설정")]
-    [Tooltip("스폰 위치 기준 순찰 반경 (맨해튼 거리). 이 범위를 넘으면 이동하지 않음")]
+    [Tooltip("스폰 위치 기준 순찰 사각형 반경 (칸). 4면 9x9 사각형 둘레를 순찰")]
     [SerializeField] private int patrolRadius = 4;
 
     [Header("소환 설정")]
+    [Tooltip("소환할 추격 감시자의 EntitySO")]
     [SerializeField] private EntitySO chaserDefinition;
 
     [Header("참조 주입")]

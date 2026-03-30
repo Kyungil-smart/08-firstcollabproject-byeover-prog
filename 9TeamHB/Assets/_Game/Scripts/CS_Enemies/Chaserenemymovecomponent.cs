@@ -13,7 +13,6 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
     private EnemyAIState _currentState;
     private float _timer;
     private int _targetPlayerId;
-    private bool _pendingDespawn;
 
     private readonly float _moveInterval;
     private readonly float _lostSearchDuration;
@@ -36,11 +35,15 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         _eventChannel = eventChannel;
         _eventChannel.OnEventRaised += OnUpdate;
 
-        // 소환 직후
         _currentState = EnemyAIState.Chase;
         _timer = 0f;
         _targetPlayerId = StageState.InvalidEntityId;
-        _pendingDespawn = false;
+    }
+
+    // B감시자가 소환 직후 호출 — 감지된 플레이어를 타겟으로 지정
+    public void SetTargetPlayer(int playerId)
+    {
+        _targetPlayerId = playerId;
     }
 
     public void OnUpdate(float dt)
@@ -50,30 +53,27 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         if (!_entityState.IsAlive) return;
         if (state.IsGameOver || state.IsStageClear) return;
 
-        // 최초 프레임: 대상 설정 + 부쉬 체크
+        // 타겟 미설정 시 가장 가까운 플레이어 (폴백)
         if (_targetPlayerId == StageState.InvalidEntityId)
-        {
             _targetPlayerId = FindNearestPlayer(state);
-            if (_targetPlayerId != StageState.InvalidEntityId &&
-                state.TryGetEntity(_targetPlayerId, out EntityState t) &&
+
+        // 소환 시 플레이어가 부쉬 → 즉시 소멸
+        if (_targetPlayerId != StageState.InvalidEntityId &&
+            _currentState == EnemyAIState.Chase && _timer == 0f)
+        {
+            if (state.TryGetEntity(_targetPlayerId, out EntityState t) &&
                 state.HasBush(t.Position))
             {
-                _pendingDespawn = true;
-                Debug.Log($"[ChaserEnemy {_entityState.Id}] 소환 시 플레이어 부쉬 → 즉시 소멸");
+                ExecuteDespawn(state, "소환 시 부쉬");
+                return;
             }
-        }
-
-        if (_pendingDespawn)
-        {
-            ExecuteDespawn(state);
-            return;
         }
 
         switch (_currentState)
         {
             case EnemyAIState.Chase:   UpdateChase(state, dt); break;
             case EnemyAIState.Lost:    UpdateLost(state, dt); break;
-            case EnemyAIState.Despawn: ExecuteDespawn(state); break;
+            case EnemyAIState.Despawn: ExecuteDespawn(state, "소멸"); break;
         }
     }
 
@@ -83,49 +83,48 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         if (_timer < _moveInterval) return;
         _timer -= _moveInterval;
 
+        // 타겟 생존 확인
         if (!state.TryGetEntity(_targetPlayerId, out EntityState target) || !target.IsAlive)
         {
-            _targetPlayerId = FindNearestPlayer(state);
-            if (_targetPlayerId == StageState.InvalidEntityId)
-            {
-                TransitionToDespawn("대상 없음");
-                return;
-            }
-            state.TryGetEntity(_targetPlayerId, out target);
+            _currentState = EnemyAIState.Despawn;
+            return;
         }
 
+        // 부쉬 체크
         if (state.HasBush(target.Position))
         {
             _currentState = EnemyAIState.Lost;
             _timer = 0f;
-            Debug.Log($"[ChaserEnemy {_entityState.Id}] 플레이어 부쉬 → Lost");
             return;
         }
 
+        // A* 다음 칸
         GridPos? nextStep = _pathfinder.GetNextStep(
             state, _entityState.Position, target.Position, false);
 
         if (nextStep == null)
         {
-            TransitionToDespawn("경로 없음");
+            _currentState = EnemyAIState.Despawn;
             return;
         }
 
         GridPos next = nextStep.Value;
 
+        // 접촉 즉사
         CellData nextCell = state.GetCell(next);
         if (nextCell.IsOccupied &&
-            state.TryGetEntity(nextCell.OccupantId, out EntityState occupant) &&
-            occupant.IsPlayer && occupant.IsAlive)
+            state.TryGetEntity(nextCell.OccupantId, out EntityState occ) &&
+            occ.IsPlayer && occ.IsAlive)
         {
             Direction killDir = GetDirectionTo(_entityState.Position, next);
             state.SetFacing(_entityState.Id, killDir);
-            state.KillEntity(occupant.Id);
+            state.KillEntity(occ.Id);
             state.MarkGameOver();
             state.SetViewDirty();
             return;
         }
 
+        // 이동
         Direction moveDir = GetDirectionTo(_entityState.Position, next);
         MoveResult result = _movementRule.TryMove(state, _entityState.Id, moveDir);
 
@@ -136,7 +135,7 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
 
             if (state.HasTrap(result.To))
             {
-                TransitionToDespawn("함정타일 밟음");
+                ExecuteDespawn(state, "함정");
                 return;
             }
 
@@ -150,7 +149,7 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         }
         else
         {
-            TransitionToDespawn("이동 불가");
+            _currentState = EnemyAIState.Despawn;
         }
     }
 
@@ -163,47 +162,19 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         {
             _currentState = EnemyAIState.Chase;
             _timer = 0f;
-            Debug.Log($"[ChaserEnemy {_entityState.Id}] 부쉬 탈출 → Chase 재개");
             return;
         }
 
         if (_timer >= _lostSearchDuration)
-        {
-            TransitionToDespawn("부쉬 은신 유지");
-        }
+            _currentState = EnemyAIState.Despawn;
     }
 
-    private void ExecuteDespawn(StageState state)
+    private void ExecuteDespawn(StageState state, string reason)
     {
-        Debug.Log($"[ChaserEnemy {_entityState.Id}] 소멸 처리");
-
-        // 소환자에게 통보
-        var alertData = _entityState.Get<EnemyAlertData>();
-        if (alertData != null && alertData.OwnerSummonerId != StageState.InvalidEntityId)
-        {
-            if (state.TryGetEntity(alertData.OwnerSummonerId, out EntityState summoner))
-            {
-                foreach (var comp in summoner.Components)
-                {
-                    if (comp is SummonerEnemyMoveComponent summonerComp)
-                    {
-                        summonerComp.NotifyChaserDespawned();
-                        break;
-                    }
-                }
-            }
-        }
-
+        Debug.Log($"[ChaserEnemy {_entityState.Id}] 소멸 ({reason})");
         _eventChannel.OnEventRaised -= OnUpdate;
         state.RemoveEntity(_entityState.Id);
         state.SetViewDirty();
-    }
-
-    private void TransitionToDespawn(string reason)
-    {
-        _currentState = EnemyAIState.Despawn;
-        _timer = 0f;
-        Debug.Log($"[ChaserEnemy {_entityState.Id}] → Despawn ({reason})");
     }
 
     private int FindNearestPlayer(StageState state)
@@ -211,7 +182,6 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         GridPos myPos = _entityState.Position;
         int bestId = StageState.InvalidEntityId;
         int bestDist = int.MaxValue;
-
         for (int i = 0; i < state.PlayerIds.Count; i++)
         {
             int pid = state.PlayerIds[i];

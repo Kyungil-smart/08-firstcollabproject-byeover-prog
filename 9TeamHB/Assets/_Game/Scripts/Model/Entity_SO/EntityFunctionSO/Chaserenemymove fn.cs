@@ -5,7 +5,10 @@ using UnityEngine;
 public class ChaserEnemyMove_Fn : EntityFunctionSO
 {
     [Header("이동 설정")]
+    [Tooltip("추격 이동 간격 (초)")]
     [SerializeField] private float moveInterval = 0.1f;
+
+    [Tooltip("부쉬 진입 시 탐색 대기 시간 (초)")]
     [SerializeField] private float lostSearchDuration = 0.5f;
 
     [Header("참조 주입")]
