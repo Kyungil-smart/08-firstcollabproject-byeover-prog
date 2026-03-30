@@ -36,6 +36,7 @@ namespace MyGame2.Stage
             // 부쉬: 감시자/적은 진입 불가, 플레이어만 가능
             if (cell.HasBush && !mover.IsPlayer)
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
+            
 
             if (cell.IsOccupied)
             {
@@ -51,6 +52,18 @@ namespace MyGame2.Stage
                     }
                 }
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
+            }
+            
+            // 텔레포트 스팟 이동
+            if (cell.HasTeleport && mover.CanTeleport)
+            {
+                if (state.TryGetCellPair(target, out GridPos pair) && 
+                    !state.GetCell(pair).IsOccupied) // 텔레포트 가능
+                {
+                    mover.Get<Teleportable>().IsTeleporting = true;
+                    return MoveResult.Success(moverId, from, pair);
+                }
+                //텔레포트 불가능 시 일반 이동 v
             }
 
             return MoveResult.Success(moverId, from, target);
