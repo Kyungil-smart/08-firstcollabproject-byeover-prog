@@ -30,7 +30,7 @@ namespace MyGame2.Stage
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.OutOfBounds);
 
             CellData cell = state.GetCell(target);
-            if (cell.HasWall||cell.HasCrack)
+            if (cell.IsBlocked)
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
 
             // 부쉬: 감시자/적은 진입 불가, 플레이어만 가능

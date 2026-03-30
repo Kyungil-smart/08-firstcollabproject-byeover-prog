@@ -27,6 +27,21 @@ namespace MyGame2.Stage
         Crack = 1 << 4,
             
         //텔레포트 타일 - 플레이어가 올라가면 정해진 위치로 이동
-        Teleport = 1 << 5
+        Teleport = 1 << 5,
+            
+        // 타일 활성 여부, 이동 불가 타일이 활성화 되면 이동 가능
+        Active = 1 << 6,
+        
+        // 문 - 활성화 전까지 이동 불가
+        Door = 1 << 7,
+        
+        // 버튼 - 처음 상호작용 시 페어에 신호 
+        Button  = 1 << 8,
+        
+        // 신호 지속성
+        Sticky = 1 << 9,
+        
+        // 스위치
+        Switch = Button | Sticky
     }
 }

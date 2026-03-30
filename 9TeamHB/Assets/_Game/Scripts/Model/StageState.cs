@@ -117,7 +117,7 @@ namespace MyGame2.Stage
         public CellData GetCell(GridPos pos) { return _cells[ToIndex(pos)]; }
         public bool HasGoal(GridPos pos) { return GetCell(pos).HasGoal; }
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
-        public bool HasCrack(GridPos pos) { return GetCell(pos).HasCrack; }
+        public bool HasCrackNotCovered(GridPos pos) { return GetCell(pos).HasCrack && !GetCell(pos).HasActive; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
@@ -283,7 +283,7 @@ namespace MyGame2.Stage
             int idx = ToIndex(position);
             CellData cell = _cells[idx];
             if (!cell.HasCrack) return;
-            cell.Flags &= ~CellFlags.Crack;
+            cell.Flags |= CellFlags.Active;
             cell.OccupantId = -1;
             _cells[idx] = cell;
 
