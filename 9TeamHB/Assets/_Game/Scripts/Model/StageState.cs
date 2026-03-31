@@ -10,7 +10,7 @@ namespace MyGame2.Stage
 
         private readonly CellData[] _cells;
         private readonly CellFlags[] _originalFlags;
-        private readonly Dictionary<int, EntityState> _entitiesById;
+        private Dictionary<int, EntityState> _entitiesById;
         private readonly List<int> _playerIds;
         private readonly List<int> _boxIds;
         private readonly List<int> _cameraIds;
@@ -19,11 +19,12 @@ namespace MyGame2.Stage
         private readonly List<int> _patrolCameraIds;
         private readonly List<int> _summonerIds;
         private readonly List<int> _chaserIds;
-        private readonly Dictionary<GridPos,GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
+        private readonly Dictionary<GridPos, GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
 
         private int _nextEntityId;
         private readonly StageEvents _events;
 
+        public CellData[] Cells { get; private set; }
         public int Width { get; private set; }
         public int Height { get; private set; }
         public int ActivePlayerId { get; private set; }
@@ -39,6 +40,7 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> PatrolCameraIds { get { return _patrolCameraIds; } }
         public IReadOnlyList<int> SummonerIds { get { return _summonerIds; } }
         public IReadOnlyList<int> ChaserIds { get { return _chaserIds; } }
+        public Dictionary<int, EntityState> EntityDict { get { return _entitiesById; } }
         public IEnumerable<EntityState> Entities { get { return _entitiesById.Values; } }
         public StageEvents Events { get { return _events; } }
         public bool IsViewDirty { get; private set; }
@@ -252,7 +254,7 @@ namespace MyGame2.Stage
         }
 
         // 감시영역 함정화 (CCTV / PatrolCamera 적발 후 사용)
-     
+
         public void TrapifyCells(List<GridPos> cells)
         {
             for (int i = 0; i < cells.Count; i++)
@@ -346,19 +348,19 @@ namespace MyGame2.Stage
 
         public void SetViewDirty() { IsViewDirty = true; }
         public void ClearViewDirty() { IsViewDirty = false; }
-        
+
         // SummonerEnemy가 적발 시 ChaserEnemy를 동적 생성할 때 사용.
-     
+
         public int SpawnEntity(EntitySO definition, GridPos position, Direction facing)
         {
             EntityState entity = new EntityState(definition, position, facing);
             return AddEntity(entity);
         }
-        
+
         // 추격 종료, 길 막힘, 함정 밟음, 투사체 피격 등
         // ChaserEnemy가 소멸할 때 호출한다.
         // 엔티티를 사망 처리하고 추적 리스트에서 제거한다.
-        
+
         public bool RemoveEntity(int entityId)
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
@@ -367,9 +369,9 @@ namespace MyGame2.Stage
 
             switch (entity.Kind)
             {
-                case EntityKind.ChaserEnemy:        _chaserIds.Remove(entityId); break;
-                case EntityKind.SummonerEnemy:       _summonerIds.Remove(entityId); break;
-                case EntityKind.PatrolCameraEnemy:   _patrolCameraIds.Remove(entityId); break;
+                case EntityKind.ChaserEnemy: _chaserIds.Remove(entityId); break;
+                case EntityKind.SummonerEnemy: _summonerIds.Remove(entityId); break;
+                case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Remove(entityId); break;
             }
 
             _entitiesById.Remove(entityId);
@@ -393,13 +395,13 @@ namespace MyGame2.Stage
                         _entitiesById[a].Get<PlayerData>().Slot
                             .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
                     break;
-                case EntityKind.Box:                _boxIds.Add(entity.Id); break;
-                case EntityKind.CameraEnemy:         _cameraIds.Add(entity.Id); break;
-                case EntityKind.RobotEnemy:          _robotIds.Add(entity.Id); break;
-                case EntityKind.AnimalEnemy:          _animalIds.Add(entity.Id); break;
-                case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Add(entity.Id); break;
-                case EntityKind.SummonerEnemy:        _summonerIds.Add(entity.Id); break;
-                case EntityKind.ChaserEnemy:          _chaserIds.Add(entity.Id); break;
+                case EntityKind.Box: _boxIds.Add(entity.Id); break;
+                case EntityKind.CameraEnemy: _cameraIds.Add(entity.Id); break;
+                case EntityKind.RobotEnemy: _robotIds.Add(entity.Id); break;
+                case EntityKind.AnimalEnemy: _animalIds.Add(entity.Id); break;
+                case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Add(entity.Id); break;
+                case EntityKind.SummonerEnemy: _summonerIds.Add(entity.Id); break;
+                case EntityKind.ChaserEnemy: _chaserIds.Add(entity.Id); break;
             }
             return entity.Id;
         }
@@ -421,5 +423,27 @@ namespace MyGame2.Stage
         }
 
         private int ToIndex(GridPos pos) { return (pos.Y * Width) + pos.X; }
+
+        public void Restore(StageSnapshot snapshot)
+        {
+            Array.Copy(snapshot.Cells, _cells, snapshot.Cells.Length);
+
+            ActivePlayerId = snapshot.ActivePlayerId;
+            TurnIndex = snapshot.TurnIndex;
+            IsGameOver = snapshot.IsGameOver;
+            IsStageClear = snapshot.IsStageClear;
+            IsViewDirty = snapshot.IsViewDirty;
+
+            _patrolCameraIds.Clear();
+            _patrolCameraIds.AddRange(snapshot.PatrolCameraIds);
+
+            _summonerIds.Clear();
+            _summonerIds.AddRange(snapshot.SummonerIds);
+
+            _chaserIds.Clear();
+            _chaserIds.AddRange(snapshot.ChaserIds);
+
+            _entitiesById = snapshot.EntityDict;
+        }
     }
 }
