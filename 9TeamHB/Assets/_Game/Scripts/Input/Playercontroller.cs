@@ -27,9 +27,6 @@ namespace MyGame2.Stage
         [Tooltip("이동 반복 간격 (초)")]
         [SerializeField] private float moveRepeatInterval = 0.2f;
 
-        [Tooltip("되돌리기 반복 간격 (초)")]
-        [SerializeField] private float undoRepeatInterval = 0.2f;
-
         // InputAction 정의
         private InputAction _moveUpAction;
         private InputAction _moveLeftAction;
@@ -46,7 +43,6 @@ namespace MyGame2.Stage
         private float _nextMoveTime;
 
         private bool _isUndoHeld;
-        private float _nextUndoTime;
 
         private void Awake()
         {
@@ -82,9 +78,8 @@ namespace MyGame2.Stage
                 return;
             }
 
-            if (_isUndoHeld)
+            if (stageManager.CurrentState.IsUndoProcessing)
             {
-                HandleUndo();
                 return;
             }
 
@@ -250,18 +245,36 @@ namespace MyGame2.Stage
 
         private void OnUndoStarted(InputAction.CallbackContext ctx)
         {
-            if (IsPlayable())
+            Debug.Log($"Undo Key Pressed, isUndoHeld : {_isUndoHeld}");
+
+            if (!IsPlayable())
             {
                 return;
             }
 
-            _isUndoHeld = true;
-            _nextUndoTime = 0f;
+            if (!_isUndoHeld)
+            {
+                _isUndoHeld = true;
+                bool enterUndoResult = stageManager.TryEnterUndo();
+
+                Debug.Log($"Enter Undo Result : {enterUndoResult}");
+            }
         }
 
         private void OnUndoCanceled(InputAction.CallbackContext ctx)
         {
-            _isUndoHeld = false;
+            Debug.Log($"Undo Key Released, isUndoHeld : {_isUndoHeld}");
+
+            if (stageManager.CurrentState.IsUndoProcessing)
+            {
+                stageManager.LeaveUndo();
+                Debug.Log("Leave Undo");
+            }
+
+            if (_isUndoHeld)
+            {
+                _isUndoHeld = false;
+            }
         }
 
         private bool IsPlayable()
@@ -299,23 +312,6 @@ namespace MyGame2.Stage
             {
                 ExecuteTurn(_lockedDirection);
             }
-        }
-
-        private void HandleUndo()
-        {
-            if (Time.time < _nextUndoTime)
-            {
-                return;
-            }
-
-            bool undoResult = true; // Todo : Execute Undo and Check Result
-            if (undoResult)
-            {
-                _lockedDirection = Direction.None;
-                _pressedAt.Clear();
-            }
-
-            _nextUndoTime += Time.time + undoRepeatInterval;
         }
 
         private void ExecuteTurn(Direction direction)
