@@ -45,11 +45,21 @@ namespace MyGame2.Stage
                     if (mover.IsLethalMover && occupant.IsPlayer)
                         return MoveResult.ContactKill(moverId, occupant.Id, from, target);
 
-                    // 플레이어가 상자를 밀려는 경우 → 판정만
+                    // 플레이어가 상자를 밀려는 경우 -> 판정만
                     if (mover.IsPlayer && occupant.IsPushable)
                     {
+                        // 1. 공간이 있어서 정상적으로 밀 수 있는가?
                         if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
+                        {
                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
+                        }
+    
+                        // 2. 밀 수 없다면(막혔다면), 부서지는 상자 조건에 맞는가?
+                        if (_pushRule.ShouldBreak(state, moverId, occupant.Id, direction))
+                        {
+                            _pushRule.ExecuteBreak(state, occupant.Id); // 상자 파괴 실행
+                            return MoveResult.Success(moverId, from, target); // 상자가 부서졌으니 플레이어는 그 칸으로 전진!
+                        }
                     }
                 }
                 Debug.Log("점유지역 이동 막힘");
