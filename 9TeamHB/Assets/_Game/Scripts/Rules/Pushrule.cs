@@ -16,6 +16,7 @@ namespace MyGame2.Stage
 
             CellData cell = state.GetCell(dest);
             if (cell.HasWall) return false;
+            if (cell.IsClosedDoor) return false;
             if (cell.IsOccupied) return false;
 
             return true;
