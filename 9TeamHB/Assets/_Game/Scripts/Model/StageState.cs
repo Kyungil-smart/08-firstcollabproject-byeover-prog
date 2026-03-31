@@ -31,6 +31,9 @@ namespace MyGame2.Stage
         public int TurnIndex { get; private set; }
         public bool IsGameOver { get; private set; }
         public bool IsStageClear { get; private set; }
+        public bool IsUndoProcessing { get; private set; }
+
+        public bool IsUpdatable() => !(IsGameOver || IsStageClear || IsUndoProcessing);
 
         public IReadOnlyList<int> PlayerIds { get { return _playerIds; } }
         public IReadOnlyList<int> BoxIds { get { return _boxIds; } }
@@ -338,6 +341,16 @@ namespace MyGame2.Stage
             if (IsStageClear) return;
             IsStageClear = true;
             _events?.RaiseStageClear();
+        }
+
+        public void UndoEnter()
+        {
+            IsUndoProcessing = true;
+        }
+
+        public void UndoLeave()
+        {
+            IsUndoProcessing = false;
         }
 
         public void AdvanceTurn()
