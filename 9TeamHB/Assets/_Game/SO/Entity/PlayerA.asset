@@ -20,3 +20,4 @@ MonoBehaviour:
     type: 3}
   Functions:
   - {fileID: 11400000, guid: 1a02e240f8c64104e85fe5fc99f6868a, type: 2}
+  - {fileID: 11400000, guid: 616f1e941d24b6247910991faf76853b, type: 2}

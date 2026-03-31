@@ -13,8 +13,14 @@ namespace MyGame2.Stage
         [Header("타일 색상")]
         [SerializeField] private Color wallColor = new Color(0.15f, 0.15f, 0.18f, 1f);
         [SerializeField] private Color floorColor = new Color(0.85f, 0.87f, 0.90f, 1f);
+        [SerializeField] private Color crackColor = new Color(0.05f, 0.05f, 0.05f, 1f);
         [SerializeField] private Color goalColor = new Color(1f, 0.84f, 0f, 1f);
         [SerializeField] private Color trapColor = new Color(0.55f, 0.15f, 0.70f, 1f);
+        [SerializeField] private Color teleportColor = new Color(0.7f, 0.7f, 0.99f, 1f);
+        [SerializeField] private Color buttonColor = new Color(0.9f, 0.2f, 0.2f, 1f);
+        [SerializeField] private Color switchColor = new Color(0.9f, 0.6f, 0.6f, 1f);
+        [SerializeField] private Color opendDoorColor = new Color(0.9f, 0.7f, 0.4f, 1f);
+        [SerializeField] private Color closedDoorColor = new Color(0.4f, 0.3f, 0.2f, 1f);
 
         [Header("카메라 감시 범위")]
         [SerializeField] private Color cameraDetectionColor = new Color(1f, 0.2f, 0.2f, 0.25f);
@@ -98,9 +104,25 @@ namespace MyGame2.Stage
                 if (cell.HasWall)       c = wallColor;
                 else if (cell.HasTrap)  c = trapColor;
                 else if (cell.HasGoal)  c = goalColor;
+                else if (cell.HasCrack) c = crackColor;
+                else if (cell.HasTeleport) c = teleportColor;
+                else if (cell.HasSignalButton)
+                {
+                    if(!cell.IsSticky) c = buttonColor;
+                    else c = switchColor;
+                }
+                else if (cell.IsOpenedDoor) c = opendDoorColor;
+                else if (cell.IsClosedDoor) c = closedDoorColor;
                 else                    c = floorColor;
 
-                _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder));
+                if (cell.HasCrack)
+                {
+                    _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder-1));
+                }
+                else
+                {
+                    _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder));
+                }
             }
         }
 

@@ -5,7 +5,7 @@ namespace MyGame2.Stage
     {
         // 플레이어 슬롯 번호 (1 또는 2)
         public int Slot;
-
+        
         public PlayerData(int slot) { Slot = slot; }
     }
 }
