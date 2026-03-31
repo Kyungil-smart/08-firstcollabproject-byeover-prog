@@ -19,6 +19,8 @@ namespace MyGame2.Stage
         private readonly List<int> _patrolCameraIds;
         private readonly List<int> _summonerIds;
         private readonly List<int> _chaserIds;
+        private readonly List<int> _launcherIds;
+        private readonly List<int> _projectileIds;
 
         private int _nextEntityId;
         private readonly StageEvents _events;
@@ -38,6 +40,8 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> PatrolCameraIds { get { return _patrolCameraIds; } }
         public IReadOnlyList<int> SummonerIds { get { return _summonerIds; } }
         public IReadOnlyList<int> ChaserIds { get { return _chaserIds; } }
+        public IReadOnlyList<int> LauncherIds { get { return _launcherIds; } }
+        public IReadOnlyList<int> ProjectileIds { get { return _projectileIds; } }
         public IEnumerable<EntityState> Entities { get { return _entitiesById.Values; } }
         public StageEvents Events { get { return _events; } }
         public bool IsViewDirty { get; private set; }
@@ -59,6 +63,8 @@ namespace MyGame2.Stage
             _patrolCameraIds = new List<int>(4);
             _summonerIds = new List<int>(4);
             _chaserIds = new List<int>(4);
+            _launcherIds = new List<int>(4);
+            _projectileIds = new List<int>(16);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
             IsViewDirty = false;
@@ -209,7 +215,7 @@ namespace MyGame2.Stage
             _events?.RaiseEntityKilled(entityId);
             return true;
         }
-        
+
         // 플레이어가 밟았을 때만 호출됨 (상자는 발동 안 함)
         public void RevealHiddenTrap(GridPos position)
         {
@@ -217,13 +223,11 @@ namespace MyGame2.Stage
             int idx = ToIndex(position);
             CellData cell = _cells[idx];
             if (!cell.HasHiddenTrap) return;
- 
-            // HiddenTrap 해제 -> Trap으로 전환
+
             cell.Flags &= ~CellFlags.HiddenTrap;
             cell.Flags |= CellFlags.Trap;
             _cells[idx] = cell;
- 
-            // 뷰에 알림 (타일 전환 애니메이션용)
+
             _events?.RaiseHiddenTrapRevealed(position);
         }
 
@@ -246,7 +250,6 @@ namespace MyGame2.Stage
             _cells[idx] = cell;
         }
 
-        // 지정 셀에 함정 플래그 켜기 (TrapifyCells 내부용)
         private void EnableTrap(GridPos position)
         {
             if (!IsInside(position)) return;
@@ -257,7 +260,7 @@ namespace MyGame2.Stage
         }
 
         // 감시영역 함정화 (CCTV / PatrolCamera 적발 후 사용)
-     
+
         public void TrapifyCells(List<GridPos> cells)
         {
             for (int i = 0; i < cells.Count; i++)
@@ -265,10 +268,8 @@ namespace MyGame2.Stage
                 GridPos pos = cells[i];
                 if (!IsInside(pos)) continue;
 
-                // 함정 플래그 켜기
                 EnableTrap(pos);
 
-                // 이 셀에 플레이어가 서 있으면 즉사
                 int idx = ToIndex(pos);
                 CellData cell = _cells[idx];
                 if (cell.IsOccupied &&
@@ -331,19 +332,13 @@ namespace MyGame2.Stage
 
         public void SetViewDirty() { IsViewDirty = true; }
         public void ClearViewDirty() { IsViewDirty = false; }
-        
-        // SummonerEnemy가 적발 시 ChaserEnemy를 동적 생성할 때 사용.
-     
+
         public int SpawnEntity(EntitySO definition, GridPos position, Direction facing)
         {
             EntityState entity = new EntityState(definition, position, facing);
             return AddEntity(entity);
         }
-        
-        // 추격 종료, 길 막힘, 함정 밟음, 투사체 피격 등
-        // ChaserEnemy가 소멸할 때 호출한다.
-        // 엔티티를 사망 처리하고 추적 리스트에서 제거한다.
-        
+
         public bool RemoveEntity(int entityId)
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
@@ -352,9 +347,11 @@ namespace MyGame2.Stage
 
             switch (entity.Kind)
             {
-                case EntityKind.ChaserEnemy:        _chaserIds.Remove(entityId); break;
-                case EntityKind.SummonerEnemy:       _summonerIds.Remove(entityId); break;
-                case EntityKind.PatrolCameraEnemy:   _patrolCameraIds.Remove(entityId); break;
+                case EntityKind.ChaserEnemy:         _chaserIds.Remove(entityId); break;
+                case EntityKind.SummonerEnemy:        _summonerIds.Remove(entityId); break;
+                case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Remove(entityId); break;
+                case EntityKind.ProjectileLauncher:   _launcherIds.Remove(entityId); break;
+                case EntityKind.Projectile:           _projectileIds.Remove(entityId); break;
             }
 
             _entitiesById.Remove(entityId);
@@ -378,13 +375,15 @@ namespace MyGame2.Stage
                         _entitiesById[a].Get<PlayerData>().Slot
                             .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
                     break;
-                case EntityKind.Box:                _boxIds.Add(entity.Id); break;
-                case EntityKind.CameraEnemy:         _cameraIds.Add(entity.Id); break;
-                case EntityKind.RobotEnemy:          _robotIds.Add(entity.Id); break;
-                case EntityKind.AnimalEnemy:          _animalIds.Add(entity.Id); break;
-                case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Add(entity.Id); break;
-                case EntityKind.SummonerEnemy:        _summonerIds.Add(entity.Id); break;
-                case EntityKind.ChaserEnemy:          _chaserIds.Add(entity.Id); break;
+                case EntityKind.Box:                  _boxIds.Add(entity.Id); break;
+                case EntityKind.CameraEnemy:          _cameraIds.Add(entity.Id); break;
+                case EntityKind.RobotEnemy:           _robotIds.Add(entity.Id); break;
+                case EntityKind.AnimalEnemy:           _animalIds.Add(entity.Id); break;
+                case EntityKind.PatrolCameraEnemy:     _patrolCameraIds.Add(entity.Id); break;
+                case EntityKind.SummonerEnemy:         _summonerIds.Add(entity.Id); break;
+                case EntityKind.ChaserEnemy:           _chaserIds.Add(entity.Id); break;
+                case EntityKind.ProjectileLauncher:    _launcherIds.Add(entity.Id); break;
+                case EntityKind.Projectile:            _projectileIds.Add(entity.Id); break;
             }
             return entity.Id;
         }

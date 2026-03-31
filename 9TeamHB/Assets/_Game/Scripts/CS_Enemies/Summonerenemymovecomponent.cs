@@ -285,20 +285,21 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         FlyTo(state, next);
     }
 
-    // 비행 이동: 벽 + 부쉬 진입 불가
+    // 비행 이동: 점유 시스템 우회 (상자 위를 지나가도 상자 점유 안 건드림)
     private void FlyTo(StageState state, GridPos target)
     {
         if (!state.IsInside(target)) return;
         CellData cell = state.GetCell(target);
         if (cell.HasWall) return;
-        if (cell.HasBush) return; // 부쉬 진입 불가
+        if (cell.HasBush) return;
         if (_entityState.Position.Equals(target)) return;
 
         Direction dir = Dir(_entityState.Position, target);
         if (dir == Direction.None) return;
 
         state.SetFacing(_entityState.Id, dir);
-        state.MoveEntity(_entityState.Id, target);
+        // MoveEntity 대신 Position 직접 변경 (점유 시스템 우회)
+        _entityState.Position = target;
         state.SetViewDirty();
     }
 
