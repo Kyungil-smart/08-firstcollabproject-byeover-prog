@@ -50,6 +50,7 @@ namespace MyGame2.Stage
             if (stageManager == null) return;
             stageManager.Events.StageLoaded += OnStageLoaded;
             stageManager.Events.TurnExecuted += OnTurnExecuted;
+            stageManager.Events.UndoExecuted += OnUndoExecuted;
         }
 
         private void OnDisable()
@@ -57,6 +58,7 @@ namespace MyGame2.Stage
             if (stageManager == null) return;
             stageManager.Events.StageLoaded -= OnStageLoaded;
             stageManager.Events.TurnExecuted -= OnTurnExecuted;
+            stageManager.Events.UndoExecuted -= OnUndoExecuted;
         }
 
         private void Start()
@@ -71,6 +73,11 @@ namespace MyGame2.Stage
         }
 
         private void OnTurnExecuted(TurnOutcome outcome)
+        {
+            RefreshAll(stageManager.CurrentState);
+        }
+
+        private void OnUndoExecuted()
         {
             RefreshAll(stageManager.CurrentState);
         }
@@ -91,28 +98,28 @@ namespace MyGame2.Stage
             float scale = 1f - tilePadding;
 
             for (int y = 0; y < state.Height; y++)
-            for (int x = 0; x < state.Width; x++)
-            {
-                GridPos pos = new GridPos(x, y);
-                CellData cell = state.GetCell(pos);
-
-                Color c;
-                if (cell.HasWall)       c = wallColor;
-                else if (cell.HasTrap)  c = trapColor;
-                else if (cell.HasGoal)  c = goalColor;
-                else if (cell.HasCrack) c = crackColor;
-                else if (cell.HasTeleport) c = teleportColor;
-                else                    c = floorColor;
-
-                if (cell.HasCrack)
+                for (int x = 0; x < state.Width; x++)
                 {
-                    _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder-1));
+                    GridPos pos = new GridPos(x, y);
+                    CellData cell = state.GetCell(pos);
+
+                    Color c;
+                    if (cell.HasWall) c = wallColor;
+                    else if (cell.HasTrap) c = trapColor;
+                    else if (cell.HasGoal) c = goalColor;
+                    else if (cell.HasCrack) c = crackColor;
+                    else if (cell.HasTeleport) c = teleportColor;
+                    else c = floorColor;
+
+                    if (cell.HasCrack)
+                    {
+                        _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder - 1));
+                    }
+                    else
+                    {
+                        _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder));
+                    }
                 }
-                else
-                {
-                    _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder));
-                }
-            }
         }
 
         // ── 카메라 감시 범위 ──
