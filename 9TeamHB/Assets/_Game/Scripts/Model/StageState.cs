@@ -24,7 +24,7 @@ namespace MyGame2.Stage
         private int _nextEntityId;
         private readonly StageEvents _events;
 
-        public CellData[] Cells { get; private set; }
+        public CellData[] Cells { get { return _cells; } }
         public int Width { get; private set; }
         public int Height { get; private set; }
         public int ActivePlayerId { get; private set; }

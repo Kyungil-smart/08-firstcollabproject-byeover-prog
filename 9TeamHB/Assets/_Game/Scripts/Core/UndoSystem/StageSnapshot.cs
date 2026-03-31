@@ -11,7 +11,7 @@ namespace MyGame2.Stage
         private readonly List<int> _summonerIds;
         private readonly List<int> _chaserIds;
 
-        public CellData[] Cells { get; private set; }
+        public CellData[] Cells { get { return _cells; } }
         public int ActivePlayerId { get; private set; }
         public int TurnIndex { get; private set; }
         public bool IsGameOver { get; private set; }
