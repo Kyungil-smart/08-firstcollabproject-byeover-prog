@@ -26,7 +26,9 @@ namespace MyGame2.Stage
         // 빨간색 — 아무도 못 밂 (철 상자)
         Iron = 3,
         // 파란색 — 밀면 벽이나 오브젝트에 닿을 때까지 미끄러짐
-        Ice = 4
+        Ice = 4,
+        // 갈색(나무) - 양쪽 다 밀기 가능, 막힌 상태에서 밀면 파괴됨
+        Breakable = 5   // 부숴지는 상자 추가부분
     }
 
     public enum CameraType

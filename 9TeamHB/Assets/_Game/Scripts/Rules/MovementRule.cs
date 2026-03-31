@@ -49,25 +49,7 @@ namespace MyGame2.Stage
             { 
                 if(state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
                 {
-                     // 적이 플레이어로 이동할 때
-                     if (mover.IsLethalMover && occupant.IsPlayer)
-                         return MoveResult.ContactKill(moverId, occupant.Id, from, target);
- 
-                     // 밀 수 있는 상자로 이동할 때
-                     if (mover.IsPlayer && occupant.IsPushable)
-                     {
-                         if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
-                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
-                     }
-                     
-                     // 획득 가능한 엔티티로 이동할 때
-                     if (mover.IsPlayer && occupant.Has<Pickable>())
-                     {
-                         if(!mover.Has<PocketData>()) // 포켓 없으면 블럭처럼 막힘
-                             return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
-                         mover.Get<PocketData>().PickUp(state, occupant);
-                         return MoveResult.Success(moverId, from, target);
-                     }
+
                 }
                 Debug.Log("Blocked by entity");
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);

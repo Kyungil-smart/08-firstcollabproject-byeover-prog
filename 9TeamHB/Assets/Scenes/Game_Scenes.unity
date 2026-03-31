@@ -215,6 +215,7 @@ MonoBehaviour:
     type: 3}
   boxIronPrefab: {fileID: 6042236026587706409, guid: c3289e2f554abf841b42a68159d5b647,
     type: 3}
+  boxBreakablePrefab: {fileID: 0}
   cameraEnemyPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595,
     type: 3}
   robotEnemyPrefab: {fileID: 651025039593506988, guid: 055e99416d717bc40bb92d5e9f93bb16,
@@ -917,6 +918,8 @@ MonoBehaviour:
   boxPlayer2Prefab: {fileID: 6042236026587706409, guid: 22876567f6ba47b4a947a272d6e87d8d,
     type: 3}
   boxIronPrefab: {fileID: 6042236026587706409, guid: c3289e2f554abf841b42a68159d5b647,
+    type: 3}
+  boxBreakablePrefab: {fileID: 6042236026587706409, guid: a58ddd7809ea3ad489418abdb075c62e,
     type: 3}
   cameraEnemyPrefab: {fileID: 4025785007125767817, guid: 2d6978910731bba459a1d55c54fa6595,
     type: 3}
