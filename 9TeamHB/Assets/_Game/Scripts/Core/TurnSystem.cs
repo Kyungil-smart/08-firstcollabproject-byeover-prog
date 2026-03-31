@@ -41,6 +41,8 @@ namespace MyGame2.Stage
             int playerId = state.ActivePlayerId;
 
             // 1. 판정 (상태 변이 없음)
+            if (state.IsPlayerOnLockedDoor)
+                direction = Direction.None; // 문이 잠기면 방향을 지워 이동 막음
             MoveResult moveResult = _movementRule.TryMove(state, playerId, direction);
 
             if (!moveResult.CanMove)

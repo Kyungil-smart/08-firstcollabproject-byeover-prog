@@ -189,10 +189,23 @@ namespace MyGame2.Stage
 
             GridPos from = entity.Position;
             ClearOccupant(from);
+            
+            //버튼의 경우 점유 해제 처리
+            if (GetCell(from).HasSignalButton && !GetCell(from).IsSticky)
+            {
+                DeactivePairCell(from);
+            }
 
+            // 상자가 함정에서 벗어나면 함정 재생
             if (entity.IsBox && OriginalHasTrap(from))
                 RestoreTrap(from);
 
+            // 예정지가 버튼계열이면 페어 활성화
+            if (GetCell(destination).HasSignalButton)
+            {
+                ActivePairCell(destination);
+            }
+            
             entity.Position = destination;
             SetOccupant(destination, entity.Id);
             _events?.RaiseEntityMoved(entityId, from, destination);
@@ -220,6 +233,15 @@ namespace MyGame2.Stage
             ClearOccupant(entity.Position);
             _events?.RaiseEntityKilled(entityId);
             return true;
+        }
+
+        public bool IsPlayerOnLockedDoor
+        {
+            get
+            {
+                TryGetEntity(ActivePlayerId, out EntityState player);
+                return GetCell(player.Position).IsClosedDoor;
+            }
         }
 
         public void DisableTrap(GridPos position)
@@ -295,6 +317,36 @@ namespace MyGame2.Stage
                 }
                 box.Get<Fallable>().StartFallAnimation(this);
             }
+        }
+        // 페어 셀 활성화
+        private void ActivePairCell(GridPos position)
+        {
+            // 페어 찾기
+            GridPos pair = _cellPairs[position];
+            
+            if (!IsInside(pair)) return;
+            int idx = ToIndex(pair);
+            CellData pairCell = _cells[idx];
+            if (!pairCell.HasActive)
+            {
+                pairCell.Flags |= CellFlags.Active;
+            }
+            _cells[idx] = pairCell;
+        }
+        // 페어 셀 비활성화
+        private void DeactivePairCell(GridPos position)
+        {
+            // 페어 찾기
+            GridPos pair = _cellPairs[position];
+
+            // 비활성화
+            int idx = ToIndex(pair);
+            CellData pairCell = _cells[idx];
+            if (pairCell.HasActive)
+            {
+                pairCell.Flags &= ~CellFlags.Active;
+            }
+            _cells[idx] = pairCell;
         }
 
         public void RotateAllCameras()
