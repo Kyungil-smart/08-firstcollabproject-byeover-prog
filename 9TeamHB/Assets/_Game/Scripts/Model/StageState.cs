@@ -318,6 +318,23 @@ namespace MyGame2.Stage
                 box.Get<Fallable>().StartFallAnimation(this);
             }
         }
+        // 문 활성화
+        public void OpenDoor(int moverId, GridPos position)
+        {
+            // 문 활성화
+            if (!IsInside(position)) return;
+            int idx = ToIndex(position);
+            CellData cell = _cells[idx];
+            cell.Flags |= (CellFlags.Active | CellFlags.OpenFixed);
+            _cells[idx] = cell;
+            
+            // 플레이어 열쇠 소모
+            if (TryGetEntity(moverId, out EntityState mover))
+            {
+                mover.Get<PocketData>().TryUseKey();
+            }
+        }
+        
         // 페어 셀 활성화
         private void ActivePairCell(GridPos position)
         {
@@ -342,7 +359,7 @@ namespace MyGame2.Stage
             // 비활성화
             int idx = ToIndex(pair);
             CellData pairCell = _cells[idx];
-            if (pairCell.HasActive)
+            if (pairCell.HasActive && !pairCell.IsOpenFixed)
             {
                 pairCell.Flags &= ~CellFlags.Active;
             }

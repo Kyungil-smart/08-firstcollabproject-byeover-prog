@@ -205,3 +205,9 @@ MonoBehaviour:
     spawnsEntity: 0
     entityConfig: {fileID: 0}
     facing: 0
+  - symbol: 75
+    description: "\uC5F4\uC1E0"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 64d23844dab510349a622d621654d3dc, type: 2}
+    facing: 0

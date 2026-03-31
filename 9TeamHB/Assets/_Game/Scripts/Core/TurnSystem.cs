@@ -46,12 +46,20 @@ namespace MyGame2.Stage
             MoveResult moveResult = _movementRule.TryMove(state, playerId, direction);
 
             if (!moveResult.CanMove)
+            {
                 return TurnOutcome.Ignored(moveResult);
+            }
 
             // 2. 상자 밀기 실행 (PushAndMove인 경우)
             if (moveResult.IsPushAndMove)
             {
                 _pushRule.ExecutePush(state, moveResult.TargetEntityId, direction);
+            }
+            
+            if (moveResult.Type == MoveResultType.OpenDoor)
+            {
+                //문 열기
+                state.OpenDoor(moveResult.MoverId, moveResult.To);
             }
 
             // 3. 플레이어 이동 실행

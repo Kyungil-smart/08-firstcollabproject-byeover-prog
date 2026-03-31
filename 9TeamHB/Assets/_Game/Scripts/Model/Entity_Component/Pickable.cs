@@ -1,6 +1,7 @@
 using UnityEngine;
+using MyGame2.Stage;
 
-public class Pickable
+public class Pickable : IComponentData
 {
     
 }

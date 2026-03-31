@@ -83,6 +83,7 @@ namespace MyGame2.Stage
         public bool IsBlocked => HasBlockCandidate && (HasWall || !HasActive);
 
         public bool HasActive => (Flags & CellFlags.Active) != 0;
+        public bool IsOpenFixed=> (Flags & CellFlags.OpenFixed) != 0;
 
         // 이동을 막을 수 있는 Flags 체크
         public bool HasBlockCandidate => HasWall || HasCrack || HasDoor;

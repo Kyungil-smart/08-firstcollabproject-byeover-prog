@@ -41,6 +41,9 @@ namespace MyGame2.Stage
         // 신호 지속성
         Sticky = 1 << 9,
         
+        // 열린 상태 고정
+        OpenFixed = 1 << 10,
+        
         // 스위치
         Switch = Button | Sticky
     }
