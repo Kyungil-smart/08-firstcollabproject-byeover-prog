@@ -3,7 +3,7 @@ using System;
 namespace MyGame2.Stage
 {
     // 그리드 셀 하나의 데이터.
-    // Flags로 벽/골/함정/부쉬 속성을 표현하고,
+    // Flags로 벽/골/함정/부쉬/히든함정 속성을 표현하고,
     // OccupantId로 해당 셀에 서 있는 엔티티를 추적한다.
     [Serializable]
     public struct CellData
@@ -35,6 +35,12 @@ namespace MyGame2.Stage
         public bool HasBush
         {
             get { return (Flags & CellFlags.Bush) != 0; }
+        }
+
+        // 히든 함정인가? (평소엔 바닥, 플레이어가 밟으면 발동)
+        public bool HasHiddenTrap
+        {
+            get { return (Flags & CellFlags.HiddenTrap) != 0; }
         }
 
         // 엔티티가 점유 중인가?

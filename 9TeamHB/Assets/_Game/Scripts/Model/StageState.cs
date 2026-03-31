@@ -116,6 +116,7 @@ namespace MyGame2.Stage
         public bool HasGoal(GridPos pos) { return GetCell(pos).HasGoal; }
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
+        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap; }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
         public bool OriginalHasTrap(GridPos pos)
@@ -207,6 +208,23 @@ namespace MyGame2.Stage
             ClearOccupant(entity.Position);
             _events?.RaiseEntityKilled(entityId);
             return true;
+        }
+        
+        // 플레이어가 밟았을 때만 호출됨 (상자는 발동 안 함)
+        public void RevealHiddenTrap(GridPos position)
+        {
+            if (!IsInside(position)) return;
+            int idx = ToIndex(position);
+            CellData cell = _cells[idx];
+            if (!cell.HasHiddenTrap) return;
+ 
+            // HiddenTrap 해제 -> Trap으로 전환
+            cell.Flags &= ~CellFlags.HiddenTrap;
+            cell.Flags |= CellFlags.Trap;
+            _cells[idx] = cell;
+ 
+            // 뷰에 알림 (타일 전환 애니메이션용)
+            _events?.RaiseHiddenTrapRevealed(position);
         }
 
         public void DisableTrap(GridPos position)

@@ -8,8 +8,8 @@ public class ChaserEnemyMove_Fn : EntityFunctionSO
     [Tooltip("추격 이동 간격 (초)")]
     [SerializeField] private float moveInterval = 0.1f;
 
-    [Tooltip("부쉬 진입 시 탐색 대기 시간 (초)")]
-    [SerializeField] private float lostSearchDuration = 0.5f;
+    [Tooltip("부쉬 진입 시 서성임 시간 (초) -> 시간 초과 시 소멸")]
+    [SerializeField] private float lostSearchDuration = 3.0f;
 
     [Header("참조 주입")]
     [SerializeField] private StageStateReferenceSO stageStateReference;

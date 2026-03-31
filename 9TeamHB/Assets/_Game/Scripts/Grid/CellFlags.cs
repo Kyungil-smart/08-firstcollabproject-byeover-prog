@@ -3,8 +3,8 @@ using System;
 namespace MyGame2.Stage
 {
     // 셀의 속성 비트 플래그.
-    // 여러 속성을 동시에 가질 수 있다 (예: Goal | Trap은 불가하지만 확장성 확보).
-    
+    // 여러 속성을 동시에 가질 수 있다.
+
     [Flags]
     public enum CellFlags
     {
@@ -21,6 +21,11 @@ namespace MyGame2.Stage
 
         // 부쉬 — 플레이어가 위에 있으면 감시자에게 감지되지 않음
         // 감시자는 이 타일을 지나갈 수 없음
-        Bush = 1 << 3
+        Bush = 1 << 3,
+
+        // 히든 함정 — 평소엔 일반 타일처럼 보이지만
+        // 플레이어가 밟으면 함정이 드러나면서 즉사
+        // 상자에는 발동하지 않음
+        HiddenTrap = 1 << 4
     }
 }
