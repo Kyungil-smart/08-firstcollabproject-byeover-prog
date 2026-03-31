@@ -19,7 +19,10 @@ namespace MyGame2.Stage
         private readonly List<int> _patrolCameraIds;
         private readonly List<int> _summonerIds;
         private readonly List<int> _chaserIds;
-        private readonly Dictionary<GridPos,GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
+        private readonly List<int> _launcherIds;
+        private readonly List<int> _projectileIds;
+        // Develop: 셀 페어 (스위치-문 등)
+        private readonly Dictionary<GridPos, GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
 
         private int _nextEntityId;
         private readonly StageEvents _events;
@@ -62,6 +65,8 @@ namespace MyGame2.Stage
             _patrolCameraIds = new List<int>(4);
             _summonerIds = new List<int>(4);
             _chaserIds = new List<int>(4);
+            _launcherIds = new List<int>(4);
+            _projectileIds = new List<int>(16);
             _cellPairs = new Dictionary<GridPos, GridPos>(16);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
@@ -122,6 +127,7 @@ namespace MyGame2.Stage
         public bool HasCrackNotCovered(GridPos pos) { return GetCell(pos).HasCrack && !GetCell(pos).HasActive; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
         public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap; }
+        public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
         public bool OriginalHasTrap(GridPos pos)
@@ -165,6 +171,7 @@ namespace MyGame2.Stage
             return bestPos;
         }
 
+        // Develop: 셀 페어 (스위치↔문 등)
         public void SetCellPair(GridPos a, GridPos b)
         {
             _cellPairs[a] = b;
@@ -173,6 +180,16 @@ namespace MyGame2.Stage
         public bool TryGetCellPair(GridPos a, out GridPos b)
         {
             return _cellPairs.TryGetValue(a, out b);
+        }
+
+        // Develop: 잠긴 문 위에 있는지 판정
+        public bool IsPlayerOnLockedDoor
+        {
+            get
+            {
+                TryGetEntity(ActivePlayerId, out EntityState player);
+                return GetCell(player.Position).IsClosedDoor;
+            }
         }
 
         // 변이 메서드
@@ -192,8 +209,8 @@ namespace MyGame2.Stage
 
             GridPos from = entity.Position;
             ClearOccupant(from);
-            
-            //버튼의 경우 점유 해제 처리
+
+            // Develop: 버튼 점유 해제 처리
             if (GetCell(from).HasSignalButton && !GetCell(from).IsSticky)
             {
                 DeactivePairCell(from);
@@ -203,12 +220,12 @@ namespace MyGame2.Stage
             if (entity.IsBox && OriginalHasTrap(from))
                 RestoreTrap(from);
 
-            // 예정지가 버튼계열이면 페어 활성화
+            // Develop: 예정지가 버튼계열이면 페어 활성화
             if (GetCell(destination).HasSignalButton)
             {
                 ActivePairCell(destination);
             }
-            
+
             entity.Position = destination;
             SetOccupant(destination, entity.Id);
             _events?.RaiseEntityMoved(entityId, from, destination);
@@ -238,13 +255,19 @@ namespace MyGame2.Stage
             return true;
         }
 
-        public bool IsPlayerOnLockedDoor
+        // JSW: 히든 함정 발동
+        public void RevealHiddenTrap(GridPos position)
         {
-            get
-            {
-                TryGetEntity(ActivePlayerId, out EntityState player);
-                return GetCell(player.Position).IsClosedDoor;
-            }
+            if (!IsInside(position)) return;
+            int idx = ToIndex(position);
+            CellData cell = _cells[idx];
+            if (!cell.HasHiddenTrap) return;
+
+            cell.Flags &= ~CellFlags.HiddenTrap;
+            cell.Flags |= CellFlags.Trap;
+            _cells[idx] = cell;
+
+            _events?.RaiseHiddenTrapRevealed(position);
         }
 
         public void DisableTrap(GridPos position)
@@ -276,7 +299,6 @@ namespace MyGame2.Stage
         }
 
         // 감시영역 함정화 (CCTV / PatrolCamera 적발 후 사용)
-
         public void TrapifyCells(List<GridPos> cells)
         {
             for (int i = 0; i < cells.Count; i++)
@@ -298,7 +320,8 @@ namespace MyGame2.Stage
             }
             SetViewDirty();
         }
-        // 틈새에 상자가 올라갔을 때 - 틈새 타일 flag변경 및 box 낙하 이동 코루틴 시행
+
+        // Develop: 틈새에 상자가 올라갔을 때
         public void SetCrackMovable(GridPos position, int boxId)
         {
             if (!IsInside(position)) return;
@@ -318,29 +341,27 @@ namespace MyGame2.Stage
                 box.Get<Fallable>().StartFallAnimation(this);
             }
         }
-        // 문 활성화
+
+        // Develop: 문 활성화
         public void OpenDoor(int moverId, GridPos position)
         {
-            // 문 활성화
             if (!IsInside(position)) return;
             int idx = ToIndex(position);
             CellData cell = _cells[idx];
             cell.Flags |= (CellFlags.Active | CellFlags.OpenFixed);
             _cells[idx] = cell;
-            
-            // 플레이어 열쇠 소모
+
             if (TryGetEntity(moverId, out EntityState mover))
             {
                 mover.Get<PocketData>().TryUseKey();
             }
         }
-        
-        // 페어 셀 활성화
+
+        // Develop: 페어 셀 활성화
         private void ActivePairCell(GridPos position)
         {
-            // 페어 찾기
             GridPos pair = _cellPairs[position];
-            
+
             if (!IsInside(pair)) return;
             int idx = ToIndex(pair);
             CellData pairCell = _cells[idx];
@@ -350,13 +371,12 @@ namespace MyGame2.Stage
             }
             _cells[idx] = pairCell;
         }
-        // 페어 셀 비활성화
+
+        // Develop: 페어 셀 비활성화
         private void DeactivePairCell(GridPos position)
         {
-            // 페어 찾기
             GridPos pair = _cellPairs[position];
 
-            // 비활성화
             int idx = ToIndex(pair);
             CellData pairCell = _cells[idx];
             if (pairCell.HasActive && !pairCell.IsOpenFixed)
@@ -430,7 +450,8 @@ namespace MyGame2.Stage
 
             switch (entity.Kind)
             {
-                case EntityKind.ChaserEnemy:         _chaserIds.Remove(entityId); break;
+                case EntityKind.Box:                  _boxIds.Remove(entityId); break;
+                case EntityKind.ChaserEnemy:          _chaserIds.Remove(entityId); break;
                 case EntityKind.SummonerEnemy:        _summonerIds.Remove(entityId); break;
                 case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Remove(entityId); break;
                 case EntityKind.ProjectileLauncher:   _launcherIds.Remove(entityId); break;

@@ -15,13 +15,15 @@ namespace MyGame2.Stage
         [SerializeField] private float cellSize = 1f;
 
         [Header("기호 레지스트리")]
+        [Tooltip("맵 텍스트의 문자 매핑 SO")]
         [SerializeField] private MapSymbolRegistrySO symbolRegistry;
 
         [Header("상태 참조 SO")]
+        [Tooltip("MoveComponent들이 StageState에 접근하기 위한 SO. Assets/_Game/SO/Util/StageState 에셋 연결")]
         [SerializeField] private StageStateReferenceSO stageStateReference;
 
         private MapLoader _mapLoader;
-
+        
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
         private TurnSystem _turnSystem;
@@ -41,6 +43,7 @@ namespace MyGame2.Stage
             LastOutcome = TurnOutcome.None();
             _events.TurnExecuted += OnTurnExecuted;
             _events.ActivePlayerChanged += OnActivePlayerChanged;
+            _events.EntityKilled += OnEntityKilled;
         }
 
         private void Start()
@@ -52,6 +55,7 @@ namespace MyGame2.Stage
         {
             _events.TurnExecuted -= OnTurnExecuted;
             _events.ActivePlayerChanged -= OnActivePlayerChanged;
+            _events.EntityKilled -= OnEntityKilled;
         }
 
         private void OnTurnExecuted(TurnOutcome outcome)
@@ -62,6 +66,13 @@ namespace MyGame2.Stage
         }
 
         private void OnActivePlayerChanged(int id) { SyncSelection(); }
+
+        // 히든 함정 등 지연 Kill 후에도 뷰가 갱신되도록 처리
+        private void OnEntityKilled(int id)
+        {
+            SyncViews();
+            SyncSelection();
+        }
 
         public void LoadStage(int stageIndex)
         {
@@ -81,6 +92,7 @@ namespace MyGame2.Stage
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
 
+            // 핵심 추가: MoveComponent들이 StageState에 접근할 수 있도록 등록
             if (stageStateReference != null)
                 stageStateReference.Register(CurrentState);
 
@@ -92,9 +104,9 @@ namespace MyGame2.Stage
             _events.RaiseStageLoaded(stageIndex);
         }
 
-        public void RestartCurrentStage()
-        {
-            LoadStage(_currentStageIndex);
+        public void RestartCurrentStage() 
+        { 
+            LoadStage(_currentStageIndex); 
         }
 
         public bool LoadNextStage()
@@ -135,17 +147,11 @@ namespace MyGame2.Stage
             if (prefabRegistry == null) return;
             foreach (EntityState e in CurrentState.Entities)
             {
-                GridEntityView prefab = e.Prefab;
-                if (prefab == null) continue;
-                GridEntityView view = Instantiate(prefab, entityRoot);
-                view.name = $"{e.Kind}_{e.Id}";
-                view.Bind(e, cellSize);
-                Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
-                _views[e.Id] = view;
+                SpawnViewForEntity(e);
             }
         }
 
-        // 단일 엔티티의 View 생성
+        // 단일 엔티티의 View 생성 (동적 스폰 지원)
         private void SpawnViewForEntity(EntityState e)
         {
             if (_views.ContainsKey(e.Id)) return; // 이미 있으면 건너뜀
@@ -156,20 +162,22 @@ namespace MyGame2.Stage
             GridEntityView view = Instantiate(prefab, entityRoot);
             view.name = $"{e.Kind}_{e.Id}";
             view.Bind(e, cellSize);
+            Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
             _views[e.Id] = view;
         }
 
-        // View 동기화
+        // View 동기화 (동적 스폰/제거 처리)
         private void SyncViews()
         {
             if (CurrentState == null) return;
-            
+
+            // 새로 생긴 엔티티의 View 생성
             foreach (EntityState e in CurrentState.Entities)
             {
                 if (!_views.ContainsKey(e.Id))
                     SpawnViewForEntity(e);
             }
-            
+
             List<int> toRemove = null;
             foreach (var pair in _views)
             {

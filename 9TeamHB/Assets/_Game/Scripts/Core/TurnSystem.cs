@@ -40,39 +40,27 @@ namespace MyGame2.Stage
 
             int playerId = state.ActivePlayerId;
 
-            // 1. 판정 (상태 변이 없음)
-            if (state.IsPlayerOnLockedDoor)
-                direction = Direction.None; // 문이 잠기면 방향을 지워 이동 막음
+            // 1. 판정
             MoveResult moveResult = _movementRule.TryMove(state, playerId, direction);
 
             if (!moveResult.CanMove)
-            {
                 return TurnOutcome.Ignored(moveResult);
-            }
 
-            // 상자 밀기 실행 (PushAndMove인 경우)
+            // 2. 상자 밀기
             if (moveResult.IsPushAndMove)
             {
                 _pushRule.ExecutePush(state, moveResult.TargetEntityId, direction);
             }
-            
-            if (moveResult.Type == MoveResultType.OpenDoor)
-            {
-                //문 열기
-                state.OpenDoor(moveResult.MoverId, moveResult.To);
-            }
 
-            // 플레이어 이동 실행
+            // 3. 플레이어 이동
             state.TryMoveEntity(playerId, moveResult.To);
             state.SetFacing(playerId, direction);
 
-            // 히든 함정 판정
-            // MarkGameOver 즉시 호출 -> 추가 입력 차단
-            // KillEntity는 애니메이션 끝난 후 HiddenTrapVisualManager가 처리
+            // 4a. 히든 함정
             if (state.HasHiddenTrap(moveResult.To))
             {
                 state.RevealHiddenTrap(moveResult.To);
-                state.MarkGameOver(); // 즉시 입력 차단
+                state.MarkGameOver();
 
                 state.Events?.RaiseHiddenTrapPlayerKill(playerId, moveResult.To);
 
@@ -89,7 +77,7 @@ namespace MyGame2.Stage
                 return hiddenTrapDeath;
             }
 
-            // 일반 함정 밟기 판정
+            // 4b. 일반 함정
             if (state.HasTrap(moveResult.To))
             {
                 state.KillEntity(playerId);
@@ -107,17 +95,35 @@ namespace MyGame2.Stage
                 return trapDeath;
             }
 
-            // 카메라 회전
+            // 4c. 파괴 함정 (플레이어도 즉사)
+            if (state.HasDestroyTrap(moveResult.To))
+            {
+                state.KillEntity(playerId);
+                state.MarkGameOver();
+                state.AdvanceTurn();
+
+                TurnOutcome destroyTrapDeath = TurnOutcome.Create(
+                    moveResult,
+                    Array.Empty<MoveResult>(),
+                    Array.Empty<MoveResult>(),
+                    Array.Empty<int>(),
+                    true, false);
+
+                state.Events?.RaiseTurnExecuted(destroyTrapDeath);
+                return destroyTrapDeath;
+            }
+
+            // 5. 카메라 회전
             state.RotateAllCameras();
 
-            // 카메라 감지
+            // 6. 카메라 감지
             _detectedBuffer.Clear();
             _detectionRule.DetectPlayers(state, _detectedBuffer);
 
             if (_detectedBuffer.Count > 0)
                 _deathRule.ApplyCameraDetections(state, _detectedBuffer);
 
-            // 클리어 판정
+            // 7. 클리어 판정
             bool stageClear = false;
             if (!state.IsGameOver)
                 stageClear = _clearRule.Evaluate(state);
