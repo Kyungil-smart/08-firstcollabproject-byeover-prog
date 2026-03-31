@@ -17,6 +17,10 @@ namespace MyGame2.Stage
         [SerializeField] private Color goalColor = new Color(1f, 0.84f, 0f, 1f);
         [SerializeField] private Color trapColor = new Color(0.55f, 0.15f, 0.70f, 1f);
         [SerializeField] private Color teleportColor = new Color(0.7f, 0.7f, 0.99f, 1f);
+        [SerializeField] private Color buttonColor = new Color(0.9f, 0.2f, 0.2f, 1f);
+        [SerializeField] private Color switchColor = new Color(0.9f, 0.6f, 0.6f, 1f);
+        [SerializeField] private Color opendDoorColor = new Color(0.9f, 0.7f, 0.4f, 1f);
+        [SerializeField] private Color closedDoorColor = new Color(0.4f, 0.3f, 0.2f, 1f);
 
         [Header("카메라 감시 범위")]
         [SerializeField] private Color cameraDetectionColor = new Color(1f, 0.2f, 0.2f, 0.25f);
@@ -102,6 +106,13 @@ namespace MyGame2.Stage
                 else if (cell.HasGoal)  c = goalColor;
                 else if (cell.HasCrack) c = crackColor;
                 else if (cell.HasTeleport) c = teleportColor;
+                else if (cell.HasSignalButton)
+                {
+                    if(!cell.IsSticky) c = buttonColor;
+                    else c = switchColor;
+                }
+                else if (cell.IsOpenedDoor) c = opendDoorColor;
+                else if (cell.IsClosedDoor) c = closedDoorColor;
                 else                    c = floorColor;
 
                 if (cell.HasCrack)

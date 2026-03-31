@@ -61,11 +61,16 @@ namespace MyGame2.Stage
             if (state == null) return;
             // pos 기준으로 셀을 찾고 pair 할당
             // 정의 할때 모든 텔레포트 스팟 위치를 정확히 알고있는 상태로 부여해주어야한다.
-            BindPair(new GridPos(1, 4), new GridPos(12, 11), state);
+            BindPair(new GridPos(3, 1), new GridPos(9, 10));
+            BindPair(new GridPos(3, 4), new GridPos(11, 10));
+            
         }
 
-        private void BindPair(GridPos a, GridPos b, StageState state)
+        private void BindPair(GridPos a, GridPos b)
         {
+            StageState state = stageManager.CurrentState;
+            if (state == null) return;
+
             state.SetCellPair(a, b);
         }
     }

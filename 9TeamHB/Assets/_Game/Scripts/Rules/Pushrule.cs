@@ -27,7 +27,7 @@ namespace MyGame2.Stage
 
             GridPos dest = box.Position.Move(direction);
             state.TryMoveEntity(boxId, dest);
-            if(state.HasCrack(dest))
+            if(state.HasCrackNotCovered(dest))
                 state.SetCrackMovable(dest, boxId);
 
             if (state.HasTrap(dest))

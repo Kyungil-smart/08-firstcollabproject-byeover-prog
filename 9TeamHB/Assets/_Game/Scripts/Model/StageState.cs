@@ -117,7 +117,7 @@ namespace MyGame2.Stage
         public CellData GetCell(GridPos pos) { return _cells[ToIndex(pos)]; }
         public bool HasGoal(GridPos pos) { return GetCell(pos).HasGoal; }
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
-        public bool HasCrack(GridPos pos) { return GetCell(pos).HasCrack; }
+        public bool HasCrackNotCovered(GridPos pos) { return GetCell(pos).HasCrack && !GetCell(pos).HasActive; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
@@ -189,10 +189,23 @@ namespace MyGame2.Stage
 
             GridPos from = entity.Position;
             ClearOccupant(from);
+            
+            //버튼의 경우 점유 해제 처리
+            if (GetCell(from).HasSignalButton && !GetCell(from).IsSticky)
+            {
+                DeactivePairCell(from);
+            }
 
+            // 상자가 함정에서 벗어나면 함정 재생
             if (entity.IsBox && OriginalHasTrap(from))
                 RestoreTrap(from);
 
+            // 예정지가 버튼계열이면 페어 활성화
+            if (GetCell(destination).HasSignalButton)
+            {
+                ActivePairCell(destination);
+            }
+            
             entity.Position = destination;
             SetOccupant(destination, entity.Id);
             _events?.RaiseEntityMoved(entityId, from, destination);
@@ -220,6 +233,15 @@ namespace MyGame2.Stage
             ClearOccupant(entity.Position);
             _events?.RaiseEntityKilled(entityId);
             return true;
+        }
+
+        public bool IsPlayerOnLockedDoor
+        {
+            get
+            {
+                TryGetEntity(ActivePlayerId, out EntityState player);
+                return GetCell(player.Position).IsClosedDoor;
+            }
         }
 
         public void DisableTrap(GridPos position)
@@ -283,7 +305,7 @@ namespace MyGame2.Stage
             int idx = ToIndex(position);
             CellData cell = _cells[idx];
             if (!cell.HasCrack) return;
-            cell.Flags &= ~CellFlags.Crack;
+            cell.Flags |= CellFlags.Active;
             cell.OccupantId = -1;
             _cells[idx] = cell;
 
@@ -295,6 +317,53 @@ namespace MyGame2.Stage
                 }
                 box.Get<Fallable>().StartFallAnimation(this);
             }
+        }
+        // 문 활성화
+        public void OpenDoor(int moverId, GridPos position)
+        {
+            // 문 활성화
+            if (!IsInside(position)) return;
+            int idx = ToIndex(position);
+            CellData cell = _cells[idx];
+            cell.Flags |= (CellFlags.Active | CellFlags.OpenFixed);
+            _cells[idx] = cell;
+            
+            // 플레이어 열쇠 소모
+            if (TryGetEntity(moverId, out EntityState mover))
+            {
+                mover.Get<PocketData>().TryUseKey();
+            }
+        }
+        
+        // 페어 셀 활성화
+        private void ActivePairCell(GridPos position)
+        {
+            // 페어 찾기
+            GridPos pair = _cellPairs[position];
+            
+            if (!IsInside(pair)) return;
+            int idx = ToIndex(pair);
+            CellData pairCell = _cells[idx];
+            if (!pairCell.HasActive)
+            {
+                pairCell.Flags |= CellFlags.Active;
+            }
+            _cells[idx] = pairCell;
+        }
+        // 페어 셀 비활성화
+        private void DeactivePairCell(GridPos position)
+        {
+            // 페어 찾기
+            GridPos pair = _cellPairs[position];
+
+            // 비활성화
+            int idx = ToIndex(pair);
+            CellData pairCell = _cells[idx];
+            if (pairCell.HasActive && !pairCell.IsOpenFixed)
+            {
+                pairCell.Flags &= ~CellFlags.Active;
+            }
+            _cells[idx] = pairCell;
         }
 
         public void RotateAllCameras()

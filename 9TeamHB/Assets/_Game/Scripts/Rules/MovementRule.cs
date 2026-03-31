@@ -30,8 +30,15 @@ namespace MyGame2.Stage
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.OutOfBounds);
 
             CellData cell = state.GetCell(target);
-            if (cell.HasWall||cell.HasCrack)
+            if (cell.IsBlocked)
+            {
+                if (cell.IsClosedDoor && mover.IsPlayer &&
+                    mover.Has<PocketData>() && (mover.Get<PocketData>().HasKey))
+                {
+                    return MoveResult.OpenDoor(moverId, from, target);
+                }
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
+            }
 
             // 부쉬: 감시자/적은 진입 불가, 플레이어만 가능
             if (cell.HasBush && !mover.IsPlayer)
@@ -39,18 +46,30 @@ namespace MyGame2.Stage
             
 
             if (cell.IsOccupied)
-            {
-                if (state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
+            { 
+                if(state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
                 {
-                    if (mover.IsLethalMover && occupant.IsPlayer)
-                        return MoveResult.ContactKill(moverId, occupant.Id, from, target);
-
-                    if (mover.IsPlayer && occupant.IsPushable)
-                    {
-                        if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
-                            return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
-                    }
+                     // 적이 플레이어로 이동할 때
+                     if (mover.IsLethalMover && occupant.IsPlayer)
+                         return MoveResult.ContactKill(moverId, occupant.Id, from, target);
+ 
+                     // 밀 수 있는 상자로 이동할 때
+                     if (mover.IsPlayer && occupant.IsPushable)
+                     {
+                         if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
+                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
+                     }
+                     
+                     // 획득 가능한 엔티티로 이동할 때
+                     if (mover.IsPlayer && occupant.Has<Pickable>())
+                     {
+                         if(!mover.Has<PocketData>()) // 포켓 없으면 블럭처럼 막힘
+                             return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
+                         mover.Get<PocketData>().PickUp(state, occupant);
+                         return MoveResult.Success(moverId, from, target);
+                     }
                 }
+                Debug.Log("Blocked by entity");
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
             }
             
