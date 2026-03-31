@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using NUnit.Framework;
 
 namespace MyGame2.Stage
 {
@@ -12,6 +14,8 @@ namespace MyGame2.Stage
 
         public CellFlags Flags;
         public int OccupantId;
+
+        
 
         // 벽인가? (이동 불가, 시야 차단)
         public bool HasWall
@@ -36,6 +40,54 @@ namespace MyGame2.Stage
         {
             get { return (Flags & CellFlags.Bush) != 0; }
         }
+        
+        // 틈새 타일이 이동 가능한가?
+        public bool HasCrack
+        {
+            get { return (Flags & CellFlags.Crack) != 0; }
+        }
+        
+        // 텔레포트 타일인가?
+        public bool HasTeleport
+        {
+            get { return (Flags & CellFlags.Teleport) != 0; }
+        }
+        // 문 타일인가?
+        public bool HasDoor  // 문인가?
+        {
+            get { return (Flags & CellFlags.Door) != 0; }
+        }
+        public bool IsOpenedDoor // 열린 문인가?
+        {
+            get { return HasDoor && HasActive; }
+        }
+        public bool IsClosedDoor // 닫힌 문인가?
+        {
+            get { return HasDoor && !HasActive; }
+        }
+
+        // 신호를 보내는 타일인가?
+        public bool HasSignalButton
+        {
+            get { return (Flags & CellFlags.Button) != 0; }
+        }
+
+        // 점유가 해제 되어도 신호가 유지되어야 하는가?
+        public bool IsSticky
+        {
+            get { return (Flags & CellFlags.Sticky) != 0; }
+        }
+        
+        // 타일이 이동 불가능하게 막혀 있는가( 점유 상관없이 타일 속성 자체로 막혀있는가)
+        // 이동을 막을 수 없는 Flags라면 false 바로 반환, 이후 활성 여부에 따라 판단
+        public bool IsBlocked => HasBlockCandidate && (HasWall || !HasActive);
+
+        public bool HasActive => (Flags & CellFlags.Active) != 0;
+        public bool IsOpenFixed=> (Flags & CellFlags.OpenFixed) != 0;
+
+        // 이동을 막을 수 있는 Flags 체크
+        public bool HasBlockCandidate => HasWall || HasCrack || HasDoor;
+
 
         // 히든 함정인가? (평소엔 바닥, 플레이어가 밟으면 발동)
         public bool HasHiddenTrap

@@ -17,6 +17,7 @@ namespace MyGame2.Stage
                 case BoxType.Player1Only: return playerSlot == 1;
                 case BoxType.Player2Only: return playerSlot == 2;
                 case BoxType.Iron:        return false;
+                case BoxType.Breakable:    return true; // <--- 부숴지는 박스 추가 부분, 일단 1,2 모두 가능
                 default:                  return false;
             }
         }

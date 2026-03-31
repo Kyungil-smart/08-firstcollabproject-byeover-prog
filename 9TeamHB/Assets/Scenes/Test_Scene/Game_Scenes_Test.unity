@@ -821,7 +821,7 @@ MonoBehaviour:
   entityRoot: {fileID: 1332624084}
   prefabRegistry: {fileID: 127105790}
   stageFiles:
-  - {fileID: 4900000, guid: 9a0b763351ddac247bedade0cad3b1db, type: 3}
+  - {fileID: 4900000, guid: 2afdea268305c2649ad7b1b8a9b2ec1a, type: 3}
   - {fileID: 4900000, guid: 80ac11f4fd3ff064fbc8efde2f36cb5e, type: 3}
   - {fileID: 4900000, guid: de45bba8dafd6ba4ab7f186f5b3bf485, type: 3}
   - {fileID: 4900000, guid: 8840970b8569b154a9d9de8a17bcff07, type: 3}
@@ -1139,6 +1139,7 @@ MonoBehaviour:
   stageManager: {fileID: 823654580}
   wallColor: {r: 0.15, g: 0.15, b: 0.18, a: 1}
   floorColor: {r: 0.85, g: 0.87, b: 0.9, a: 1}
+  crackColor: {r: 0.05, g: 0.05, b: 0.05, a: 1}
   goalColor: {r: 1, g: 0.84, b: 0, a: 1}
   trapColor: {r: 0.55, g: 0.15, b: 0.7, a: 1}
   cameraDetectionColor: {r: 1, g: 0.2, b: 0.2, a: 0.25}

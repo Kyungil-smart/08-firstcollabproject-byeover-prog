@@ -30,27 +30,41 @@ namespace MyGame2.Stage
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.OutOfBounds);
 
             CellData cell = state.GetCell(target);
-            if (cell.HasWall)
+            if (cell.IsBlocked)
+            {
+                if (cell.IsClosedDoor && mover.IsPlayer &&
+                    mover.Has<PocketData>() && (mover.Get<PocketData>().HasKey))
+                {
+                    return MoveResult.OpenDoor(moverId, from, target);
+                }
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
+            }
 
             // 부쉬: 감시자/적은 진입 불가, 플레이어만 가능
             if (cell.HasBush && !mover.IsPlayer)
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
+            
 
             if (cell.IsOccupied)
-            {
-                if (state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
+            { 
+                if(state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
                 {
-                    if (mover.IsLethalMover && occupant.IsPlayer)
-                        return MoveResult.ContactKill(moverId, occupant.Id, from, target);
 
-                    if (mover.IsPlayer && occupant.IsPushable)
-                    {
-                        if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
-                            return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
-                    }
                 }
+                Debug.Log("Blocked by entity");
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
+            }
+            
+            // 텔레포트 스팟 이동
+            if (cell.HasTeleport && mover.CanTeleport)
+            {
+                if (state.TryGetCellPair(target, out GridPos pair) && 
+                    !state.GetCell(pair).IsOccupied) // 텔레포트 가능
+                {
+                    mover.Get<Teleportable>().IsTeleporting = true;
+                    return MoveResult.Success(moverId, from, pair);
+                }
+                //텔레포트 불가능 시 일반 이동 v
             }
 
             return MoveResult.Success(moverId, from, target);

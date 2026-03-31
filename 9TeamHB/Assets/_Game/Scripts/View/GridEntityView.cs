@@ -24,8 +24,6 @@ namespace MyGame2.Stage
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
         private bool _isSliding;
-        private Coroutine _moveCoroutine;
-        private Coroutine _rotateCoroutine;
         private Animator _animator;
         private Direction _lastFacing;
 
@@ -96,6 +94,16 @@ namespace MyGame2.Stage
             gameObject.SetActive(true);
 
             Vector3 newTarget = entity.Position.ToWorld(cellSize);
+            
+            // 텔레포트
+            if (entity.CanTeleport && entity.Get<Teleportable>().IsTeleporting)
+            {
+                _targetPosition = newTarget;
+                transform.position = _targetPosition;
+                entity.Get<Teleportable>().IsTeleporting = false;
+            }
+            
+            // 일반 이동
             if ((_targetPosition - newTarget).sqrMagnitude > snapThreshold * snapThreshold)
             {
                 _targetPosition = newTarget;
@@ -127,21 +135,6 @@ namespace MyGame2.Stage
                 selectedMarker.SetActive(isSelected);
         }
 
-        public void ViewMove()
-        {
-            if(_moveCoroutine != null)
-                StopCoroutine(_moveCoroutine);
-            _moveCoroutine = StartCoroutine(MoveRoutine());
-        }
-
-        public void ViewRotate()
-        {
-            if(_rotateCoroutine != null)
-                StopCoroutine(_rotateCoroutine);
-            _rotateCoroutine = StartCoroutine(RotateRoutine());
-        }
-        
-
         private void Update()
         {
             if (!_isSliding && !rotateWithFacing)
@@ -167,37 +160,6 @@ namespace MyGame2.Stage
             {
                 transform.rotation = Quaternion.Lerp(
                     transform.rotation, _targetRotation, slideSpeed * dt);
-            }
-        }
-
-        IEnumerator MoveRoutine()
-        {
-            float dt = Time.deltaTime;
-            while (_isSliding)
-            {
-                transform.position = Vector3.Lerp(
-                    transform.position, _targetPosition, slideSpeed * dt);
-
-                if ((transform.position - _targetPosition).sqrMagnitude <=
-                    snapThreshold * snapThreshold)
-                {
-                    transform.position = _targetPosition;
-                    _isSliding = false;
-                    UpdateMovingAnim(false);
-                }
-
-                yield return null;
-            }
-        }
-
-        IEnumerator RotateRoutine()
-        {
-            float dt = Time.deltaTime;
-            while (rotateWithFacing)
-            {
-                transform.rotation = Quaternion.Lerp(
-                    transform.rotation, _targetRotation, slideSpeed * dt);
-                yield return null;
             }
         }
 
@@ -228,6 +190,11 @@ namespace MyGame2.Stage
 
             // ── 디버그: IsMoving 파라미터 설정 ──
             //Debug.Log($"[GridEntityView] {name}: Animator.IsMoving = {isMoving}", this);
+        }
+
+        public void OnRequestView(ViewRequest request)
+        {
+            request.Callback(this);
         }
     }
 }

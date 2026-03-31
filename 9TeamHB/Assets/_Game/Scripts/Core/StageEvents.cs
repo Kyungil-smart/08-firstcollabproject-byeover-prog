@@ -17,15 +17,19 @@ namespace MyGame2.Stage
         public event Action<TurnOutcome> TurnExecuted;
         public event Action<int> StageLoaded;
         public event Action WarpComplete;
-        public event Action<int, string, float> EnemyWorldMessageRequested;
-        public event Action<int> EnemyDespawnStarted;
 
-        // 히든 함정이 발동되어 드러났을 때 (position)
-        public event Action<GridPos> HiddenTrapRevealed;
+        // ID로 view 콜백을 위한 이벤트 딕셔너리
+        private Dictionary<int, Action<ViewRequest>> _viewRequests = new();
 
-        // 히든 함정 발동 -> 애니메이션 후 플레이어 Kill 요청 (playerId, trapPosition)
-        public event Action<int, GridPos> HiddenTrapPlayerKill;
+        public void ViewRequestSubscribe(int id, Action<ViewRequest> request)
+        {
+            _viewRequests[id] = request;
+        }
+        
 
+        
+        // 발행 메서드 (StageState, TurnSystem 등이 호출)
+        
         public void RaiseEntityMoved(int entityId, GridPos from, GridPos to)
         { EntityMoved?.Invoke(entityId, from, to); }
 
@@ -68,6 +72,17 @@ namespace MyGame2.Stage
         public void RaiseHiddenTrapPlayerKill(int playerId, GridPos trapPosition)
         { HiddenTrapPlayerKill?.Invoke(playerId, trapPosition); }
 
+        public void RaiseViewRequest(ViewRequest request)
+        { 
+            if(_viewRequests.TryGetValue(request.Id, out var callback))
+            {
+                callback?.Invoke(request);
+            }
+        }
+
+       
+        // 모든 구독자를 해제한다.
+        // 스테이지 전환 시 이전 구독을 깨끗하게 정리할 때 사용.
         public void ClearAll()
         {
             EntityMoved = null;
@@ -80,10 +95,13 @@ namespace MyGame2.Stage
             TurnExecuted = null;
             StageLoaded = null;
             WarpComplete = null;
-            EnemyWorldMessageRequested = null;
-            EnemyDespawnStarted = null;
-            HiddenTrapRevealed = null;
-            HiddenTrapPlayerKill = null;
+            _viewRequests.Clear();
         }
+    }
+
+    public struct ViewRequest
+    {
+        public int Id;
+        public Action<GridEntityView> Callback;
     }
 }

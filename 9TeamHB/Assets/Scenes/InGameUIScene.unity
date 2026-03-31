@@ -119,6 +119,65 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &453071149
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 453071151}
+  - component: {fileID: 453071150}
+  - component: {fileID: 453071152}
+  m_Layer: 0
+  m_Name: LocalizationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &453071150
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 453071149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e8e8b215422cb429ade05fc1c287b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GoogleSheetDownloader
+  sheetURL: https://docs.google.com/spreadsheets/d/e/2PACX-1vT2UZqE-l6VeUOQfEa7j8TFFuU0lqMopMzXBgBqE4BfsJlpzjc0t4mtkFtSKVfohXwZZ3PiqwwsUIYC/pub?gid=0&single=true&output=csv
+--- !u!4 &453071151
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 453071149}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 900, y: 460, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &453071152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 453071149}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e550208a1a6cac4dad1f544c575096c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizationManager
+  currentLanguage: 0
 --- !u!1001 &891391241
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -328,6 +387,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7703838590190091061, guid: f8eb6d9ddcdb91b47a5e8f2cc3e71029,
+        type: 3}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.size
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7703838590190091061, guid: f8eb6d9ddcdb91b47a5e8f2cc3e71029,
+        type: 3}
+      propertyPath: m_OnValueChanged.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 453071152}
     - target: {fileID: 8998778373714766322, guid: f8eb6d9ddcdb91b47a5e8f2cc3e71029,
         type: 3}
       propertyPath: m_AnchorMax.x
@@ -382,6 +451,8 @@ MonoBehaviour:
     type: 3}
   gameQuitPrefab: {fileID: 4678675293507642822, guid: 0d839841899192f48864584c2d53d0eb,
     type: 3}
+  maxUndoCount: 3
+  maxTagCount: 3
   timeElapsed: 0
 --- !u!4 &925338799
 Transform:
@@ -1390,3 +1461,4 @@ SceneRoots:
   - {fileID: 891391241}
   - {fileID: 925338799}
   - {fileID: 1577928407}
+  - {fileID: 453071151}
