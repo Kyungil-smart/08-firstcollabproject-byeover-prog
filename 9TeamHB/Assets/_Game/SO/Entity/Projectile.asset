@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
-  m_Name: Enemy_Chaser
+  m_Name: Projectile
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 8
-  isBlocking: 1
+  _kind: 12
+  isBlocking: 0
   blocksCameraSight: 0
-  isLethal: 1
-  _viewPrefab: {fileID: 651025039593506988, guid: f9e4323eba98f3240b07a17a57ffb4e2,
+  isLethal: 0
+  _viewPrefab: {fileID: 2360668120630020828, guid: f87436cd62160a7418fc2e1707049b3d,
     type: 3}
   Functions:
-  - {fileID: 11400000, guid: 7e22c2788319e7e4a912825f94a2bb0f, type: 2}
+  - {fileID: 11400000, guid: b262d97b3fbd5cf47bee11bdec3fa75b, type: 2}

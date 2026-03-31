@@ -3,8 +3,8 @@ using System;
 namespace MyGame2.Stage
 {
     // 셀의 속성 비트 플래그.
-    // 여러 속성을 동시에 가질 수 있다 (예: Goal | Trap은 불가하지만 확장성 확보).
-    
+    // 여러 속성을 동시에 가질 수 있다.
+
     [Flags]
     public enum CellFlags
     {

@@ -15,15 +15,13 @@ namespace MyGame2.Stage
         [SerializeField] private float cellSize = 1f;
 
         [Header("기호 레지스트리")]
-        [Tooltip("맵 텍스트의 문자 매핑 SO")]
         [SerializeField] private MapSymbolRegistrySO symbolRegistry;
 
         [Header("상태 참조 SO")]
-        [Tooltip("MoveComponent들이 StageState에 접근하기 위한 SO. Assets/_Game/SO/Util/StageState 에셋 연결")]
         [SerializeField] private StageStateReferenceSO stageStateReference;
 
         private MapLoader _mapLoader;
-        
+
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
         private TurnSystem _turnSystem;
@@ -83,7 +81,6 @@ namespace MyGame2.Stage
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
 
-            // 핵심 추가: MoveComponent들이 StageState에 접근할 수 있도록 등록
             if (stageStateReference != null)
                 stageStateReference.Register(CurrentState);
 
@@ -95,9 +92,9 @@ namespace MyGame2.Stage
             _events.RaiseStageLoaded(stageIndex);
         }
 
-        public void RestartCurrentStage() 
-        { 
-            LoadStage(_currentStageIndex); 
+        public void RestartCurrentStage()
+        {
+            LoadStage(_currentStageIndex);
         }
 
         public bool LoadNextStage()
@@ -132,6 +129,7 @@ namespace MyGame2.Stage
             return CurrentState != null && !CurrentState.IsGameOver && !CurrentState.IsStageClear;
         }
 
+        // 스테이지 로드 시 최초 View 생성
         private void SpawnViews()
         {
             if (prefabRegistry == null) return;
@@ -147,13 +145,54 @@ namespace MyGame2.Stage
             }
         }
 
+        // 단일 엔티티의 View 생성
+        private void SpawnViewForEntity(EntityState e)
+        {
+            if (_views.ContainsKey(e.Id)) return; // 이미 있으면 건너뜀
+
+            GridEntityView prefab = e.Prefab;
+            if (prefab == null) return;
+
+            GridEntityView view = Instantiate(prefab, entityRoot);
+            view.name = $"{e.Kind}_{e.Id}";
+            view.Bind(e, cellSize);
+            _views[e.Id] = view;
+        }
+
+        // View 동기화
         private void SyncViews()
         {
+            if (CurrentState == null) return;
+            
+            foreach (EntityState e in CurrentState.Entities)
+            {
+                if (!_views.ContainsKey(e.Id))
+                    SpawnViewForEntity(e);
+            }
+            
+            List<int> toRemove = null;
             foreach (var pair in _views)
             {
                 if (pair.Value == null) continue;
+
                 if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
+                {
                     pair.Value.Sync(e, cellSize);
+                }
+                else
+                {
+                    // 엔티티가 StageState에서 제거됨 (RemoveEntity로 소멸)
+                    Destroy(pair.Value.gameObject);
+                    if (toRemove == null) toRemove = new List<int>(4);
+                    toRemove.Add(pair.Key);
+                }
+            }
+
+            // Dictionary 순회 중 삭제 방지
+            if (toRemove != null)
+            {
+                for (int i = 0; i < toRemove.Count; i++)
+                    _views.Remove(toRemove[i]);
             }
         }
 

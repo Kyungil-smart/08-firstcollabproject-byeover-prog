@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d13089e1531efb48b25a54d70160b8c, type: 3}
-  m_Name: SummonerEnemyMove_Fn
-  m_EditorClassIdentifier: Assembly-CSharp::SummonerEnemyMove_Fn
-  moveInterval: 0.2
-  alertDuration: 0.5
-  patrolRadius: 3
-  chaserDefinition: {fileID: 11400000, guid: fe699ce4ae355834f8a230066d5037ea, type: 2}
+  m_Script: {fileID: 11500000, guid: 6234fa8d7c032914d9ec665f94ecd675, type: 3}
+  m_Name: ProjectileLauncherMove_Fn
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileLauncherMove_Fn
+  fireInterval: 2
+  projectileDefinition: {fileID: 11400000, guid: 9df244b9b2ee3074aae0babf94a10d1d,
+    type: 2}
+  projectileSpeed: 0.1
   stageStateReference: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511,
     type: 2}
   onUpdateEvent: {fileID: 11400000, guid: 0ddfe81bad0c68148a65346f1f702aa1, type: 2}

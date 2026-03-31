@@ -50,7 +50,7 @@ namespace MyGame2.Stage
                 return TurnOutcome.Ignored(moveResult);
             }
 
-            // 2. 상자 밀기 실행 (PushAndMove인 경우)
+            // 상자 밀기 실행 (PushAndMove인 경우)
             if (moveResult.IsPushAndMove)
             {
                 _pushRule.ExecutePush(state, moveResult.TargetEntityId, direction);
@@ -62,11 +62,34 @@ namespace MyGame2.Stage
                 state.OpenDoor(moveResult.MoverId, moveResult.To);
             }
 
-            // 3. 플레이어 이동 실행
+            // 플레이어 이동 실행
             state.TryMoveEntity(playerId, moveResult.To);
             state.SetFacing(playerId, direction);
 
-            // 4. 함정 밟기 판정
+            // 히든 함정 판정
+            // MarkGameOver 즉시 호출 -> 추가 입력 차단
+            // KillEntity는 애니메이션 끝난 후 HiddenTrapVisualManager가 처리
+            if (state.HasHiddenTrap(moveResult.To))
+            {
+                state.RevealHiddenTrap(moveResult.To);
+                state.MarkGameOver(); // 즉시 입력 차단
+
+                state.Events?.RaiseHiddenTrapPlayerKill(playerId, moveResult.To);
+
+                state.AdvanceTurn();
+
+                TurnOutcome hiddenTrapDeath = TurnOutcome.Create(
+                    moveResult,
+                    Array.Empty<MoveResult>(),
+                    Array.Empty<MoveResult>(),
+                    Array.Empty<int>(),
+                    true, false);
+
+                state.Events?.RaiseTurnExecuted(hiddenTrapDeath);
+                return hiddenTrapDeath;
+            }
+
+            // 일반 함정 밟기 판정
             if (state.HasTrap(moveResult.To))
             {
                 state.KillEntity(playerId);
@@ -84,17 +107,17 @@ namespace MyGame2.Stage
                 return trapDeath;
             }
 
-            // 5. 카메라 회전
+            // 카메라 회전
             state.RotateAllCameras();
 
-            // 6. 카메라 감지
+            // 카메라 감지
             _detectedBuffer.Clear();
             _detectionRule.DetectPlayers(state, _detectedBuffer);
 
             if (_detectedBuffer.Count > 0)
                 _deathRule.ApplyCameraDetections(state, _detectedBuffer);
 
-            // 7. 클리어 판정
+            // 클리어 판정
             bool stageClear = false;
             if (!state.IsGameOver)
                 stageClear = _clearRule.Evaluate(state);
