@@ -1,8 +1,7 @@
+using UnityEngine;
+
 namespace MyGame2.Stage
 {
-    // 이동 가능 여부를 판정한다. 상태를 변경하지 않는다.
-    // 상자가 있는 셀로 이동 시 PushAndMove 결과를 반환하고,
-    ///실제 밀기/이동은 TurnSystem이 수행한다.
     public sealed class MovementRule
     {
         private readonly PushRule _pushRule;
@@ -31,26 +30,40 @@ namespace MyGame2.Stage
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.OutOfBounds);
 
             CellData cell = state.GetCell(target);
-            if (cell.HasWall)
+            if (cell.HasWall||cell.HasCrack)
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
+
+            // 부쉬: 감시자/적은 진입 불가, 플레이어만 가능
+            if (cell.HasBush && !mover.IsPlayer)
+                return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
+            
 
             if (cell.IsOccupied)
             {
                 if (state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
                 {
-                    // 적이 플레이어 위치로 이동 → ContactKill
                     if (mover.IsLethalMover && occupant.IsPlayer)
                         return MoveResult.ContactKill(moverId, occupant.Id, from, target);
 
-                    // 플레이어가 상자를 밀려는 경우 → 판정만
-                    if (mover.IsPlayer && occupant.IsBox)
+                    if (mover.IsPlayer && occupant.IsPushable)
                     {
                         if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
                     }
                 }
-
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
+            }
+            
+            // 텔레포트 스팟 이동
+            if (cell.HasTeleport && mover.CanTeleport)
+            {
+                if (state.TryGetCellPair(target, out GridPos pair) && 
+                    !state.GetCell(pair).IsOccupied) // 텔레포트 가능
+                {
+                    mover.Get<Teleportable>().IsTeleporting = true;
+                    return MoveResult.Success(moverId, from, pair);
+                }
+                //텔레포트 불가능 시 일반 이동 v
             }
 
             return MoveResult.Success(moverId, from, target);

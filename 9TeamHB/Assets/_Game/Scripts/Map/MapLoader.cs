@@ -111,16 +111,16 @@ namespace MyGame2.Stage
         // EntityConfigSO와 MapSymbolEntry의 facing으로 SpawnData를 생성한다.
         private static SpawnData CreateSpawnData(MapSymbolEntry entry, GridPos position)
         {
-            EntityConfigSO config = entry.entityConfig;
+            EntitySO config = entry.entityConfig;
 
             return new SpawnData(
-                config.kind,
+                config,
                 position,
-                entry.facing,
-                playerSlot: config.usePlayerData ? config.playerSlot : 0,
-                boxOwnership: config.useBoxData ? config.boxOwnership : BoxType.Shared,
-                detectionPattern: config.useCameraData ? config.cameraPattern : CameraType.LineShort,
-                reverseRotation: config.useCameraData && config.reverseRotation
+                entry.facing
+                // playerSlot: config.usePlayerData ? config.playerSlot : 0,
+                // boxOwnership: config.useBoxData ? config.boxOwnership : BoxType.Shared,
+                // detectionPattern: config.useCameraData ? config.cameraPattern : CameraType.LineShort,
+                // reverseRotation: config.useCameraData && config.reverseRotation
             );
         }
 
@@ -132,13 +132,13 @@ namespace MyGame2.Stage
 
             for (int i = 0; i < spawns.Count; i++)
             {
-                if (spawns[i].Kind != EntityKind.Player)
+                if (spawns[i].Def.GetFunction<PlayerCmp>() == null)
                 {
                     continue;
                 }
 
-                if (spawns[i].PlayerSlot == 1) hasPlayer1 = true;
-                if (spawns[i].PlayerSlot == 2) hasPlayer2 = true;
+                if (spawns[i].Def.GetFunction<PlayerCmp>().PlayerSlot == 1) hasPlayer1 = true;
+                if (spawns[i].Def.GetFunction<PlayerCmp>().PlayerSlot == 2) hasPlayer2 = true;
             }
 
             if (!hasPlayer1 || !hasPlayer2)

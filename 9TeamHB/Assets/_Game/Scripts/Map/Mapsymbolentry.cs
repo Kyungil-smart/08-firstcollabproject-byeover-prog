@@ -33,8 +33,8 @@ namespace MyGame2.Stage
         public bool spawnsEntity;
 
         [Tooltip("스폰할 엔티티 설정 SO (spawnsEntity가 true일 때만 사용)")]
-        public EntityConfigSO entityConfig;
-
+        public EntitySO entityConfig;
+        
         [Tooltip("스폰 시 초기 방향")]
         public Direction facing = Direction.None;
     }

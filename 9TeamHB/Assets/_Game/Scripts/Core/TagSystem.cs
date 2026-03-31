@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace MyGame2.Stage
 {
     //  플레이어 전환 (Tab 키).

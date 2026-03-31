@@ -3,13 +3,6 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    enum RobotAIState
-    {
-        Patrol,  // 일반 순찰 (기본 속도)
-        Alert,   // 감지! 0.5초 정지
-        Chase    // 같은 경로 + 2배속 순찰 (영구)
-    }
-
     // 로봇을 실시간으로 자동 이동시킨다.
     
     public sealed class RobotAutoMover : MonoBehaviour

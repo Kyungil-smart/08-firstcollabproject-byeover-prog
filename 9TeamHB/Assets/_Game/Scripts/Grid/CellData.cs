@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace MyGame2.Stage
 {
@@ -12,6 +13,8 @@ namespace MyGame2.Stage
 
         public CellFlags Flags;
         public int OccupantId;
+
+        
 
         // 벽인가? (이동 불가, 시야 차단)
         public bool HasWall
@@ -36,6 +39,20 @@ namespace MyGame2.Stage
         {
             get { return (Flags & CellFlags.Bush) != 0; }
         }
+        
+        // 틈새 타일이 이동 가능한가?
+        public bool HasCrack
+        {
+            get { return (Flags & CellFlags.Crack) != 0; }
+        }
+        
+        // 텔레포트 타일인가?
+        public bool HasTeleport
+        {
+            get { return (Flags & CellFlags.Teleport) != 0; }
+        }
+
+
 
         // 엔티티가 점유 중인가?
         public bool IsOccupied
