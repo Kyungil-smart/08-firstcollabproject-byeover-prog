@@ -451,6 +451,8 @@ MonoBehaviour:
     type: 3}
   gameQuitPrefab: {fileID: 4678675293507642822, guid: 0d839841899192f48864584c2d53d0eb,
     type: 3}
+  maxUndoCount: 3
+  maxTagCount: 3
   timeElapsed: 0
 --- !u!4 &925338799
 Transform:
