@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
   m_Name: DoorEntity
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 0
-  isBlocking: 1
+  _kind: 14
+  isBlocking: 0
   blocksCameraSight: 0
   isLethal: 0
-  _viewPrefab: {fileID: 0}
+  _viewPrefab: {fileID: 6727728939614707992, guid: d1440beb318faf44f92dca0f6dc3dcc5,
+    type: 3}
   Functions: []

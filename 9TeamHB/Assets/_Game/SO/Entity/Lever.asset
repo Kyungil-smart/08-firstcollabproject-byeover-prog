@@ -12,9 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
   m_Name: Lever
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 0
-  isBlocking: 1
+  _kind: 15
+  isBlocking: 0
   blocksCameraSight: 0
   isLethal: 0
-  _viewPrefab: {fileID: 0}
+  _viewPrefab: {fileID: 60529896063486276, guid: 8fee9fe2f9c6dee4bbf9327f7f38905a,
+    type: 3}
   Functions: []
