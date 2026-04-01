@@ -24,8 +24,9 @@ public class TitleUIManager : MonoBehaviour
     {
         if (useDebugLog) Debug.Log($"{startSceneName}으로 이동.");
         
-        // 스테이지 선택 화면(UI_Scene)으로 전환
-        SceneManager.LoadScene(startSceneName);
+        // 변경사항, Loading 씬이 나오기 위해 해당 프롬을 수정함
+        // 변경 전, SceneManager.LoadScene("Stage_Scene");
+        LoadingManager.LoadScene("Stage_Scene");
     }
 
     // 조작키 버튼 연결용 (패널 열기)

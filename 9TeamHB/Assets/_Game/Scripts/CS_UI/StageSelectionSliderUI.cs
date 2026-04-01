@@ -100,13 +100,17 @@ public class StageSelectionSliderUI : MonoBehaviour
 
         PlayerPrefs.SetInt("SelectedStage", currentIndex);
         PlayerPrefs.Save();
-        SceneManager.LoadScene(targetSceneName);
+        // 로딩 씬 추가
+        // 변경전: SceneManager.LoadScene(targetSceneName);
+        LoadingManager.LoadScene(targetSceneName);
     }
 
     // back 버튼
     public void OnClickBack()
     {
         if (useDebugLog) Debug.Log($"{backSceneName}으로 복귀.");
-        SceneManager.LoadScene(backSceneName);
+        // 로딩 씬 추가
+        // 변경전: SceneManager.LoadScene(backSceneName);
+        LoadingManager.LoadScene(backSceneName);
     }
 }
