@@ -187,3 +187,69 @@ MonoBehaviour:
     spawnsEntity: 0
     entityConfig: {fileID: 0}
     facing: 0
+  - symbol: 68
+    description: "\uBB38"
+    cellFlags: 128
+    spawnsEntity: 0
+    entityConfig: {fileID: 0}
+    facing: 0
+  - symbol: 91
+    description: "\uC2A4\uC704\uCE58"
+    cellFlags: 768
+    spawnsEntity: 0
+    entityConfig: {fileID: 0}
+    facing: 0
+  - symbol: 93
+    description: "\uBC84\uD2BC"
+    cellFlags: 256
+    spawnsEntity: 0
+    entityConfig: {fileID: 0}
+    facing: 0
+  - symbol: 75
+    description: "\uC5F4\uC1E0"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 64d23844dab510349a622d621654d3dc, type: 2}
+    facing: 0
+  - symbol: 76
+    description: "\uBC1C\uC0AC\uB300L"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: f44e748756e769c40ab812c79feead7c, type: 2}
+    facing: 2
+  - symbol: 74
+    description: "\uBC1C\uC0AC\uB300R"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: f44e748756e769c40ab812c79feead7c, type: 2}
+    facing: 4
+  - symbol: 85
+    description: "\uBC1C\uC0AC\uB300UP"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: f44e748756e769c40ab812c79feead7c, type: 2}
+    facing: 1
+  - symbol: 78
+    description: "\uBC1C\uC0AC\uB300Down"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: f44e748756e769c40ab812c79feead7c, type: 2}
+    facing: 3
+  - symbol: 72
+    description: "\uD788\uB4E0 \uD568\uC815"
+    cellFlags: 2048
+    spawnsEntity: 0
+    entityConfig: {fileID: 0}
+    facing: 0
+  - symbol: 122
+    description: "1x2 \uD568\uC815"
+    cellFlags: 8192
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 4a771417019d15c4399c5898bbb38f95, type: 2}
+    facing: 0
+  - symbol: 90
+    description: "1x5 \uD568\uC815"
+    cellFlags: 8192
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2309ea45b4750604d99ca8794d547085, type: 2}
+    facing: 0

@@ -7,7 +7,7 @@ namespace MyGame2.Stage
         Blocked = 2,
         ContactKill = 3,
         PushAndMove = 4,
-        Teleport = 5
+        OpenDoor = 5
     }
 
     public enum MoveBlockReason
@@ -32,8 +32,9 @@ namespace MyGame2.Stage
         public bool Succeeded { get { return Type == MoveResultType.Success; } }
         public bool IsContactKill { get { return Type == MoveResultType.ContactKill; } }
         public bool IsPushAndMove { get { return Type == MoveResultType.PushAndMove; } }
+        public bool IsOpenDoor { get { return Type == MoveResultType.OpenDoor; } }
         // 이동 가능한가?
-        public bool CanMove { get { return Succeeded || IsPushAndMove; } }
+        public bool CanMove { get { return Succeeded || IsPushAndMove || IsOpenDoor; } }
 
         private MoveResult(MoveResultType type, MoveBlockReason reason,
             int moverId, int targetId, GridPos from, GridPos to)
@@ -65,6 +66,12 @@ namespace MyGame2.Stage
         {
             return new MoveResult(MoveResultType.PushAndMove, MoveBlockReason.None,
                 moverId, targetBoxId, from, to);
+        }
+
+        public static MoveResult OpenDoor(int moverId, GridPos from, GridPos to)
+        {
+            return new MoveResult(MoveResultType.OpenDoor, MoveBlockReason.None,
+                moverId, StageState.InvalidEntityId, from, to);
         }
     }
 }

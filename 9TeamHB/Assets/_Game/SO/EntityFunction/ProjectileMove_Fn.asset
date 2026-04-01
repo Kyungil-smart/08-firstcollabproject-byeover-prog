@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9283047f1caa6a14d86e9901efd738bf, type: 3}
+  m_Name: ProjectileMove_Fn
+  m_EditorClassIdentifier: Assembly-CSharp::ProjectileMove_Fn
+  defaultMoveInterval: 0.1
+  stageStateReference: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511,
+    type: 2}
+  onUpdateEvent: {fileID: 11400000, guid: 0ddfe81bad0c68148a65346f1f702aa1, type: 2}

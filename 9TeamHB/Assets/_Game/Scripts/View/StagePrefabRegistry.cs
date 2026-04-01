@@ -17,6 +17,9 @@ namespace MyGame2.Stage
         [SerializeField] private GridEntityView boxPlayer2Prefab;
         [Tooltip("빨간색 철 상자")]
         [SerializeField] private GridEntityView boxIronPrefab;
+        // 부숴지는 상자 추가 부분
+        [Tooltip("갈색 부서지는 상자")]
+        [SerializeField] private GridEntityView boxBreakablePrefab;
 
         [Header("카메라")]
         [SerializeField] private GridEntityView cameraEnemyPrefab;

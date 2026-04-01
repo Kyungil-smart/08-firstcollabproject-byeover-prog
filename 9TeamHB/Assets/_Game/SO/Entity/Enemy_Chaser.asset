@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
   m_Name: Enemy_Chaser
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 5
+  _kind: 8
   isBlocking: 1
   blocksCameraSight: 0
   isLethal: 1
-  _viewPrefab: {fileID: 651025039593506988, guid: faf5ba42911ba534ca309c17577156f7,
+  _viewPrefab: {fileID: 651025039593506988, guid: f9e4323eba98f3240b07a17a57ffb4e2,
     type: 3}
   Functions:
-  - {fileID: 11400000, guid: c8756e79b2eb1584a9c4b3fa3b5c7140, type: 2}
+  - {fileID: 11400000, guid: 7e22c2788319e7e4a912825f94a2bb0f, type: 2}

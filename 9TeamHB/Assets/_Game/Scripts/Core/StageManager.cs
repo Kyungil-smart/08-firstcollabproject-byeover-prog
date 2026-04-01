@@ -53,6 +53,7 @@ namespace MyGame2.Stage
             _events.TurnExecuted += OnTurnExecuted;
             _events.ActivePlayerChanged += OnActivePlayerChanged;
             _events.UndoExecuted += OnUndoExecuted;
+            _events.EntityKilled += OnEntityKilled;
         }
 
         private void Start()
@@ -84,6 +85,7 @@ namespace MyGame2.Stage
             _events.TurnExecuted -= OnTurnExecuted;
             _events.ActivePlayerChanged -= OnActivePlayerChanged;
             _events.UndoExecuted -= OnUndoExecuted;
+            _events.EntityKilled -= OnEntityKilled;
         }
 
         private void OnTurnExecuted(TurnOutcome outcome)
@@ -96,6 +98,11 @@ namespace MyGame2.Stage
         private void OnActivePlayerChanged(int id) { SyncSelection(); }
 
         private void OnUndoExecuted()
+        {
+            SyncViews();
+            SyncSelection();
+        }
+        private void OnEntityKilled(int id)
         {
             SyncViews();
             SyncSelection();
@@ -204,28 +211,66 @@ namespace MyGame2.Stage
             return CurrentState != null && !CurrentState.IsGameOver && !CurrentState.IsStageClear;
         }
 
+        // 스테이지 로드 시 최초 View 생성
         private void SpawnViews()
         {
             if (prefabRegistry == null) return;
             foreach (EntityState e in CurrentState.Entities)
             {
-                GridEntityView prefab = e.Prefab;
-                if (prefab == null) continue;
-                GridEntityView view = Instantiate(prefab, entityRoot);
-                view.name = $"{e.Kind}_{e.Id}";
-                view.Bind(e, cellSize);
-                Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
-                _views[e.Id] = view;
+                SpawnViewForEntity(e);
             }
         }
 
+        // 단일 엔티티의 View 생성 (동적 스폰 지원)
+        private void SpawnViewForEntity(EntityState e)
+        {
+            if (_views.ContainsKey(e.Id)) return; // 이미 있으면 건너뜀
+
+            GridEntityView prefab = e.Prefab;
+            if (prefab == null) return;
+
+            GridEntityView view = Instantiate(prefab, entityRoot);
+            view.name = $"{e.Kind}_{e.Id}";
+            view.Bind(e, cellSize);
+            Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
+            _views[e.Id] = view;
+        }
+
+        // View 동기화 (동적 스폰/제거 처리)
         private void SyncViews()
         {
+            if (CurrentState == null) return;
+
+            // 새로 생긴 엔티티의 View 생성
+            foreach (EntityState e in CurrentState.Entities)
+            {
+                if (!_views.ContainsKey(e.Id))
+                    SpawnViewForEntity(e);
+            }
+
+            List<int> toRemove = null;
             foreach (var pair in _views)
             {
                 if (pair.Value == null) continue;
+
                 if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
+                {
                     pair.Value.Sync(e, cellSize);
+                }
+                else
+                {
+                    // 엔티티가 StageState에서 제거됨 (RemoveEntity로 소멸)
+                    Destroy(pair.Value.gameObject);
+                    if (toRemove == null) toRemove = new List<int>(4);
+                    toRemove.Add(pair.Key);
+                }
+            }
+
+            // Dictionary 순회 중 삭제 방지
+            if (toRemove != null)
+            {
+                for (int i = 0; i < toRemove.Count; i++)
+                    _views.Remove(toRemove[i]);
             }
         }
 
