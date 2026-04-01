@@ -1288,9 +1288,7 @@ MonoBehaviour:
   cameraDetectionColor: {r: 1, g: 0.2, b: 0.2, a: 0.25}
   robotDetectionColor: {r: 1, g: 0.6, b: 0, a: 0.3}
   summonerDetectionColor: {r: 0.2, g: 0.6, b: 1, a: 0.3}
-  crackTileOrder: -4
   tileOrder: -2
-  trapTileOrder: -1
   detectionOrder: 0
   tilePadding: 0.05
 --- !u!1 &1906414214
