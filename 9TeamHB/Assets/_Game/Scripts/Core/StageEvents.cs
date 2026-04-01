@@ -42,6 +42,25 @@ namespace MyGame2.Stage
         // 워프 연출 완료 후 다음 스테이지 로드 트리거.
         public event Action WarpComplete;
         
+        // 적이 월드 메시지를 표시할 때 (entityId, message, duration)
+        public event Action<int, string, float> EnemyWorldMessageRequested;
+        // 적이 디스폰 시작될 때 (entityId)
+        public event Action<int> EnemyDespawnStarted;
+        // 히든 함정이 발동되어 드러났을 때 (position)
+        public event Action<GridPos> HiddenTrapRevealed;
+        // 히든 함정 발동 -> 애니메이션 후 플레이어 Kill 요청 (playerId, trapPosition)
+        public event Action<int, GridPos> HiddenTrapPlayerKill;
+
+        // ID로 view 콜백을 위한 이벤트 딕셔너리
+        private Dictionary<int, Action<ViewRequest>> _viewRequests = new();
+
+        public void ViewRequestSubscribe(int id, Action<ViewRequest> request)
+        {
+            _viewRequests[id] = request;
+        }
+        
+
+        
         // 발행 메서드 (StageState, TurnSystem 등이 호출)
         
         public void RaiseEntityMoved(int entityId, GridPos from, GridPos to)
@@ -94,6 +113,35 @@ namespace MyGame2.Stage
             WarpComplete?.Invoke();
         }
 
+        // Raise 메서드
+        public void RaiseEnemyWorldMessage(int entityId, string message, float duration)
+        {
+            EnemyWorldMessageRequested?.Invoke(entityId, message, duration);
+        }
+
+        public void RaiseEnemyDespawnStarted(int entityId)
+        {
+            EnemyDespawnStarted?.Invoke(entityId);
+        }
+
+        public void RaiseHiddenTrapRevealed(GridPos position)
+        {
+            HiddenTrapRevealed?.Invoke(position);
+        }
+
+        public void RaiseHiddenTrapPlayerKill(int playerId, GridPos trapPosition)
+        {
+            HiddenTrapPlayerKill?.Invoke(playerId, trapPosition);
+        }
+
+        public void RaiseViewRequest(ViewRequest request)
+        { 
+            if(_viewRequests.TryGetValue(request.Id, out var callback))
+            {
+                callback?.Invoke(request);
+            }
+        }
+
        
         // 모든 구독자를 해제한다.
         // 스테이지 전환 시 이전 구독을 깨끗하게 정리할 때 사용.
@@ -109,6 +157,17 @@ namespace MyGame2.Stage
             TurnExecuted = null;
             StageLoaded = null;
             WarpComplete = null;
+            EnemyWorldMessageRequested = null;
+            EnemyDespawnStarted = null;
+            HiddenTrapRevealed = null;
+            HiddenTrapPlayerKill = null;
+            _viewRequests.Clear();
         }
+    }
+
+    public struct ViewRequest
+    {
+        public int Id;
+        public Action<GridEntityView> Callback;
     }
 }

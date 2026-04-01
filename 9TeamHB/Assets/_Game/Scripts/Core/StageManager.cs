@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    // 스테이지 생명주기와 View 동기화를 관리
-    // StageEvents를 소유하고, TurnSystem과 View 사이를 연결
-    // GameManager와의 직접 참조를 제거하고 이벤트로 구현
-
     public sealed class StageManager : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -22,25 +18,21 @@ namespace MyGame2.Stage
         [Tooltip("맵 텍스트의 문자 매핑 SO")]
         [SerializeField] private MapSymbolRegistrySO symbolRegistry;
 
+        [Header("상태 참조 SO")]
+        [Tooltip("MoveComponent들이 StageState에 접근하기 위한 SO. Assets/_Game/SO/Util/StageState 에셋 연결")]
+        [SerializeField] private StageStateReferenceSO stageStateReference;
+
         private MapLoader _mapLoader;
         
-        // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
         private TurnSystem _turnSystem;
 
-        // 런타임 상태
         private readonly Dictionary<int, GridEntityView> _views = new Dictionary<int, GridEntityView>(16);
         private int _currentStageIndex;
 
-
-        // 이벤트 허브. GameManager, PlayerInputReader 등이 구독한다.
         public StageEvents Events { get { return _events; } }
-
-        // 현재 스테이지 상태 (null이면 아직 로드 전).
         public StageState CurrentState { get; private set; }
-
-        // 마지막 턴의 결과.
         public TurnOutcome LastOutcome { get; private set; }
 
         private void Awake()
@@ -51,6 +43,7 @@ namespace MyGame2.Stage
             LastOutcome = TurnOutcome.None();
             _events.TurnExecuted += OnTurnExecuted;
             _events.ActivePlayerChanged += OnActivePlayerChanged;
+            _events.EntityKilled += OnEntityKilled;
         }
 
         private void Start()
@@ -62,9 +55,9 @@ namespace MyGame2.Stage
         {
             _events.TurnExecuted -= OnTurnExecuted;
             _events.ActivePlayerChanged -= OnActivePlayerChanged;
+            _events.EntityKilled -= OnEntityKilled;
         }
 
-        // 턴 실행 완료 시 View 일괄 동기화.
         private void OnTurnExecuted(TurnOutcome outcome)
         {
             LastOutcome = outcome;
@@ -72,11 +65,14 @@ namespace MyGame2.Stage
             SyncSelection();
         }
 
-        // 활성 플레이어 전환 시 선택 마커 갱신.
         private void OnActivePlayerChanged(int id) { SyncSelection(); }
 
-        // 밑에 Load 구조는 경민님이 마음대로 수정 하셔도 됩니다.
-        // 지정한 인덱스의 스테이지를 로드한다.
+        // 히든 함정 등 지연 Kill 후에도 뷰가 갱신되도록 처리
+        private void OnEntityKilled(int id)
+        {
+            SyncViews();
+            SyncSelection();
+        }
 
         public void LoadStage(int stageIndex)
         {
@@ -95,6 +91,11 @@ namespace MyGame2.Stage
 
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
+
+            // 핵심 추가: MoveComponent들이 StageState에 접근할 수 있도록 등록
+            if (stageStateReference != null)
+                stageStateReference.Register(CurrentState);
+
             _tagSystem.Initialize(CurrentState);
 
             SpawnViews();
@@ -103,16 +104,11 @@ namespace MyGame2.Stage
             _events.RaiseStageLoaded(stageIndex);
         }
 
-        // 현재 스테이지를 다시 로드한다.
-
         public void RestartCurrentStage() 
         { 
             LoadStage(_currentStageIndex); 
         }
 
-
-
-        // 다음 스테이지를 로드한다.
         public bool LoadNextStage()
         {
             int next = _currentStageIndex + 1;
@@ -121,15 +117,11 @@ namespace MyGame2.Stage
             return true;
         }
 
-        // 활성 플레이어를 전환한다.
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
             return _tagSystem.Switch(CurrentState);
         }
-
-        // 플레이어 턴을 실행한다.
-        // 성공 시 View 동기화는 TurnExecuted 이벤트를 통해 자동 처리된다.
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
@@ -141,40 +133,74 @@ namespace MyGame2.Stage
                 return LastOutcome;
             }
 
-            // TurnSystem이 실행 → StageState가 이벤트 발행
-            // OnTurnExecuted에서 SyncViews/SyncSelection 자동 호출
             return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
         }
-
-        // 내부 유틸리티
-        // 안전장치를 많이 넣어놔서 그렇지 크게 복잡한 구조는 아닙니다...?
 
         private bool CanAcceptInput()
         {
             return CurrentState != null && !CurrentState.IsGameOver && !CurrentState.IsStageClear;
         }
 
+        // 스테이지 로드 시 최초 View 생성
         private void SpawnViews()
         {
             if (prefabRegistry == null) return;
             foreach (EntityState e in CurrentState.Entities)
             {
-                GridEntityView prefab = e.Prefab;
-                if (prefab == null) continue;
-                GridEntityView view = Instantiate(prefab, entityRoot);
-                view.name = $"{e.Kind}_{e.Id}";
-                view.Bind(e, cellSize);
-                _views[e.Id] = view;
+                SpawnViewForEntity(e);
             }
         }
 
+        // 단일 엔티티의 View 생성 (동적 스폰 지원)
+        private void SpawnViewForEntity(EntityState e)
+        {
+            if (_views.ContainsKey(e.Id)) return; // 이미 있으면 건너뜀
+
+            GridEntityView prefab = e.Prefab;
+            if (prefab == null) return;
+
+            GridEntityView view = Instantiate(prefab, entityRoot);
+            view.name = $"{e.Kind}_{e.Id}";
+            view.Bind(e, cellSize);
+            Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
+            _views[e.Id] = view;
+        }
+
+        // View 동기화 (동적 스폰/제거 처리)
         private void SyncViews()
         {
+            if (CurrentState == null) return;
+
+            // 새로 생긴 엔티티의 View 생성
+            foreach (EntityState e in CurrentState.Entities)
+            {
+                if (!_views.ContainsKey(e.Id))
+                    SpawnViewForEntity(e);
+            }
+
+            List<int> toRemove = null;
             foreach (var pair in _views)
             {
                 if (pair.Value == null) continue;
+
                 if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
+                {
                     pair.Value.Sync(e, cellSize);
+                }
+                else
+                {
+                    // 엔티티가 StageState에서 제거됨 (RemoveEntity로 소멸)
+                    Destroy(pair.Value.gameObject);
+                    if (toRemove == null) toRemove = new List<int>(4);
+                    toRemove.Add(pair.Key);
+                }
+            }
+
+            // Dictionary 순회 중 삭제 방지
+            if (toRemove != null)
+            {
+                for (int i = 0; i < toRemove.Count; i++)
+                    _views.Remove(toRemove[i]);
             }
         }
 

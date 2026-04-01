@@ -1,10 +1,9 @@
 using System;
+using System.Collections.Generic;
+using NUnit.Framework;
 
 namespace MyGame2.Stage
 {
-    // 그리드 셀 하나의 데이터.
-    // Flags로 벽/골/함정/부쉬 속성을 표현하고,
-    // OccupantId로 해당 셀에 서 있는 엔티티를 추적한다.
     [Serializable]
     public struct CellData
     {
@@ -35,6 +34,77 @@ namespace MyGame2.Stage
         public bool HasBush
         {
             get { return (Flags & CellFlags.Bush) != 0; }
+        }
+        
+        // 틈새 타일인가?
+        public bool HasCrack
+        {
+            get { return (Flags & CellFlags.Crack) != 0; }
+        }
+        
+        // 텔레포트 타일인가?
+        public bool HasTeleport
+        {
+            get { return (Flags & CellFlags.Teleport) != 0; }
+        }
+
+        // 문 타일인가?
+        public bool HasDoor
+        {
+            get { return (Flags & CellFlags.Door) != 0; }
+        }
+        public bool IsOpenedDoor
+        {
+            get { return HasDoor && HasActive; }
+        }
+        public bool IsClosedDoor
+        {
+            get { return HasDoor && !HasActive; }
+        }
+
+        // 신호를 보내는 타일인가?
+        public bool HasSignalButton
+        {
+            get { return (Flags & CellFlags.Button) != 0; }
+        }
+
+        // 점유가 해제 되어도 신호가 유지되어야 하는가?
+        public bool IsSticky
+        {
+            get { return (Flags & CellFlags.Sticky) != 0; }
+        }
+        
+        // 타일이 이동 불가능하게 막혀 있는가
+        public bool IsBlocked => HasBlockCandidate && (HasWall || !HasActive);
+
+        public bool HasActive => (Flags & CellFlags.Active) != 0;
+        public bool IsOpenFixed => (Flags & CellFlags.OpenFixed) != 0;
+
+        // 이동을 막을 수 있는 Flags 체크
+        public bool HasBlockCandidate => HasWall || HasCrack || HasDoor;
+        
+        public bool HasHiddenTrap
+        {
+            get { return (Flags & CellFlags.HiddenTrap) != 0; }
+        }
+
+        // 파괴 함정 — 상자를 부수는 함정
+        public bool HasDestroyTrap
+        {
+            get { return (Flags & CellFlags.DestroyTrap) != 0; }
+        }
+
+        // 바닥형 함정 02 (톱날) — SawTrap 플래그 존재 여부
+        public bool HasSawTrap
+        {
+            get { return (Flags & CellFlags.SawTrap) != 0; }
+        }
+
+        // 바닥형 함정 02가 현재 위험한 상태인가?
+        // SawTrap이 있고 Active가 아니면 위험 (버튼/스위치로 Active 켜지면 안전)
+        public bool IsSawTrapActive
+        {
+            get { return HasSawTrap && !HasActive; }
         }
 
         // 엔티티가 점유 중인가?
