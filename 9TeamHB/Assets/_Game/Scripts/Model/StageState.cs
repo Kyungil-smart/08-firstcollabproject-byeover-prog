@@ -40,6 +40,7 @@ namespace MyGame2.Stage
 
         public bool IsUpdatable() => !(IsGameOver || IsStageClear || IsUndoProcessing);
 
+        public Dictionary<int, EntityState> EntityDict { get { return _entitiesById; } }
         public IReadOnlyList<int> PlayerIds { get { return _playerIds; } }
         public IReadOnlyList<int> BoxIds { get { return _boxIds; } }
         public IReadOnlyList<int> CameraIds { get { return _cameraIds; } }
@@ -48,8 +49,6 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> PatrolCameraIds { get { return _patrolCameraIds; } }
         public IReadOnlyList<int> SummonerIds { get { return _summonerIds; } }
         public IReadOnlyList<int> ChaserIds { get { return _chaserIds; } }
-
-        public Dictionary<int, EntityState> EntityDict { get { return _entitiesById; } }
 
         public IReadOnlyList<int> LauncherIds { get { return _launcherIds; } }
         public IReadOnlyList<int> ProjectileIds { get { return _projectileIds; } }
@@ -576,6 +575,9 @@ namespace MyGame2.Stage
             IsStageClear = snapshot.IsStageClear;
             IsViewDirty = snapshot.IsViewDirty;
 
+            _boxIds.Clear();
+            _boxIds.AddRange(snapshot.BoxIds);
+
             _patrolCameraIds.Clear();
             _patrolCameraIds.AddRange(snapshot.PatrolCameraIds);
 
@@ -584,6 +586,15 @@ namespace MyGame2.Stage
 
             _chaserIds.Clear();
             _chaserIds.AddRange(snapshot.ChaserIds);
+
+            _launcherIds.Clear();
+            _launcherIds.AddRange(snapshot.LauncherIds);
+
+            _projectileIds.Clear();
+            _projectileIds.AddRange(snapshot.ProjectileIds);
+
+            _sawTrapIds.Clear();
+            _sawTrapIds.AddRange(snapshot.SawTrapIds);
 
             _entitiesById = snapshot.EntityDict;
         }
