@@ -64,6 +64,7 @@ namespace MyGame2.Stage
             if (stageManager == null) return;
             stageManager.Events.StageLoaded += OnStageLoaded;
             stageManager.Events.TurnExecuted += OnTurnExecuted;
+            stageManager.Events.UndoExecuted += OnUndoExecuted;
         }
 
         private void OnDisable()
@@ -71,6 +72,7 @@ namespace MyGame2.Stage
             if (stageManager == null) return;
             stageManager.Events.StageLoaded -= OnStageLoaded;
             stageManager.Events.TurnExecuted -= OnTurnExecuted;
+            stageManager.Events.UndoExecuted -= OnUndoExecuted;
         }
 
         private void Start()
@@ -85,6 +87,11 @@ namespace MyGame2.Stage
         }
 
         private void OnTurnExecuted(TurnOutcome outcome)
+        {
+            RefreshAll(stageManager.CurrentState);
+        }
+
+        private void OnUndoExecuted()
         {
             RefreshAll(stageManager.CurrentState);
         }
@@ -106,7 +113,6 @@ namespace MyGame2.Stage
             float scale = 1f - tilePadding;
 
             for (int y = 0; y < state.Height; y++)
-            for (int x = 0; x < state.Width; x++)
             {
                 GridPos pos = new GridPos(x, y);
                 CellData cell = state.GetCell(pos);

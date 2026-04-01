@@ -92,6 +92,9 @@ namespace MyGame2.Stage
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
 
+            // 자동 페어링: 맵 텍스트를 다시 스캔해서 같은 pairGroup끼리 SetCellPair
+            ApplyPairGroups(file, CurrentState);
+
             // 핵심 추가: MoveComponent들이 StageState에 접근할 수 있도록 등록
             if (stageStateReference != null)
                 stageStateReference.Register(CurrentState);
@@ -230,6 +233,63 @@ namespace MyGame2.Stage
             foreach (var pair in _views)
                 if (pair.Value != null) Destroy(pair.Value.gameObject);
             _views.Clear();
+        }
+
+        // 자동 페어링
+        // 맵 텍스트를 다시 스캔하여 같은 pairGroup 번호를 가진 셀끼리 SetCellPair 호출
+        // pairGroup이 0이면 무시, 같은 번호가 정확히 2개여야 페어 성립
+        private void ApplyPairGroups(TextAsset file, StageState state)
+        {
+            if (symbolRegistry == null || file == null) return;
+
+            string rawText = file.text;
+            if (rawText.Length > 0 && rawText[0] == '\uFEFF')
+                rawText = rawText.Substring(1);
+
+            string normalized = rawText.Replace("\r\n", "\n").Replace('\r', '\n');
+            string[] split = normalized.Split('\n');
+            List<string> validLines = new List<string>(split.Length);
+
+            for (int i = 0; i < split.Length; i++)
+            {
+                string line = split[i].TrimEnd();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (line.TrimStart().StartsWith("//")) continue;
+                validLines.Add(line);
+            }
+
+            // pairGroup → 위치 수집
+            Dictionary<int, List<GridPos>> groups = new Dictionary<int, List<GridPos>>();
+
+            for (int y = 0; y < validLines.Count; y++)
+            {
+                string row = validLines[y];
+                for (int x = 0; x < row.Length; x++)
+                {
+                    char ch = row[x];
+                    if (!symbolRegistry.TryGetEntry(ch, out MapSymbolEntry entry)) continue;
+                    if (entry.pairGroup <= 0) continue;
+
+                    if (!groups.ContainsKey(entry.pairGroup))
+                        groups[entry.pairGroup] = new List<GridPos>(2);
+                    groups[entry.pairGroup].Add(new GridPos(x, y));
+                }
+            }
+
+            // 페어 적용
+            foreach (var kvp in groups)
+            {
+                if (kvp.Value.Count == 2)
+                {
+                    state.SetCellPair(kvp.Value[0], kvp.Value[1]);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"[StageManager] PairGroup {kvp.Key}: " +
+                        $"{kvp.Value.Count}개 셀 발견 (2개여야 페어 성립). 무시됨.");
+                }
+            }
         }
     }
 }
