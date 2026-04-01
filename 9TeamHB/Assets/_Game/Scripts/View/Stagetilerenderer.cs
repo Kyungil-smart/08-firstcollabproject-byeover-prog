@@ -113,6 +113,7 @@ namespace MyGame2.Stage
             float scale = 1f - tilePadding;
 
             for (int y = 0; y < state.Height; y++)
+            for (int x = 0; x < state.Width; x++)
             {
                 GridPos pos = new GridPos(x, y);
                 CellData cell = state.GetCell(pos);
@@ -128,7 +129,7 @@ namespace MyGame2.Stage
                 else if (cell.HasTrap)
                 {
                     c = trapColor;
-                    order = trapTileOrder; // 함정: -1
+                    order = trapTileOrder;
                 }
                 else if (cell.HasGoal)
                 {
@@ -138,7 +139,7 @@ namespace MyGame2.Stage
                 else if (cell.HasCrack)
                 {
                     c = crackColor;
-                    order = crackTileOrder; // 틈새: -4
+                    order = crackTileOrder;
                 }
                 else if (cell.HasTeleport)
                 {
@@ -192,7 +193,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // 로봇 감지 범위 (앞 2칸 + 뒤 2칸)
+        // 로봇 감지 범위
 
         private void RenderRobotDetection(StageState state)
         {
@@ -228,7 +229,6 @@ namespace MyGame2.Stage
                 if (!state.TryGetEntity(summonerId, out EntityState summoner) || !summoner.IsAlive)
                     continue;
 
-                // 3×3 감지범위 수집 (오브젝트 무시 = true, 기획서 4-5-2)
                 List<GridPos> cells = _detector3x3.CollectDetectionCells(
                     state, summoner.Position, summoner.Facing, true);
 

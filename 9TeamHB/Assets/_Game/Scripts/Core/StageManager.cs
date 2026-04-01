@@ -139,6 +139,20 @@ namespace MyGame2.Stage
             return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
         }
 
+        // ── Undo 스텁 (다른 팀원이 구현 시 교체) ──
+        public bool TryEnterUndo()
+        {
+            // TODO: Undo 시스템 구현 시 여기에 로직 추가
+            Debug.Log("[StageManager] TryEnterUndo - 아직 미구현");
+            return false;
+        }
+
+        public void LeaveUndo()
+        {
+            // TODO: Undo 시스템 구현 시 여기에 로직 추가
+            Debug.Log("[StageManager] LeaveUndo - 아직 미구현");
+        }
+
         private bool CanAcceptInput()
         {
             return CurrentState != null && !CurrentState.IsGameOver && !CurrentState.IsStageClear;
@@ -235,7 +249,7 @@ namespace MyGame2.Stage
             _views.Clear();
         }
 
-        // 자동 페어링
+        // ── 자동 페어링 ──
         // 맵 텍스트를 다시 스캔하여 같은 pairGroup 번호를 가진 셀끼리 SetCellPair 호출
         // pairGroup이 0이면 무시, 같은 번호가 정확히 2개여야 페어 성립
         private void ApplyPairGroups(TextAsset file, StageState state)
