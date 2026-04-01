@@ -65,7 +65,25 @@ public class ProjectileLauncherMoveComponent : IComponentData, IUpdate, IDisposa
 
         // 앞 칸이 맵 밖이거나 벽이면 발사 안 함
         if (!state.IsInside(spawnPos)) return;
-        if (state.GetCell(spawnPos).HasWall) return;
+        CellData spawnCell = state.GetCell(spawnPos);
+        if (spawnCell.HasWall) return;
+
+        // 수정: 앞 칸에 상자/엔티티가 이미 있으면 발사 안 함
+        if (spawnCell.IsOccupied)
+        {
+            // 플레이어가 서 있으면 즉사 처리만 하고 투사체는 안 만듦
+            if (state.TryGetEntity(spawnCell.OccupantId, out EntityState occupant))
+            {
+                if (occupant.IsPlayer && occupant.IsAlive)
+                {
+                    state.KillEntity(occupant.Id);
+                    state.MarkGameOver();
+                    state.SetViewDirty();
+                }
+            }
+            // 상자/다른 엔티티가 있으면 발사 자체를 하지 않음
+            return;
+        }
 
         // 투사체 소환
         int projectileId = state.SpawnEntity(_projectileDefinition, spawnPos, facing);
@@ -73,31 +91,7 @@ public class ProjectileLauncherMoveComponent : IComponentData, IUpdate, IDisposa
         // 투사체에 이동 속도 전달
         ProjectileSpeedRegistry.Register(projectileId, _projectileSpeed);
 
-        // 소환 즉시 해당 칸의 충돌 판정
-        CheckImmediateCollision(state, spawnPos, projectileId);
-
         state.SetViewDirty();
-    }
-
-    // 소환 위치에 이미 플레이어/상자가 있으면 즉시 처리
-    private void CheckImmediateCollision(StageState state, GridPos pos, int projectileId)
-    {
-        CellData cell = state.GetCell(pos);
-        if (!cell.IsOccupied) return;
-
-        if (!state.TryGetEntity(cell.OccupantId, out EntityState occupant)) return;
-
-        if (occupant.IsPlayer && occupant.IsAlive)
-        {
-            state.KillEntity(occupant.Id);
-            state.MarkGameOver();
-            state.RemoveEntity(projectileId);
-        }
-        else if (occupant.IsBox)
-        {
-            // 상자에 닿으면 투사체 소멸 (부서지는 상자면 상자도 파괴)
-            state.RemoveEntity(projectileId);
-        }
     }
 
     public void Dispose()

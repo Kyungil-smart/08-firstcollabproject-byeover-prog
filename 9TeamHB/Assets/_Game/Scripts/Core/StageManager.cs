@@ -162,6 +162,14 @@ namespace MyGame2.Stage
             GridEntityView view = Instantiate(prefab, entityRoot);
             view.name = $"{e.Kind}_{e.Id}";
             view.Bind(e, cellSize);
+
+            // 톱날 함정: 멀티셀 비주얼 자동 생성
+            SawTrapVisual sawVisual = view.GetComponent<SawTrapVisual>();
+            if (sawVisual != null && e.Has<SawTrapData>())
+            {
+                sawVisual.BuildVisual(e.Get<SawTrapData>().Size, e.Facing);
+            }
+
             Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
             _views[e.Id] = view;
         }

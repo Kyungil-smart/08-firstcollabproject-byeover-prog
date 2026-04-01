@@ -50,6 +50,8 @@ namespace MyGame2.Stage
         public event Action<GridPos> HiddenTrapRevealed;
         // 히든 함정 발동 -> 애니메이션 후 플레이어 Kill 요청 (playerId, trapPosition)
         public event Action<int, GridPos> HiddenTrapPlayerKill;
+        // 얼음 상자가 톱날에 의해 파괴됨 (entityId, position, sawFacing)
+        public event Action<int, GridPos, Direction> IceBoxSawDestroyed;
 
         // ID로 view 콜백을 위한 이벤트 딕셔너리
         private Dictionary<int, Action<ViewRequest>> _viewRequests = new();
@@ -134,6 +136,11 @@ namespace MyGame2.Stage
             HiddenTrapPlayerKill?.Invoke(playerId, trapPosition);
         }
 
+        public void RaiseIceBoxSawDestroyed(int entityId, GridPos position, Direction sawFacing)
+        {
+            IceBoxSawDestroyed?.Invoke(entityId, position, sawFacing);
+        }
+
         public void RaiseViewRequest(ViewRequest request)
         { 
             if(_viewRequests.TryGetValue(request.Id, out var callback))
@@ -161,6 +168,7 @@ namespace MyGame2.Stage
             EnemyDespawnStarted = null;
             HiddenTrapRevealed = null;
             HiddenTrapPlayerKill = null;
+            IceBoxSawDestroyed = null;
             _viewRequests.Clear();
         }
     }
