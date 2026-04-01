@@ -22,6 +22,7 @@ namespace MyGame2.Stage
         private readonly List<int> _launcherIds;
         private readonly List<int> _projectileIds;
         private readonly List<int> _sawTrapIds;
+        // 셀 페어 (스위치-문 등)
         private readonly Dictionary<GridPos, GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
 
         private int _nextEntityId;
@@ -33,7 +34,7 @@ namespace MyGame2.Stage
         public int TurnIndex { get; private set; }
         public bool IsGameOver { get; private set; }
         public bool IsStageClear { get; private set; }
-        // Undo 스텁 (다른 팀원 구현 시 교체)
+        // Undo 시스템
         public bool IsUndoProcessing { get; set; }
         // RobotAutoMover용 — 게임 진행 가능 상태인지
         public bool IsUpdatable() { return !IsGameOver && !IsStageClear && !IsUndoProcessing; }
@@ -41,6 +42,82 @@ namespace MyGame2.Stage
         public CellData[] Cells { get { return _cells; } }
         // Undo 스냅샷용 — 엔티티 딕셔너리 직접 접근
         public Dictionary<int, EntityState> EntityDict { get { return _entitiesById; } }
+
+        public void UndoEnter()
+        {
+            IsUndoProcessing = true;
+        }
+
+        public void UndoLeave()
+        {
+            IsUndoProcessing = false;
+        }
+
+        public void Restore(StageSnapshot snapshot)
+        {
+            if (snapshot == null) return;
+
+            // 셀 복원
+            System.Array.Copy(snapshot.Cells, _cells, _cells.Length);
+
+            // 엔티티 복원
+            _entitiesById.Clear();
+            foreach (var kvp in snapshot.EntityDict)
+                _entitiesById[kvp.Key] = kvp.Value;
+
+            // 상태 복원
+            ActivePlayerId = snapshot.ActivePlayerId;
+            TurnIndex = snapshot.TurnIndex;
+            IsGameOver = snapshot.IsGameOver;
+            IsStageClear = snapshot.IsStageClear;
+            IsViewDirty = snapshot.IsViewDirty;
+
+            // 리스트 복원
+            RebuildEntityLists();
+
+            SetViewDirty();
+        }
+
+        // 엔티티 딕셔너리에서 종류별 ID 리스트 재구축
+        private void RebuildEntityLists()
+        {
+            _playerIds.Clear();
+            _boxIds.Clear();
+            _cameraIds.Clear();
+            _robotIds.Clear();
+            _animalIds.Clear();
+            _patrolCameraIds.Clear();
+            _summonerIds.Clear();
+            _chaserIds.Clear();
+            _launcherIds.Clear();
+            _projectileIds.Clear();
+            _sawTrapIds.Clear();
+
+            foreach (var kvp in _entitiesById)
+            {
+                EntityState e = kvp.Value;
+                switch (e.Kind)
+                {
+                    case EntityKind.Player:
+                        _playerIds.Add(e.Id);
+                        break;
+                    case EntityKind.Box:                  _boxIds.Add(e.Id); break;
+                    case EntityKind.CameraEnemy:          _cameraIds.Add(e.Id); break;
+                    case EntityKind.RobotEnemy:           _robotIds.Add(e.Id); break;
+                    case EntityKind.AnimalEnemy:          _animalIds.Add(e.Id); break;
+                    case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Add(e.Id); break;
+                    case EntityKind.SummonerEnemy:        _summonerIds.Add(e.Id); break;
+                    case EntityKind.ChaserEnemy:          _chaserIds.Add(e.Id); break;
+                    case EntityKind.ProjectileLauncher:   _launcherIds.Add(e.Id); break;
+                    case EntityKind.Projectile:           _projectileIds.Add(e.Id); break;
+                    case EntityKind.SawTrapEnemy:         _sawTrapIds.Add(e.Id); break;
+                }
+            }
+
+            _playerIds.Sort((a, b) =>
+                _entitiesById[a].Get<PlayerData>().Slot
+                    .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
+        }
 
         public IReadOnlyList<int> PlayerIds { get { return _playerIds; } }
         public IReadOnlyList<int> BoxIds { get { return _boxIds; } }
@@ -229,7 +306,7 @@ namespace MyGame2.Stage
             return bestPos;
         }
 
-        // Develop: 셀 페어 (스위치↔문 등)
+        // 셀 페어 (스위치↔문 등)
         public void SetCellPair(GridPos a, GridPos b)
         {
             _cellPairs[a] = b;
@@ -240,7 +317,7 @@ namespace MyGame2.Stage
             return _cellPairs.TryGetValue(a, out b);
         }
 
-        // Develop: 잠긴 문 위에 있는지 판정
+        // 잠긴 문 위에 있는지 판정
         public bool IsPlayerOnLockedDoor
         {
             get
@@ -400,7 +477,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // Develop: 문 활성화
+        // 문 활성화
         public void OpenDoor(int moverId, GridPos position)
         {
             if (!IsInside(position)) return;
