@@ -10,7 +10,11 @@ namespace MyGame2.Stage
 
         private readonly CellData[] _cells;
         private readonly CellFlags[] _originalFlags;
+<<<<<<< Updated upstream
         private Dictionary<int, EntityState> _entitiesById;
+=======
+        private Dictionary<int, EntityState> _entitiesById; // Restore 시 새로운 Dictionary를 참조하기 때문에 readonly 속성 제거
+>>>>>>> Stashed changes
         private readonly List<int> _playerIds;
         private readonly List<int> _boxIds;
         private readonly List<int> _cameraIds;
@@ -38,9 +42,99 @@ namespace MyGame2.Stage
         public bool IsStageClear { get; private set; }
         public bool IsUndoProcessing { get; private set; }
 
+<<<<<<< Updated upstream
         public bool IsUpdatable() => !(IsGameOver || IsStageClear || IsUndoProcessing);
+=======
+        public void UndoEnter()
+        {
+            IsUndoProcessing = true;
+        }
 
-        public Dictionary<int, EntityState> EntityDict { get { return _entitiesById; } }
+        public void UndoLeave()
+        {
+            IsUndoProcessing = false;
+        }
+
+        public void Restore(StageSnapshot snapshot)
+        {
+            // Cell 복원
+            Array.Copy(snapshot.Cells, _cells, snapshot.Cells.Length);
+
+            // 멤버변수 복원
+            ActivePlayerId = snapshot.ActivePlayerId;
+            TurnIndex = snapshot.TurnIndex;
+            IsGameOver = snapshot.IsGameOver;
+            IsStageClear = snapshot.IsStageClear;
+            IsViewDirty = snapshot.IsViewDirty;
+
+            // ID 리스트 복원
+            _boxIds.Clear();
+            _boxIds.AddRange(snapshot.BoxIds);
+
+            _patrolCameraIds.Clear();
+            _patrolCameraIds.AddRange(snapshot.PatrolCameraIds);
+
+            _summonerIds.Clear();
+            _summonerIds.AddRange(snapshot.SummonerIds);
+
+            _chaserIds.Clear();
+            _chaserIds.AddRange(snapshot.ChaserIds);
+
+            _launcherIds.Clear();
+            _launcherIds.AddRange(snapshot.LauncherIds);
+
+            _projectileIds.Clear();
+            _projectileIds.AddRange(snapshot.ProjectileIds);
+
+            _sawTrapIds.Clear();
+            _sawTrapIds.AddRange(snapshot.SawTrapIds);
+
+            // Entity Dictionary 복원
+            _entitiesById = snapshot.EntityDict;
+        }
+
+        // 엔티티 딕셔너리에서 종류별 ID 리스트 재구축
+        private void RebuildEntityLists()
+        {
+            _playerIds.Clear();
+            _boxIds.Clear();
+            _cameraIds.Clear();
+            _robotIds.Clear();
+            _animalIds.Clear();
+            _patrolCameraIds.Clear();
+            _summonerIds.Clear();
+            _chaserIds.Clear();
+            _launcherIds.Clear();
+            _projectileIds.Clear();
+            _sawTrapIds.Clear();
+
+            foreach (var kvp in _entitiesById)
+            {
+                EntityState e = kvp.Value;
+                switch (e.Kind)
+                {
+                    case EntityKind.Player:
+                        _playerIds.Add(e.Id);
+                        break;
+                    case EntityKind.Box: _boxIds.Add(e.Id); break;
+                    case EntityKind.CameraEnemy: _cameraIds.Add(e.Id); break;
+                    case EntityKind.RobotEnemy: _robotIds.Add(e.Id); break;
+                    case EntityKind.AnimalEnemy: _animalIds.Add(e.Id); break;
+                    case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Add(e.Id); break;
+                    case EntityKind.SummonerEnemy: _summonerIds.Add(e.Id); break;
+                    case EntityKind.ChaserEnemy: _chaserIds.Add(e.Id); break;
+                    case EntityKind.ProjectileLauncher: _launcherIds.Add(e.Id); break;
+                    case EntityKind.Projectile: _projectileIds.Add(e.Id); break;
+                    case EntityKind.SawTrapEnemy: _sawTrapIds.Add(e.Id); break;
+                }
+            }
+
+            _playerIds.Sort((a, b) =>
+                _entitiesById[a].Get<PlayerData>().Slot
+                    .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
+        }
+>>>>>>> Stashed changes
+
         public IReadOnlyList<int> PlayerIds { get { return _playerIds; } }
         public IReadOnlyList<int> BoxIds { get { return _boxIds; } }
         public IReadOnlyList<int> CameraIds { get { return _cameraIds; } }
@@ -142,7 +236,10 @@ namespace MyGame2.Stage
         // 바닥형 함정 02: SawTrap이 있고 Active가 아닌 상태 (위험)
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
 
+<<<<<<< Updated upstream
         // 바닥형 함정 02: 플레이어가 톱날 커버 범위 안에 있는지 판정
+=======
+>>>>>>> Stashed changes
         // 각 SawTrap 엔티티의 앵커 위치 + Facing 방향으로 Size칸 범위를 검사
         // 앵커 셀에 Active 플래그가 켜져 있으면 (버튼/스위치로 비활성화) 안전
         public bool IsPlayerInSawTrap(GridPos playerPos)
@@ -564,39 +661,5 @@ namespace MyGame2.Stage
         }
 
         private int ToIndex(GridPos pos) { return (pos.Y * Width) + pos.X; }
-
-        public void Restore(StageSnapshot snapshot)
-        {
-            Array.Copy(snapshot.Cells, _cells, snapshot.Cells.Length);
-
-            ActivePlayerId = snapshot.ActivePlayerId;
-            TurnIndex = snapshot.TurnIndex;
-            IsGameOver = snapshot.IsGameOver;
-            IsStageClear = snapshot.IsStageClear;
-            IsViewDirty = snapshot.IsViewDirty;
-
-            _boxIds.Clear();
-            _boxIds.AddRange(snapshot.BoxIds);
-
-            _patrolCameraIds.Clear();
-            _patrolCameraIds.AddRange(snapshot.PatrolCameraIds);
-
-            _summonerIds.Clear();
-            _summonerIds.AddRange(snapshot.SummonerIds);
-
-            _chaserIds.Clear();
-            _chaserIds.AddRange(snapshot.ChaserIds);
-
-            _launcherIds.Clear();
-            _launcherIds.AddRange(snapshot.LauncherIds);
-
-            _projectileIds.Clear();
-            _projectileIds.AddRange(snapshot.ProjectileIds);
-
-            _sawTrapIds.Clear();
-            _sawTrapIds.AddRange(snapshot.SawTrapIds);
-
-            _entitiesById = snapshot.EntityDict;
-        }
     }
 }
