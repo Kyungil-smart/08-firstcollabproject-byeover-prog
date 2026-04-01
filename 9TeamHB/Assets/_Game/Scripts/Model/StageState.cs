@@ -10,7 +10,8 @@ namespace MyGame2.Stage
 
         private readonly CellData[] _cells;
         private readonly CellFlags[] _originalFlags;
-        private readonly Dictionary<int, EntityState> _entitiesById;
+        private Dictionary<int, EntityState> _entitiesById; // Restore 시 새로운 Dictionary를 참조하기 때문에 readonly 속성 제거
+
         private readonly List<int> _playerIds;
         private readonly List<int> _boxIds;
         private readonly List<int> _cameraIds;
@@ -55,7 +56,10 @@ namespace MyGame2.Stage
 
         public void Restore(StageSnapshot snapshot)
         {
-            if (snapshot == null) return;
+            if (snapshot == null)
+            {
+                return;
+            }
 
             // 셀 복원
             System.Array.Copy(snapshot.Cells, _cells, _cells.Length);
@@ -63,7 +67,9 @@ namespace MyGame2.Stage
             // 엔티티 복원
             _entitiesById.Clear();
             foreach (var kvp in snapshot.EntityDict)
+            {
                 _entitiesById[kvp.Key] = kvp.Value;
+            }
 
             // 상태 복원
             ActivePlayerId = snapshot.ActivePlayerId;
@@ -71,6 +77,9 @@ namespace MyGame2.Stage
             IsGameOver = snapshot.IsGameOver;
             IsStageClear = snapshot.IsStageClear;
             IsViewDirty = snapshot.IsViewDirty;
+
+            // Entity Dictionary 복원
+            _entitiesById = snapshot.EntityDict;
 
             // 리스트 복원
             RebuildEntityLists();
@@ -101,16 +110,17 @@ namespace MyGame2.Stage
                     case EntityKind.Player:
                         _playerIds.Add(e.Id);
                         break;
-                    case EntityKind.Box:                  _boxIds.Add(e.Id); break;
-                    case EntityKind.CameraEnemy:          _cameraIds.Add(e.Id); break;
-                    case EntityKind.RobotEnemy:           _robotIds.Add(e.Id); break;
-                    case EntityKind.AnimalEnemy:          _animalIds.Add(e.Id); break;
-                    case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Add(e.Id); break;
-                    case EntityKind.SummonerEnemy:        _summonerIds.Add(e.Id); break;
-                    case EntityKind.ChaserEnemy:          _chaserIds.Add(e.Id); break;
-                    case EntityKind.ProjectileLauncher:   _launcherIds.Add(e.Id); break;
-                    case EntityKind.Projectile:           _projectileIds.Add(e.Id); break;
-                    case EntityKind.SawTrapEnemy:         _sawTrapIds.Add(e.Id); break;
+
+                    case EntityKind.Box: _boxIds.Add(e.Id); break;
+                    case EntityKind.CameraEnemy: _cameraIds.Add(e.Id); break;
+                    case EntityKind.RobotEnemy: _robotIds.Add(e.Id); break;
+                    case EntityKind.AnimalEnemy: _animalIds.Add(e.Id); break;
+                    case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Add(e.Id); break;
+                    case EntityKind.SummonerEnemy: _summonerIds.Add(e.Id); break;
+                    case EntityKind.ChaserEnemy: _chaserIds.Add(e.Id); break;
+                    case EntityKind.ProjectileLauncher: _launcherIds.Add(e.Id); break;
+                    case EntityKind.Projectile: _projectileIds.Add(e.Id); break;
+                    case EntityKind.SawTrapEnemy: _sawTrapIds.Add(e.Id); break;
                 }
             }
 
@@ -119,7 +129,6 @@ namespace MyGame2.Stage
                     .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
         }
 
-        public Dictionary<int, EntityState> EntityDict { get { return _entitiesById; } }
         public IReadOnlyList<int> PlayerIds { get { return _playerIds; } }
         public IReadOnlyList<int> BoxIds { get { return _boxIds; } }
         public IReadOnlyList<int> CameraIds { get { return _cameraIds; } }
@@ -218,7 +227,8 @@ namespace MyGame2.Stage
         public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap; }
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
-        
+
+        // 바닥형 함정 02: 플레이어가 톱날 커버 범위 안에 있는지 판정
         // 각 SawTrap 엔티티의 앵커 위치 + Facing 방향으로 Size칸 범위를 검사
         // 앵커 셀에 Active 플래그가 켜져 있으면 (버튼/스위치로 비활성화) 안전
         public bool IsInSawTrapRange(GridPos pos)
@@ -586,13 +596,13 @@ namespace MyGame2.Stage
 
             switch (entity.Kind)
             {
-                case EntityKind.Box:                  _boxIds.Remove(entityId); break;
-                case EntityKind.ChaserEnemy:          _chaserIds.Remove(entityId); break;
-                case EntityKind.SummonerEnemy:        _summonerIds.Remove(entityId); break;
-                case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Remove(entityId); break;
-                case EntityKind.ProjectileLauncher:   _launcherIds.Remove(entityId); break;
-                case EntityKind.Projectile:           _projectileIds.Remove(entityId); break;
-                case EntityKind.SawTrapEnemy:          _sawTrapIds.Remove(entityId); break;
+                case EntityKind.Box: _boxIds.Remove(entityId); break;
+                case EntityKind.ChaserEnemy: _chaserIds.Remove(entityId); break;
+                case EntityKind.SummonerEnemy: _summonerIds.Remove(entityId); break;
+                case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Remove(entityId); break;
+                case EntityKind.ProjectileLauncher: _launcherIds.Remove(entityId); break;
+                case EntityKind.Projectile: _projectileIds.Remove(entityId); break;
+                case EntityKind.SawTrapEnemy: _sawTrapIds.Remove(entityId); break;
             }
 
             _entitiesById.Remove(entityId);
@@ -616,16 +626,16 @@ namespace MyGame2.Stage
                         _entitiesById[a].Get<PlayerData>().Slot
                             .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
                     break;
-                case EntityKind.Box:                  _boxIds.Add(entity.Id); break;
-                case EntityKind.CameraEnemy:          _cameraIds.Add(entity.Id); break;
-                case EntityKind.RobotEnemy:           _robotIds.Add(entity.Id); break;
-                case EntityKind.AnimalEnemy:           _animalIds.Add(entity.Id); break;
-                case EntityKind.PatrolCameraEnemy:     _patrolCameraIds.Add(entity.Id); break;
-                case EntityKind.SummonerEnemy:         _summonerIds.Add(entity.Id); break;
-                case EntityKind.ChaserEnemy:           _chaserIds.Add(entity.Id); break;
-                case EntityKind.ProjectileLauncher:    _launcherIds.Add(entity.Id); break;
-                case EntityKind.Projectile:            _projectileIds.Add(entity.Id); break;
-                case EntityKind.SawTrapEnemy:           _sawTrapIds.Add(entity.Id); break;
+                case EntityKind.Box: _boxIds.Add(entity.Id); break;
+                case EntityKind.CameraEnemy: _cameraIds.Add(entity.Id); break;
+                case EntityKind.RobotEnemy: _robotIds.Add(entity.Id); break;
+                case EntityKind.AnimalEnemy: _animalIds.Add(entity.Id); break;
+                case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Add(entity.Id); break;
+                case EntityKind.SummonerEnemy: _summonerIds.Add(entity.Id); break;
+                case EntityKind.ChaserEnemy: _chaserIds.Add(entity.Id); break;
+                case EntityKind.ProjectileLauncher: _launcherIds.Add(entity.Id); break;
+                case EntityKind.Projectile: _projectileIds.Add(entity.Id); break;
+                case EntityKind.SawTrapEnemy: _sawTrapIds.Add(entity.Id); break;
             }
             return entity.Id;
         }
@@ -647,39 +657,5 @@ namespace MyGame2.Stage
         }
 
         private int ToIndex(GridPos pos) { return (pos.Y * Width) + pos.X; }
-
-        public void Restore(StageSnapshot snapshot)
-        {
-            Array.Copy(snapshot.Cells, _cells, snapshot.Cells.Length);
-
-            ActivePlayerId = snapshot.ActivePlayerId;
-            TurnIndex = snapshot.TurnIndex;
-            IsGameOver = snapshot.IsGameOver;
-            IsStageClear = snapshot.IsStageClear;
-            IsViewDirty = snapshot.IsViewDirty;
-
-            _boxIds.Clear();
-            _boxIds.AddRange(snapshot.BoxIds);
-
-            _patrolCameraIds.Clear();
-            _patrolCameraIds.AddRange(snapshot.PatrolCameraIds);
-
-            _summonerIds.Clear();
-            _summonerIds.AddRange(snapshot.SummonerIds);
-
-            _chaserIds.Clear();
-            _chaserIds.AddRange(snapshot.ChaserIds);
-
-            _launcherIds.Clear();
-            _launcherIds.AddRange(snapshot.LauncherIds);
-
-            _projectileIds.Clear();
-            _projectileIds.AddRange(snapshot.ProjectileIds);
-
-            _sawTrapIds.Clear();
-            _sawTrapIds.AddRange(snapshot.SawTrapIds);
-
-            _entitiesById = snapshot.EntityDict;
-        }
     }
 }
