@@ -44,7 +44,7 @@ namespace MyGame2.Stage
             if (cell.HasBush && !mover.IsPlayer)
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
 
-            // 점유 셀: 밀기 / 부서지는 상자 / 차단 판정
+            // 점유 셀: 밀기 / 부서지는 상자 / 톱날 파괴 / 차단 판정
             if (cell.IsOccupied)
             {
                 if (state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
@@ -55,6 +55,13 @@ namespace MyGame2.Stage
                         // 일반 밀기 가능
                         if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
+
+                        // 톱날 범위로 밀기 -> 부서지는/얼음 상자면 파괴
+                        if (_pushRule.ShouldBreakBySaw(state, moverId, occupant.Id, direction))
+                        {
+                            _pushRule.ExecuteSawBreak(state, occupant.Id, direction);
+                            return MoveResult.Success(moverId, from, target);
+                        }
 
                         // 밀기 불가 -> 부서지는 상자인지 판정
                         if (_pushRule.ShouldBreak(state, moverId, occupant.Id, direction))

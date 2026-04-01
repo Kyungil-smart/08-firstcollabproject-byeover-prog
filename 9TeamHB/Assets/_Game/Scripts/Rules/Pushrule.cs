@@ -19,6 +19,13 @@ namespace MyGame2.Stage
             if (cell.IsClosedDoor) return false;
             if (cell.IsOccupied) return false;
 
+            // 톱날 범위로는 일반 상자를 밀 수 없음
+            // 부서지는 상자와 얼음 상자는 ShouldBreakBySaw에서 별도 처리
+            if (state.IsInSawTrapRange(dest))
+            {
+                return false;
+            }
+
             return true;
         }
 
@@ -58,7 +65,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // 막힌 상태에서 부서져야 하는지 판정
+        // 막힌 상태에서 부서져야 하는지 판정 (Breakable 상자)
         public bool ShouldBreak(StageState state, int pusherId, int boxId, Direction direction)
         {
             if (!state.TryGetEntity(pusherId, out EntityState pusher)) return false;
@@ -71,6 +78,51 @@ namespace MyGame2.Stage
             bool isBlocked = !state.IsInside(dest) || state.GetCell(dest).HasWall || state.GetCell(dest).IsOccupied;
 
             return isBlocked;
+        }
+
+        // 톱날 범위에 밀 때 파괴되는 상자인지 판정 (부서지는 상자 + 얼음 상자)
+        public bool ShouldBreakBySaw(StageState state, int pusherId, int boxId, Direction direction)
+        {
+            if (!state.TryGetEntity(pusherId, out EntityState pusher)) return false;
+            if (!state.TryGetEntity(boxId, out EntityState box)) return false;
+
+            if (!pusher.IsPlayer) return false;
+
+            GridPos dest = box.Position.Move(direction);
+            if (!state.IsInside(dest)) return false;
+
+            // 톱날 범위가 아니면 해당 없음
+            if (!state.IsInSawTrapRange(dest)) return false;
+
+            // 목적지에 벽/문/점유가 있으면 안 됨
+            CellData cell = state.GetCell(dest);
+            if (cell.HasWall || cell.IsClosedDoor || cell.IsOccupied) return false;
+
+            // 부서지는 상자 또는 얼음 상자만 파괴 가능
+            BoxData boxData = box.Get<BoxData>();
+            if (boxData.Ownership == BoxType.Breakable) return true;
+            if (boxData.Ownership == BoxType.Ice) return true;
+
+            return false;
+        }
+
+        // 톱날에 의한 상자 파괴 실행
+        public void ExecuteSawBreak(StageState state, int boxId, Direction direction)
+        {
+            if (!state.TryGetEntity(boxId, out EntityState box)) return;
+
+            GridPos dest = box.Position.Move(direction);
+            state.TryMoveEntity(boxId, dest);
+
+            // 얼음 상자면 쪼개짐 이벤트 발행
+            if (box.Has<IceSlideData>())
+            {
+                Direction sawFacing = state.GetSawTrapFacingAt(dest);
+                state.Events?.RaiseIceBoxSawDestroyed(boxId, dest, sawFacing);
+            }
+
+            state.RemoveEntity(boxId);
+            state.SetViewDirty();
         }
 
         // 부숴지는 상자를 파괴

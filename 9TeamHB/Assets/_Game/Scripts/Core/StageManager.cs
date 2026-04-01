@@ -42,8 +42,6 @@ namespace MyGame2.Stage
 
         private float _nextUndoTime;
 
-
-
         private void Awake()
         {
             _mapLoader = new MapLoader(symbolRegistry);
@@ -52,8 +50,8 @@ namespace MyGame2.Stage
             LastOutcome = TurnOutcome.None();
             _events.TurnExecuted += OnTurnExecuted;
             _events.ActivePlayerChanged += OnActivePlayerChanged;
-            _events.UndoExecuted += OnUndoExecuted;
             _events.EntityKilled += OnEntityKilled;
+            _events.UndoExecuted += OnUndoExecuted;
         }
 
         private void Start()
@@ -63,6 +61,7 @@ namespace MyGame2.Stage
 
         private void Update()
         {
+            if (CurrentState == null) return;
             if (CurrentState.IsUndoProcessing)
             {
                 if (snapshotStack.Count == 0)
@@ -84,8 +83,8 @@ namespace MyGame2.Stage
         {
             _events.TurnExecuted -= OnTurnExecuted;
             _events.ActivePlayerChanged -= OnActivePlayerChanged;
-            _events.UndoExecuted -= OnUndoExecuted;
             _events.EntityKilled -= OnEntityKilled;
+            _events.UndoExecuted -= OnUndoExecuted;
         }
 
         private void OnTurnExecuted(TurnOutcome outcome)
@@ -97,12 +96,14 @@ namespace MyGame2.Stage
 
         private void OnActivePlayerChanged(int id) { SyncSelection(); }
 
-        private void OnUndoExecuted()
+        // 히든 함정 등 지연 Kill 후에도 뷰가 갱신되도록 처리
+        private void OnEntityKilled(int id)
         {
             SyncViews();
             SyncSelection();
         }
-        private void OnEntityKilled(int id)
+
+        private void OnUndoExecuted()
         {
             SyncViews();
             SyncSelection();
@@ -125,6 +126,9 @@ namespace MyGame2.Stage
 
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
+
+            // 자동 페어링: 맵 텍스트를 다시 스캔해서 같은 pairGroup끼리 SetCellPair
+            ApplyPairGroups(file, CurrentState);
 
             // 핵심 추가: MoveComponent들이 StageState에 접근할 수 있도록 등록
             if (stageStateReference != null)
@@ -166,8 +170,6 @@ namespace MyGame2.Stage
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
-            StageSnapshot snapshot = new StageSnapshot(CurrentState);
-
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -180,6 +182,7 @@ namespace MyGame2.Stage
 
             if (outcome.Executed)
             {
+                StageSnapshot snapshot = new StageSnapshot(CurrentState);
                 snapshotStack.Push(snapshot);
 
                 Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
@@ -224,7 +227,7 @@ namespace MyGame2.Stage
         // 단일 엔티티의 View 생성 (동적 스폰 지원)
         private void SpawnViewForEntity(EntityState e)
         {
-            if (_views.ContainsKey(e.Id)) return; // 이미 있으면 건너뜀
+            if (_views.ContainsKey(e.Id)) return;
 
             GridEntityView prefab = e.Prefab;
             if (prefab == null) return;
@@ -232,6 +235,14 @@ namespace MyGame2.Stage
             GridEntityView view = Instantiate(prefab, entityRoot);
             view.name = $"{e.Kind}_{e.Id}";
             view.Bind(e, cellSize);
+
+            // 톱날 함정: 멀티셀 비주얼 자동 생성
+            SawTrapVisual sawVisual = view.GetComponent<SawTrapVisual>();
+            if (sawVisual != null && e.Has<SawTrapData>())
+            {
+                sawVisual.BuildVisual(e.Get<SawTrapData>().Size, e.Facing);
+            }
+
             Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
             _views[e.Id] = view;
         }
@@ -241,7 +252,6 @@ namespace MyGame2.Stage
         {
             if (CurrentState == null) return;
 
-            // 새로 생긴 엔티티의 View 생성
             foreach (EntityState e in CurrentState.Entities)
             {
                 if (!_views.ContainsKey(e.Id))
@@ -259,14 +269,12 @@ namespace MyGame2.Stage
                 }
                 else
                 {
-                    // 엔티티가 StageState에서 제거됨 (RemoveEntity로 소멸)
                     Destroy(pair.Value.gameObject);
                     if (toRemove == null) toRemove = new List<int>(4);
                     toRemove.Add(pair.Key);
                 }
             }
 
-            // Dictionary 순회 중 삭제 방지
             if (toRemove != null)
             {
                 for (int i = 0; i < toRemove.Count; i++)
@@ -292,6 +300,59 @@ namespace MyGame2.Stage
             foreach (var pair in _views)
                 if (pair.Value != null) Destroy(pair.Value.gameObject);
             _views.Clear();
+        }
+
+        // 자동 페어링
+        private void ApplyPairGroups(TextAsset file, StageState state)
+        {
+            if (symbolRegistry == null || file == null) return;
+
+            string rawText = file.text;
+            if (rawText.Length > 0 && rawText[0] == '\uFEFF')
+                rawText = rawText.Substring(1);
+
+            string normalized = rawText.Replace("\r\n", "\n").Replace('\r', '\n');
+            string[] split = normalized.Split('\n');
+            List<string> validLines = new List<string>(split.Length);
+
+            for (int i = 0; i < split.Length; i++)
+            {
+                string line = split[i].TrimEnd();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (line.TrimStart().StartsWith("//")) continue;
+                validLines.Add(line);
+            }
+
+            Dictionary<int, List<GridPos>> groups = new Dictionary<int, List<GridPos>>();
+
+            for (int y = 0; y < validLines.Count; y++)
+            {
+                string row = validLines[y];
+                for (int x = 0; x < row.Length; x++)
+                {
+                    char ch = row[x];
+                    if (!symbolRegistry.TryGetEntry(ch, out MapSymbolEntry entry)) continue;
+                    if (entry.pairGroup <= 0) continue;
+
+                    if (!groups.ContainsKey(entry.pairGroup))
+                        groups[entry.pairGroup] = new List<GridPos>(2);
+                    groups[entry.pairGroup].Add(new GridPos(x, y));
+                }
+            }
+
+            foreach (var kvp in groups)
+            {
+                if (kvp.Value.Count == 2)
+                {
+                    state.SetCellPair(kvp.Value[0], kvp.Value[1]);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"[StageManager] PairGroup {kvp.Key}: " +
+                        $"{kvp.Value.Count}개 셀 발견 (2개여야 페어 성립). 무시됨.");
+                }
+            }
         }
     }
 }
