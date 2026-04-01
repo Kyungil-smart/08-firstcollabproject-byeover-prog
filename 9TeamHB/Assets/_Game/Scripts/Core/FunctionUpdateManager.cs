@@ -33,7 +33,7 @@ namespace MyGame2.Stage
             StageState state = stageManager.CurrentState;
             if (state == null) return;
             // ---
-            
+
         }
 
         private void Update()
@@ -56,7 +56,7 @@ namespace MyGame2.Stage
         private bool IsActive()
         {
             if (stageManager == null || stageManager.CurrentState == null) return false;
-            if (stageManager.CurrentState.IsGameOver || stageManager.CurrentState.IsStageClear) return false;
+            if (stageManager.CurrentState.IsUpdatable()) return false;
             if (gameManager != null && gameManager.CurrentState != GameFlowState.Playing) return false;
             return true;
         }

@@ -119,6 +119,7 @@ namespace MyGame2.Stage
                     .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
         }
 
+        public Dictionary<int, EntityState> EntityDict { get { return _entitiesById; } }
         public IReadOnlyList<int> PlayerIds { get { return _playerIds; } }
         public IReadOnlyList<int> BoxIds { get { return _boxIds; } }
         public IReadOnlyList<int> CameraIds { get { return _cameraIds; } }
@@ -127,6 +128,7 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> PatrolCameraIds { get { return _patrolCameraIds; } }
         public IReadOnlyList<int> SummonerIds { get { return _summonerIds; } }
         public IReadOnlyList<int> ChaserIds { get { return _chaserIds; } }
+
         public IReadOnlyList<int> LauncherIds { get { return _launcherIds; } }
         public IReadOnlyList<int> ProjectileIds { get { return _projectileIds; } }
         public IReadOnlyList<int> SawTrapIds { get { return _sawTrapIds; } }
@@ -645,5 +647,39 @@ namespace MyGame2.Stage
         }
 
         private int ToIndex(GridPos pos) { return (pos.Y * Width) + pos.X; }
+
+        public void Restore(StageSnapshot snapshot)
+        {
+            Array.Copy(snapshot.Cells, _cells, snapshot.Cells.Length);
+
+            ActivePlayerId = snapshot.ActivePlayerId;
+            TurnIndex = snapshot.TurnIndex;
+            IsGameOver = snapshot.IsGameOver;
+            IsStageClear = snapshot.IsStageClear;
+            IsViewDirty = snapshot.IsViewDirty;
+
+            _boxIds.Clear();
+            _boxIds.AddRange(snapshot.BoxIds);
+
+            _patrolCameraIds.Clear();
+            _patrolCameraIds.AddRange(snapshot.PatrolCameraIds);
+
+            _summonerIds.Clear();
+            _summonerIds.AddRange(snapshot.SummonerIds);
+
+            _chaserIds.Clear();
+            _chaserIds.AddRange(snapshot.ChaserIds);
+
+            _launcherIds.Clear();
+            _launcherIds.AddRange(snapshot.LauncherIds);
+
+            _projectileIds.Clear();
+            _projectileIds.AddRange(snapshot.ProjectileIds);
+
+            _sawTrapIds.Clear();
+            _sawTrapIds.AddRange(snapshot.SawTrapIds);
+
+            _entitiesById = snapshot.EntityDict;
+        }
     }
 }
