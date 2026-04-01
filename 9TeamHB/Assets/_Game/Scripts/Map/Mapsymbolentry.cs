@@ -3,17 +3,6 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    // 맵 텍스트의 한 문자가 어떤 지형/엔티티에 대응하는지 정의한다.
-    // MapSymbolRegistrySO의 entries 배열에 들어가는 단위 데이터.
-    //
-    // [사용 예시]
-    // symbol='B', cellFlags=None, spawnsEntity=true,
-    // entityConfig=BoxSharedConfig, facing=None
-    // → 'B' 문자가 있는 위치에 공용 상자를 스폰한다.
-    //
-    // symbol='T', cellFlags=Trap, spawnsEntity=false
-    // → 'T' 문자가 있는 위치를 함정 타일로 설정한다.
-
     [Serializable]
     public class MapSymbolEntry
     {
@@ -37,5 +26,10 @@ namespace MyGame2.Stage
         
         [Tooltip("스폰 시 초기 방향")]
         public Direction facing = Direction.None;
+
+        [Header("페어 그룹")]
+        [Tooltip("같은 번호끼리 자동 페어링 (0 = 페어 없음)\n" +
+                 "레버1↔문1 = 같은 번호, 스위치1↔문5 = 같은 번호")]
+        public int pairGroup = 0;
     }
 }

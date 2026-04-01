@@ -19,6 +19,16 @@ public class InGameUIManager : MonoBehaviour
     private GameObject activeGameClear;
     private GameObject activeGameQuit;
 
+    [Header("되돌리기 설정")]
+    public int maxUndoCount = 3;        // 최대 되돌리기 횟수 (나중에 스테이지 불러올때 InGameUIManager생성 후 InGameUIManager.maxUndoCount에 전달.)
+    private int currentUndoCount;       // 현재 남은 되돌리기 횟수
+    private HUDUndoUI hudUndoUI; // HUD 스크립트 접근용
+    
+    [Header("태그 설정")]  
+    public int maxTagCount = 3;
+    private int currentTagCount;
+    private HUDTagUI hudTagUI;
+    
     //흐른 시간 체크 변수  
     public float timeElapsed = 0f; 
     private void Awake()
@@ -29,7 +39,7 @@ public class InGameUIManager : MonoBehaviour
         }
         else
         {
-            Destroy(gameObject);
+            Destroy(gameObject); //싱글톤인데 씬 바뀔시 데이터초기화, 인게임 시작될때 초기화되는 
         }
     }
 
@@ -37,6 +47,8 @@ public class InGameUIManager : MonoBehaviour
     {
         timeElapsed = 0f; 
         Time.timeScale = 1f; //시간 흐르게
+        currentUndoCount = maxUndoCount;
+        currentTagCount = maxTagCount;
         ShowHUD();
     }
 
@@ -81,10 +93,22 @@ public class InGameUIManager : MonoBehaviour
         {
             
             activeHUD = Instantiate(hudPrefab);
+            hudUndoUI = activeHUD.GetComponentInChildren<HUDUndoUI>(true);
+            hudTagUI = activeHUD.GetComponentInChildren<HUDTagUI>(true);
         }
         else
         {
             activeHUD.SetActive(true);
+        }
+        
+        if (hudUndoUI != null)
+        {
+            hudUndoUI.UpdateUndoUI(currentUndoCount, maxUndoCount);
+        }
+
+        if (hudTagUI != null)
+        {
+            hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
         }
     }
 
@@ -183,5 +207,50 @@ public class InGameUIManager : MonoBehaviour
         }
         
         UpdateTimeScale();
+    }
+    
+    // Undo 버튼 눌릴시 실행되는 Undo로직(UI포함)
+    public void ExecuteUndo()
+    {
+        if (currentUndoCount > 0)
+        {
+            currentUndoCount--;
+
+            // TODO: 팀원분이 만든 되돌리기 로직 실행
+            
+
+            // 
+            if (hudUndoUI != null)
+            {
+                hudUndoUI.UpdateUndoUI(currentUndoCount, maxUndoCount);
+            }
+        }
+        else
+        {
+            Debug.Log("되돌리기 횟수가 다닳은 상태입니다 ");
+        }
+    }
+
+    
+    /// <summary>
+    /// 
+    /// </summary>
+    public void ExecuteTag()
+    {
+        if (currentTagCount > 0)
+        {
+            currentTagCount--;
+            
+            // ToDo: 팀원분이 만든 태그 로직 실행.
+
+            if (hudTagUI != null)
+            {
+                hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
+            }
+        }
+        else
+        {
+            Debug.Log("바키제키는 요술사인가??");
+        }
     }
 }

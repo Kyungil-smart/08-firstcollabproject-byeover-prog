@@ -43,33 +43,34 @@ namespace MyGame2.Stage
             // 부쉬: 감시자/적은 진입 불가, 플레이어만 가능
             if (cell.HasBush && !mover.IsPlayer)
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByWall);
-            
 
+            // 점유 셀: 밀기 / 부서지는 상자 / 톱날 파괴 / 차단 판정
             if (cell.IsOccupied)
-            { 
-                if(state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
+            {
+                if (state.TryGetEntity(cell.OccupantId, out EntityState occupant) && occupant.IsAlive)
                 {
-                     // 적이 플레이어로 이동할 때
-                     if (mover.IsLethalMover && occupant.IsPlayer)
-                         return MoveResult.ContactKill(moverId, occupant.Id, from, target);
- 
-                     // 밀 수 있는 상자로 이동할 때
-                     if (mover.IsPlayer && occupant.IsPushable)
-                     {
-                         if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
-                             return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
-                     }
-                     
-                     // 획득 가능한 엔티티로 이동할 때
-                     if (mover.IsPlayer && occupant.Has<Pickable>())
-                     {
-                         if(!mover.Has<PocketData>()) // 포켓 없으면 블럭처럼 막힘
-                             return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
-                         mover.Get<PocketData>().PickUp(state, occupant);
-                         return MoveResult.Success(moverId, from, target);
-                     }
+                    // 플레이어가 밀 수 있는 상자인지 확인
+                    if (mover.IsPlayer && occupant.IsPushable)
+                    {
+                        // 일반 밀기 가능
+                        if (_pushRule.CanPush(state, moverId, occupant.Id, direction))
+                            return MoveResult.PushAndMove(moverId, occupant.Id, from, target);
+
+                        // 톱날 범위로 밀기 -> 부서지는/얼음 상자면 파괴
+                        if (_pushRule.ShouldBreakBySaw(state, moverId, occupant.Id, direction))
+                        {
+                            _pushRule.ExecuteSawBreak(state, occupant.Id, direction);
+                            return MoveResult.Success(moverId, from, target);
+                        }
+
+                        // 밀기 불가 -> 부서지는 상자인지 판정
+                        if (_pushRule.ShouldBreak(state, moverId, occupant.Id, direction))
+                        {
+                            _pushRule.ExecuteBreak(state, occupant.Id);
+                            return MoveResult.Success(moverId, from, target);
+                        }
+                    }
                 }
-                Debug.Log("Blocked by entity");
                 return MoveResult.Blocked(moverId, from, target, MoveBlockReason.BlockedByEntity);
             }
             
@@ -82,7 +83,7 @@ namespace MyGame2.Stage
                     mover.Get<Teleportable>().IsTeleporting = true;
                     return MoveResult.Success(moverId, from, pair);
                 }
-                //텔레포트 불가능 시 일반 이동 v
+                //텔레포트 불가능 시 일반 이동
             }
 
             return MoveResult.Success(moverId, from, target);

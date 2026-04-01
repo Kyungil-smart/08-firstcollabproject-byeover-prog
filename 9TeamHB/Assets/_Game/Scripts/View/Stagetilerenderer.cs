@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    // 스테이지 로드 시 그리드 타일 + 카메라/로봇 감시 범위를 시각화한다.
-
     public sealed class StageTileRenderer : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -28,25 +26,37 @@ namespace MyGame2.Stage
         [Header("로봇 감지 범위")]
         [SerializeField] private Color robotDetectionColor = new Color(1f, 0.6f, 0f, 0.3f);
 
-        [Header("렌더링")]
-        [SerializeField] private int tileOrder = -1;
+        [Header("B감시자(Summoner) 감지 범위")]
+        [SerializeField] private Color summonerDetectionColor = new Color(0.2f, 0.6f, 1f, 0.3f);
+
+        [Header("렌더링 레이어")]
+        [Tooltip("틈새 타일 sortingOrder")]
+        [SerializeField] private int crackTileOrder = -4;
+        [Tooltip("바닥/벽/골 등 일반 타일 sortingOrder")]
+        [SerializeField] private int tileOrder = -2;
+        [Tooltip("함정 타일 sortingOrder")]
+        [SerializeField] private int trapTileOrder = -1;
         [SerializeField] private int detectionOrder = 0;
         [SerializeField] private float tilePadding = 0.05f;
 
         private readonly List<GameObject> _tiles = new List<GameObject>(256);
         private readonly List<GameObject> _camDetections = new List<GameObject>(64);
         private readonly List<GameObject> _robotDetections = new List<GameObject>(16);
+        private readonly List<GameObject> _summonerDetections = new List<GameObject>(16);
         private Transform _tileRoot;
         private Transform _camDetRoot;
         private Transform _robotDetRoot;
+        private Transform _summonerDetRoot;
 
         private CameraEnemy _cameraEnemy;
         private RobotEnemy _robotEnemy;
+        private DetectionArea3x3 _detector3x3;
 
         private void Awake()
         {
             _cameraEnemy = new CameraEnemy();
             _robotEnemy = new RobotEnemy();
+            _detector3x3 = new DetectionArea3x3();
         }
 
         private void OnEnable()
@@ -54,6 +64,7 @@ namespace MyGame2.Stage
             if (stageManager == null) return;
             stageManager.Events.StageLoaded += OnStageLoaded;
             stageManager.Events.TurnExecuted += OnTurnExecuted;
+            stageManager.Events.UndoExecuted += OnUndoExecuted;
         }
 
         private void OnDisable()
@@ -61,6 +72,7 @@ namespace MyGame2.Stage
             if (stageManager == null) return;
             stageManager.Events.StageLoaded -= OnStageLoaded;
             stageManager.Events.TurnExecuted -= OnTurnExecuted;
+            stageManager.Events.UndoExecuted -= OnUndoExecuted;
         }
 
         private void Start()
@@ -79,14 +91,20 @@ namespace MyGame2.Stage
             RefreshAll(stageManager.CurrentState);
         }
 
+        private void OnUndoExecuted()
+        {
+            RefreshAll(stageManager.CurrentState);
+        }
+
         private void RefreshAll(StageState state)
         {
             RenderTiles(state);
             RenderCameraDetection(state);
             RenderRobotDetection(state);
+            RenderSummonerDetection(state);
         }
 
-        // ── 타일 ──
+        // 타일
 
         private void RenderTiles(StageState state)
         {
@@ -101,32 +119,59 @@ namespace MyGame2.Stage
                 CellData cell = state.GetCell(pos);
 
                 Color c;
-                if (cell.HasWall)       c = wallColor;
-                else if (cell.HasTrap)  c = trapColor;
-                else if (cell.HasGoal)  c = goalColor;
-                else if (cell.HasCrack) c = crackColor;
-                else if (cell.HasTeleport) c = teleportColor;
+                int order;
+
+                if (cell.HasWall)
+                {
+                    c = wallColor;
+                    order = tileOrder;
+                }
+                else if (cell.HasTrap)
+                {
+                    c = trapColor;
+                    order = trapTileOrder;
+                }
+                else if (cell.HasGoal)
+                {
+                    c = goalColor;
+                    order = tileOrder;
+                }
+                else if (cell.HasCrack)
+                {
+                    c = crackColor;
+                    order = crackTileOrder;
+                }
+                else if (cell.HasTeleport)
+                {
+                    c = teleportColor;
+                    order = tileOrder;
+                }
                 else if (cell.HasSignalButton)
                 {
-                    if(!cell.IsSticky) c = buttonColor;
-                    else c = switchColor;
+                    c = !cell.IsSticky ? buttonColor : switchColor;
+                    order = tileOrder;
                 }
-                else if (cell.IsOpenedDoor) c = opendDoorColor;
-                else if (cell.IsClosedDoor) c = closedDoorColor;
-                else                    c = floorColor;
-
-                if (cell.HasCrack)
+                else if (cell.IsOpenedDoor)
                 {
-                    _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder-1));
+                    c = opendDoorColor;
+                    order = tileOrder;
+                }
+                else if (cell.IsClosedDoor)
+                {
+                    c = closedDoorColor;
+                    order = tileOrder;
                 }
                 else
                 {
-                    _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder));
+                    c = floorColor;
+                    order = tileOrder;
                 }
+
+                _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, order));
             }
         }
 
-        // ── 카메라 감시 범위 ──
+        // 카메라 감시 범위
 
         private void RenderCameraDetection(StageState state)
         {
@@ -148,7 +193,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // ── 로봇 감지 범위 (앞 2칸 + 뒤 2칸) ──
+        // 로봇 감지 범위
 
         private void RenderRobotDetection(StageState state)
         {
@@ -170,7 +215,33 @@ namespace MyGame2.Stage
             }
         }
 
-        // ── 유틸리티 ──
+        // B감시자(Summoner) 3×3 감지 범위
+
+        private void RenderSummonerDetection(StageState state)
+        {
+            Clear(_summonerDetections);
+            EnsureRoot(ref _summonerDetRoot, "_SummonerDetRoot");
+            float scale = 1f - tilePadding;
+
+            for (int i = 0; i < state.SummonerIds.Count; i++)
+            {
+                int summonerId = state.SummonerIds[i];
+                if (!state.TryGetEntity(summonerId, out EntityState summoner) || !summoner.IsAlive)
+                    continue;
+
+                List<GridPos> cells = _detector3x3.CollectDetectionCells(
+                    state, summoner.Position, summoner.Facing, true);
+
+                for (int j = 0; j < cells.Count; j++)
+                {
+                    _summonerDetections.Add(MakeSprite(
+                        $"SD_{summonerId}_{j}", _summonerDetRoot,
+                        cells[j].ToWorld(1f), scale, summonerDetectionColor, detectionOrder));
+                }
+            }
+        }
+
+        // 유틸리티
 
         private GameObject MakeSprite(string name, Transform parent, Vector3 pos,
             float scale, Color color, int order)

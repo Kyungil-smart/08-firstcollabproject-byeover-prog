@@ -4,7 +4,7 @@ using UnityEngine;
 namespace MyGame2.Stage
 {
     // 로봇을 실시간으로 자동 이동시킨다.
-    
+
     public sealed class RobotAutoMover : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -73,7 +73,10 @@ namespace MyGame2.Stage
 
             for (int i = 0; i < state.RobotIds.Count; i++)
             {
-                if (state.IsGameOver) break;
+                if (!state.IsUpdatable())
+                {
+                    break;
+                }
 
                 int robotId = state.RobotIds[i];
                 EnsureRobotTracked(robotId);

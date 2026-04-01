@@ -1,5 +1,7 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.InputSystem;
+
 public class HUDController : MonoBehaviour
 {
     [Header("경과 시간 텍스트")]
@@ -20,6 +22,12 @@ public class HUDController : MonoBehaviour
     public void Update()
     {
         GetTimeElapsed();
+        
+        // 신규인풋시스템간이버전으로 ESC누를때 정지화면띄움
+        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            OnClickPauseButton();
+        }
     }
     
     //프리펩화했을때 InGameUIManger 참조 못하는 문제 해결을 위해 프리펩 안에 스크립트로 참조

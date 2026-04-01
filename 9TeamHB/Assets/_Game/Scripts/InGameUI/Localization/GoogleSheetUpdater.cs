@@ -13,7 +13,7 @@ public class GoogleSheetDownloader : MonoBehaviour
     [ContextMenu("시트 데이터 가져오기")] //우클릭 시 아래 한 개의 함수 실행
     public void DownloadData()
     {
-        StartCoroutine(DownloadCSV());
+        StartCoroutine(DownloadCSV()); //웹은 요청시간이 걸려서 게임이 멈추지 않게 비동기로. (게임 키고 안해서 큰 상관없긴 함)
     }
 
     IEnumerator DownloadCSV()
@@ -24,9 +24,9 @@ public class GoogleSheetDownloader : MonoBehaviour
 
             if (www.result == UnityWebRequest.Result.Success)
             {
-                // Assets/Resources 폴더 안에 LocalizationTable.csv 라는 이름으로 덮어쓰기 저장
-                string path = Application.dataPath + "/Resources/LocalizationTable.csv";
-                File.WriteAllText(path, www.downloadHandler.text);
+                // Assets/_Game/Resources 폴더 안에 LocalizationTable.csv 라는 이름으로 덮어쓰기 저장
+                string path = Application.dataPath + "/_Game/Resources/LocalizationTable.csv";
+                File.WriteAllText(path, www.downloadHandler.text, System.Text.Encoding.UTF8);
                 
 #if UNITY_EDITOR
                 UnityEditor.AssetDatabase.Refresh();

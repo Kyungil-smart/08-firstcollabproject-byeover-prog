@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
+  m_Name: 1x2Trap
+  m_EditorClassIdentifier: Assembly-CSharp::EntitySO
+  _kind: 13
+  isBlocking: 0
+  blocksCameraSight: 0
+  isLethal: 0
+  _viewPrefab: {fileID: 5570471146318663386, guid: c533dee3d41311146acd7c46127f59fc,
+    type: 3}
+  Functions:
+  - {fileID: 11400000, guid: e6728c9b2d33b6943a6832069fc66290, type: 2}

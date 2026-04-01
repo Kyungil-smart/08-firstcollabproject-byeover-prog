@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace MyGame2.Stage
 {
-    // 스테이지 생명주기와 View 동기화를 관리
-    // StageEvents를 소유하고, TurnSystem과 View 사이를 연결
-    // GameManager와의 직접 참조를 제거하고 이벤트로 구현
-
     public sealed class StageManager : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -22,26 +18,29 @@ namespace MyGame2.Stage
         [Tooltip("맵 텍스트의 문자 매핑 SO")]
         [SerializeField] private MapSymbolRegistrySO symbolRegistry;
 
+        [Header("상태 참조 SO")]
+        [Tooltip("MoveComponent들이 StageState에 접근하기 위한 SO. Assets/_Game/SO/Util/StageState 에셋 연결")]
+        [SerializeField] private StageStateReferenceSO stageStateReference;
+
+        [Tooltip("되돌리기 반복 간격 (초)")]
+        [SerializeField] private float undoRepeatInterval = 0.2f;
+
         private MapLoader _mapLoader;
-        
-        // 이벤트 허브
+
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
         private TurnSystem _turnSystem;
 
-        // 런타임 상태
         private readonly Dictionary<int, GridEntityView> _views = new Dictionary<int, GridEntityView>(16);
         private int _currentStageIndex;
 
+        private Stack<StageSnapshot> snapshotStack = new Stack<StageSnapshot>();
 
-        // 이벤트 허브. GameManager, PlayerInputReader 등이 구독한다.
         public StageEvents Events { get { return _events; } }
-
-        // 현재 스테이지 상태 (null이면 아직 로드 전).
         public StageState CurrentState { get; private set; }
-
-        // 마지막 턴의 결과.
         public TurnOutcome LastOutcome { get; private set; }
+
+        private float _nextUndoTime;
 
         private void Awake()
         {
@@ -51,6 +50,8 @@ namespace MyGame2.Stage
             LastOutcome = TurnOutcome.None();
             _events.TurnExecuted += OnTurnExecuted;
             _events.ActivePlayerChanged += OnActivePlayerChanged;
+            _events.EntityKilled += OnEntityKilled;
+            _events.UndoExecuted += OnUndoExecuted;
         }
 
         private void Start()
@@ -58,13 +59,34 @@ namespace MyGame2.Stage
             LoadStage(startStageIndex);
         }
 
+        private void Update()
+        {
+            if (CurrentState == null) return;
+            if (CurrentState.IsUndoProcessing)
+            {
+                if (snapshotStack.Count == 0)
+                {
+                    LeaveUndo();
+                    return;
+                }
+                if (Time.time >= _nextUndoTime)
+                {
+                    _nextUndoTime = Time.time + undoRepeatInterval;
+                    CurrentState.Restore(snapshotStack.Pop());
+                    _events.RaiseUndoExecuted();
+                    Debug.Log($"Pop SnapshotStack, Stack Size : {snapshotStack.Count}");
+                }
+            }
+        }
+
         private void OnDestroy()
         {
             _events.TurnExecuted -= OnTurnExecuted;
             _events.ActivePlayerChanged -= OnActivePlayerChanged;
+            _events.EntityKilled -= OnEntityKilled;
+            _events.UndoExecuted -= OnUndoExecuted;
         }
 
-        // 턴 실행 완료 시 View 일괄 동기화.
         private void OnTurnExecuted(TurnOutcome outcome)
         {
             LastOutcome = outcome;
@@ -72,11 +94,20 @@ namespace MyGame2.Stage
             SyncSelection();
         }
 
-        // 활성 플레이어 전환 시 선택 마커 갱신.
         private void OnActivePlayerChanged(int id) { SyncSelection(); }
 
-        // 밑에 Load 구조는 경민님이 마음대로 수정 하셔도 됩니다.
-        // 지정한 인덱스의 스테이지를 로드한다.
+        // 히든 함정 등 지연 Kill 후에도 뷰가 갱신되도록 처리
+        private void OnEntityKilled(int id)
+        {
+            SyncViews();
+            SyncSelection();
+        }
+
+        private void OnUndoExecuted()
+        {
+            SyncViews();
+            SyncSelection();
+        }
 
         public void LoadStage(int stageIndex)
         {
@@ -95,6 +126,14 @@ namespace MyGame2.Stage
 
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
+
+            // 자동 페어링: 맵 텍스트를 다시 스캔해서 같은 pairGroup끼리 SetCellPair
+            ApplyPairGroups(file, CurrentState);
+
+            // 핵심 추가: MoveComponent들이 StageState에 접근할 수 있도록 등록
+            if (stageStateReference != null)
+                stageStateReference.Register(CurrentState);
+
             _tagSystem.Initialize(CurrentState);
 
             SpawnViews();
@@ -103,16 +142,11 @@ namespace MyGame2.Stage
             _events.RaiseStageLoaded(stageIndex);
         }
 
-        // 현재 스테이지를 다시 로드한다.
-
-        public void RestartCurrentStage() 
-        { 
-            LoadStage(_currentStageIndex); 
+        public void RestartCurrentStage()
+        {
+            LoadStage(_currentStageIndex);
         }
 
-
-
-        // 다음 스테이지를 로드한다.
         public bool LoadNextStage()
         {
             int next = _currentStageIndex + 1;
@@ -121,15 +155,18 @@ namespace MyGame2.Stage
             return true;
         }
 
-        // 활성 플레이어를 전환한다.
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
-            return _tagSystem.Switch(CurrentState);
-        }
 
-        // 플레이어 턴을 실행한다.
-        // 성공 시 View 동기화는 TurnExecuted 이벤트를 통해 자동 처리된다.
+            bool switchResult = _tagSystem.Switch(CurrentState);
+            if (switchResult)
+            {
+                snapshotStack.Clear();
+            }
+
+            return switchResult;
+        }
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
@@ -141,41 +178,107 @@ namespace MyGame2.Stage
                 return LastOutcome;
             }
 
-            // TurnSystem이 실행 → StageState가 이벤트 발행
-            // OnTurnExecuted에서 SyncViews/SyncSelection 자동 호출
-            return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+            TurnOutcome outcome = _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+
+            if (outcome.Executed)
+            {
+                StageSnapshot snapshot = new StageSnapshot(CurrentState);
+                snapshotStack.Push(snapshot);
+
+                Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
+            }
+
+            return outcome;
         }
 
-        // 내부 유틸리티
-        // 안전장치를 많이 넣어놔서 그렇지 크게 복잡한 구조는 아닙니다...?
+        public bool TryEnterUndo()
+        {
+            if (snapshotStack.Count == 0)
+            {
+                return false;
+            }
+
+            CurrentState.UndoEnter();
+            _nextUndoTime = 0.0f;
+
+            return true;
+        }
+
+        public void LeaveUndo()
+        {
+            CurrentState.UndoLeave();
+        }
 
         private bool CanAcceptInput()
         {
             return CurrentState != null && !CurrentState.IsGameOver && !CurrentState.IsStageClear;
         }
 
+        // 스테이지 로드 시 최초 View 생성
         private void SpawnViews()
         {
             if (prefabRegistry == null) return;
             foreach (EntityState e in CurrentState.Entities)
             {
-                GridEntityView prefab = e.Prefab;
-                if (prefab == null) continue;
-                GridEntityView view = Instantiate(prefab, entityRoot);
-                view.name = $"{e.Kind}_{e.Id}";
-                view.Bind(e, cellSize);
-                Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
-                _views[e.Id] = view;
+                SpawnViewForEntity(e);
             }
         }
 
+        // 단일 엔티티의 View 생성 (동적 스폰 지원)
+        private void SpawnViewForEntity(EntityState e)
+        {
+            if (_views.ContainsKey(e.Id)) return;
+
+            GridEntityView prefab = e.Prefab;
+            if (prefab == null) return;
+
+            GridEntityView view = Instantiate(prefab, entityRoot);
+            view.name = $"{e.Kind}_{e.Id}";
+            view.Bind(e, cellSize);
+
+            // 톱날 함정: 멀티셀 비주얼 자동 생성
+            SawTrapVisual sawVisual = view.GetComponent<SawTrapVisual>();
+            if (sawVisual != null && e.Has<SawTrapData>())
+            {
+                sawVisual.BuildVisual(e.Get<SawTrapData>().Size, e.Facing);
+            }
+
+            Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
+            _views[e.Id] = view;
+        }
+
+        // View 동기화 (동적 스폰/제거 처리)
         private void SyncViews()
         {
+            if (CurrentState == null) return;
+
+            foreach (EntityState e in CurrentState.Entities)
+            {
+                if (!_views.ContainsKey(e.Id))
+                    SpawnViewForEntity(e);
+            }
+
+            List<int> toRemove = null;
             foreach (var pair in _views)
             {
                 if (pair.Value == null) continue;
+
                 if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
+                {
                     pair.Value.Sync(e, cellSize);
+                }
+                else
+                {
+                    Destroy(pair.Value.gameObject);
+                    if (toRemove == null) toRemove = new List<int>(4);
+                    toRemove.Add(pair.Key);
+                }
+            }
+
+            if (toRemove != null)
+            {
+                for (int i = 0; i < toRemove.Count; i++)
+                    _views.Remove(toRemove[i]);
             }
         }
 
@@ -197,6 +300,59 @@ namespace MyGame2.Stage
             foreach (var pair in _views)
                 if (pair.Value != null) Destroy(pair.Value.gameObject);
             _views.Clear();
+        }
+
+        // 자동 페어링
+        private void ApplyPairGroups(TextAsset file, StageState state)
+        {
+            if (symbolRegistry == null || file == null) return;
+
+            string rawText = file.text;
+            if (rawText.Length > 0 && rawText[0] == '\uFEFF')
+                rawText = rawText.Substring(1);
+
+            string normalized = rawText.Replace("\r\n", "\n").Replace('\r', '\n');
+            string[] split = normalized.Split('\n');
+            List<string> validLines = new List<string>(split.Length);
+
+            for (int i = 0; i < split.Length; i++)
+            {
+                string line = split[i].TrimEnd();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (line.TrimStart().StartsWith("//")) continue;
+                validLines.Add(line);
+            }
+
+            Dictionary<int, List<GridPos>> groups = new Dictionary<int, List<GridPos>>();
+
+            for (int y = 0; y < validLines.Count; y++)
+            {
+                string row = validLines[y];
+                for (int x = 0; x < row.Length; x++)
+                {
+                    char ch = row[x];
+                    if (!symbolRegistry.TryGetEntry(ch, out MapSymbolEntry entry)) continue;
+                    if (entry.pairGroup <= 0) continue;
+
+                    if (!groups.ContainsKey(entry.pairGroup))
+                        groups[entry.pairGroup] = new List<GridPos>(2);
+                    groups[entry.pairGroup].Add(new GridPos(x, y));
+                }
+            }
+
+            foreach (var kvp in groups)
+            {
+                if (kvp.Value.Count == 2)
+                {
+                    state.SetCellPair(kvp.Value[0], kvp.Value[1]);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"[StageManager] PairGroup {kvp.Key}: " +
+                        $"{kvp.Value.Count}개 셀 발견 (2개여야 페어 성립). 무시됨.");
+                }
+            }
         }
     }
 }
