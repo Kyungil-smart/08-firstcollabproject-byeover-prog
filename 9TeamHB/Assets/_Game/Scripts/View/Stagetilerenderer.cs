@@ -29,8 +29,13 @@ namespace MyGame2.Stage
         [Header("B감시자(Summoner) 감지 범위")]
         [SerializeField] private Color summonerDetectionColor = new Color(0.2f, 0.6f, 1f, 0.3f);
 
-        [Header("렌더링")]
-        [SerializeField] private int tileOrder = -1;
+        [Header("렌더링 레이어")]
+        [Tooltip("틈새 타일 sortingOrder")]
+        [SerializeField] private int crackTileOrder = -4;
+        [Tooltip("바닥/벽/골 등 일반 타일 sortingOrder")]
+        [SerializeField] private int tileOrder = -2;
+        [Tooltip("함정 타일 sortingOrder")]
+        [SerializeField] private int trapTileOrder = -1;
         [SerializeField] private int detectionOrder = 0;
         [SerializeField] private float tilePadding = 0.05f;
 
@@ -99,7 +104,7 @@ namespace MyGame2.Stage
             RenderSummonerDetection(state);
         }
 
-        // ── 타일 ──
+        // 타일
 
         private void RenderTiles(StageState state)
         {
@@ -109,32 +114,63 @@ namespace MyGame2.Stage
 
             for (int y = 0; y < state.Height; y++)
             {
-                for (int x = 0; x < state.Width; x++)
+                GridPos pos = new GridPos(x, y);
+                CellData cell = state.GetCell(pos);
+
+                Color c;
+                int order;
+
+                if (cell.HasWall)
                 {
-                    GridPos pos = new GridPos(x, y);
-                    CellData cell = state.GetCell(pos);
-
-                    Color c;
-                    if (cell.HasWall) c = wallColor;
-                    else if (cell.HasTrap) c = trapColor;
-                    else if (cell.HasGoal) c = goalColor;
-                    else if (cell.HasCrack) c = crackColor;
-                    else if (cell.HasTeleport) c = teleportColor;
-                    else c = floorColor;
-
-                    if (cell.HasCrack)
-                    {
-                        _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder - 1));
-                    }
-                    else
-                    {
-                        _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, tileOrder));
-                    }
+                    c = wallColor;
+                    order = tileOrder;
                 }
+                else if (cell.HasTrap)
+                {
+                    c = trapColor;
+                    order = trapTileOrder; // 함정: -1
+                }
+                else if (cell.HasGoal)
+                {
+                    c = goalColor;
+                    order = tileOrder;
+                }
+                else if (cell.HasCrack)
+                {
+                    c = crackColor;
+                    order = crackTileOrder; // 틈새: -4
+                }
+                else if (cell.HasTeleport)
+                {
+                    c = teleportColor;
+                    order = tileOrder;
+                }
+                else if (cell.HasSignalButton)
+                {
+                    c = !cell.IsSticky ? buttonColor : switchColor;
+                    order = tileOrder;
+                }
+                else if (cell.IsOpenedDoor)
+                {
+                    c = opendDoorColor;
+                    order = tileOrder;
+                }
+                else if (cell.IsClosedDoor)
+                {
+                    c = closedDoorColor;
+                    order = tileOrder;
+                }
+                else
+                {
+                    c = floorColor;
+                    order = tileOrder;
+                }
+
+                _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, order));
             }
         }
 
-        // ── 카메라 감시 범위 ──
+        // 카메라 감시 범위
 
         private void RenderCameraDetection(StageState state)
         {
@@ -156,7 +192,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // ── 로봇 감지 범위 (앞 2칸 + 뒤 2칸) ──
+        // 로봇 감지 범위 (앞 2칸 + 뒤 2칸)
 
         private void RenderRobotDetection(StageState state)
         {
@@ -178,7 +214,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // ── B감시자(Summoner) 3×3 감지 범위 ──
+        // B감시자(Summoner) 3×3 감지 범위
 
         private void RenderSummonerDetection(StageState state)
         {

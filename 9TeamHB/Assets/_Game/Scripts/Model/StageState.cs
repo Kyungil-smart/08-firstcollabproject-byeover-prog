@@ -23,7 +23,7 @@ namespace MyGame2.Stage
         private readonly List<int> _launcherIds;
         private readonly List<int> _projectileIds;
         private readonly List<int> _sawTrapIds;
-        // Develop: 셀 페어 (스위치-문 등)
+        // 셀 페어 (스위치-문 등)
         private readonly Dictionary<GridPos, GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
 
         private int _nextEntityId;
@@ -140,20 +140,18 @@ namespace MyGame2.Stage
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
         public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap; }
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
-        // 바닥형 함정 02: SawTrap이 있고 Active가 아닌 상태 (위험)
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
 
-        // 바닥형 함정 02: 플레이어가 톱날 커버 범위 안에 있는지 판정
+        // 바닥형 함정 : 특정 위치가 톱날 커버 범위 안에 있는지 판정 (플레이어/상자 공용)
         // 각 SawTrap 엔티티의 앵커 위치 + Facing 방향으로 Size칸 범위를 검사
         // 앵커 셀에 Active 플래그가 켜져 있으면 (버튼/스위치로 비활성화) 안전
-        public bool IsPlayerInSawTrap(GridPos playerPos)
+        public bool IsInSawTrapRange(GridPos pos)
         {
             for (int i = 0; i < _sawTrapIds.Count; i++)
             {
                 if (!_entitiesById.TryGetValue(_sawTrapIds[i], out EntityState trap)) continue;
                 if (!trap.IsAlive) continue;
 
-                // 앵커 셀에 Active 플래그가 있으면 비활성화 상태 (안전)
                 CellData anchorCell = GetCell(trap.Position);
                 if (anchorCell.HasActive) continue;
 
@@ -162,11 +160,34 @@ namespace MyGame2.Stage
 
                 for (int step = 0; step < data.Size; step++)
                 {
-                    if (cursor == playerPos) return true;
+                    if (cursor == pos) return true;
                     cursor = cursor.Move(trap.Facing);
                 }
             }
             return false;
+        }
+
+        // 특정 위치를 커버하는 SawTrap 엔티티를 찾아 Facing 방향을 반환 (쪼개짐 연출용)
+        public Direction GetSawTrapFacingAt(GridPos pos)
+        {
+            for (int i = 0; i < _sawTrapIds.Count; i++)
+            {
+                if (!_entitiesById.TryGetValue(_sawTrapIds[i], out EntityState trap)) continue;
+                if (!trap.IsAlive) continue;
+
+                CellData anchorCell = GetCell(trap.Position);
+                if (anchorCell.HasActive) continue;
+
+                SawTrapData data = trap.Get<SawTrapData>();
+                GridPos cursor = trap.Position;
+
+                for (int step = 0; step < data.Size; step++)
+                {
+                    if (cursor == pos) return trap.Facing;
+                    cursor = cursor.Move(trap.Facing);
+                }
+            }
+            return Direction.Right;
         }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
@@ -211,7 +232,7 @@ namespace MyGame2.Stage
             return bestPos;
         }
 
-        // Develop: 셀 페어 (스위치↔문 등)
+        // 셀 페어 (스위치↔문 등)
         public void SetCellPair(GridPos a, GridPos b)
         {
             _cellPairs[a] = b;
@@ -222,7 +243,7 @@ namespace MyGame2.Stage
             return _cellPairs.TryGetValue(a, out b);
         }
 
-        // Develop: 잠긴 문 위에 있는지 판정
+        // 잠긴 문 위에 있는지 판정
         public bool IsPlayerOnLockedDoor
         {
             get
@@ -250,7 +271,7 @@ namespace MyGame2.Stage
             GridPos from = entity.Position;
             ClearOccupant(from);
 
-            // Develop: 버튼 점유 해제 처리
+            // 버튼 점유 해제 처리
             if (GetCell(from).HasSignalButton && !GetCell(from).IsSticky)
             {
                 DeactivePairCell(from);
@@ -260,7 +281,7 @@ namespace MyGame2.Stage
             if (entity.IsBox && OriginalHasTrap(from))
                 RestoreTrap(from);
 
-            // Develop: 예정지가 버튼계열이면 페어 활성화
+            // 예정지가 버튼계열이면 페어 활성화
             if (GetCell(destination).HasSignalButton)
             {
                 ActivePairCell(destination);
@@ -295,7 +316,7 @@ namespace MyGame2.Stage
             return true;
         }
 
-        // JSW: 히든 함정 발동
+        // 히든 함정 발동
         public void RevealHiddenTrap(GridPos position)
         {
             if (!IsInside(position)) return;
@@ -361,7 +382,7 @@ namespace MyGame2.Stage
             SetViewDirty();
         }
 
-        // Develop: 틈새에 상자가 올라갔을 때
+        // 틈새에 상자가 올라갔을 때
         public void SetCrackMovable(GridPos position, int boxId)
         {
             if (!IsInside(position)) return;
@@ -382,7 +403,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // Develop: 문 활성화
+        // 문 활성화
         public void OpenDoor(int moverId, GridPos position)
         {
             if (!IsInside(position)) return;
@@ -397,11 +418,10 @@ namespace MyGame2.Stage
             }
         }
 
-        // Develop: 페어 셀 활성화
+        // 페어 셀 활성화
         private void ActivePairCell(GridPos position)
         {
-            GridPos pair = _cellPairs[position];
-
+            if (!_cellPairs.TryGetValue(position, out GridPos pair)) return;
             if (!IsInside(pair)) return;
             int idx = ToIndex(pair);
             CellData pairCell = _cells[idx];
@@ -412,10 +432,10 @@ namespace MyGame2.Stage
             _cells[idx] = pairCell;
         }
 
-        // Develop: 페어 셀 비활성화
+        // 페어 셀 비활성화
         private void DeactivePairCell(GridPos position)
         {
-            GridPos pair = _cellPairs[position];
+            if (!_cellPairs.TryGetValue(position, out GridPos pair)) return;
 
             int idx = ToIndex(pair);
             CellData pairCell = _cells[idx];
