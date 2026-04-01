@@ -81,7 +81,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300038, guid: 29c9cded5e558164aaf8c9bf08aa1510, type: 3}
   m_Color: {r: 0.28487647, g: 1, b: 0, a: 1}
@@ -109,6 +109,10 @@ MonoBehaviour:
   selectedMarker: {fileID: 0}
   slideSpeed: 12
   snapThreshold: 0.01
+  useDirectionAnim: 0
+  targetAnimator: {fileID: 0}
+  flipXOnLeft: 1
+  targetSpriteRenderer: {fileID: 0}
 --- !u!1 &8363763276194432462
 GameObject:
   m_ObjectHideFlags: 0

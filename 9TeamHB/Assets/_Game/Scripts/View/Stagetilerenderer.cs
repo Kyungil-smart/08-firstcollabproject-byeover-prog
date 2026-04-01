@@ -8,7 +8,7 @@ namespace MyGame2.Stage
         [Header("씬 참조")]
         [SerializeField] private StageManager stageManager;
 
-        [Header("타일 색상")]
+        [Header("타일 색상 (스프라이트 없을 때 폴백)")]
         [SerializeField] private Color wallColor = new Color(0.15f, 0.15f, 0.18f, 1f);
         [SerializeField] private Color floorColor = new Color(0.85f, 0.87f, 0.90f, 1f);
         [SerializeField] private Color crackColor = new Color(0.05f, 0.05f, 0.05f, 1f);
@@ -19,6 +19,18 @@ namespace MyGame2.Stage
         [SerializeField] private Color switchColor = new Color(0.9f, 0.6f, 0.6f, 1f);
         [SerializeField] private Color opendDoorColor = new Color(0.9f, 0.7f, 0.4f, 1f);
         [SerializeField] private Color closedDoorColor = new Color(0.4f, 0.3f, 0.2f, 1f);
+
+        [Header("타일 스프라이트 (비우면 색상 사각형 사용)")]
+        [SerializeField] private Sprite wallSprite;
+        [SerializeField] private Sprite floorSprite;
+        [SerializeField] private Sprite crackSprite;
+        [SerializeField] private Sprite goalSprite;
+        [SerializeField] private Sprite trapSprite;
+        [SerializeField] private Sprite teleportSprite;
+        [SerializeField] private Sprite buttonSprite;
+        [SerializeField] private Sprite switchSprite;
+        [SerializeField] private Sprite openedDoorSprite;
+        [SerializeField] private Sprite closedDoorSprite;
 
         [Header("카메라 감시 범위")]
         [SerializeField] private Color cameraDetectionColor = new Color(1f, 0.2f, 0.2f, 0.25f);
@@ -117,57 +129,66 @@ namespace MyGame2.Stage
             {
                 GridPos pos = new GridPos(x, y);
                 CellData cell = state.GetCell(pos);
+                Vector3 worldPos = pos.ToWorld(1f);
 
-                Color c;
-                int order;
-
+                // 벽은 바닥 없이 벽만
                 if (cell.HasWall)
                 {
-                    c = wallColor;
-                    order = tileOrder;
+                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                        wallColor, wallSprite, tileOrder));
+                    continue;
                 }
-                else if (cell.HasTrap)
+
+                // 벽이 아닌 모든 셀에 바닥 깔기
+                _tiles.Add(MakeTile($"F_{x}_{y}", _tileRoot, worldPos, scale,
+                    floorColor, floorSprite, tileOrder));
+
+                // 특수 타일은 바닥 위에 오버레이 (tileOrder + 1)
+                int overlayOrder = tileOrder + 1;
+
+                if (cell.HasTrap)
                 {
-                    c = trapColor;
-                    order = trapTileOrder;
+                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                        trapColor, trapSprite, trapTileOrder));
                 }
                 else if (cell.HasGoal)
                 {
-                    c = goalColor;
-                    order = tileOrder;
+                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                        goalColor, goalSprite, overlayOrder));
                 }
                 else if (cell.HasCrack)
                 {
-                    c = crackColor;
-                    order = crackTileOrder;
+                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                        crackColor, crackSprite, crackTileOrder));
                 }
                 else if (cell.HasTeleport)
                 {
-                    c = teleportColor;
-                    order = tileOrder;
+                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                        teleportColor, teleportSprite, overlayOrder));
                 }
                 else if (cell.HasSignalButton)
                 {
-                    c = !cell.IsSticky ? buttonColor : switchColor;
-                    order = tileOrder;
+                    if (!cell.IsSticky)
+                    {
+                        _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                            buttonColor, buttonSprite, overlayOrder));
+                    }
+                    else
+                    {
+                        _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                            switchColor, switchSprite, overlayOrder));
+                    }
                 }
                 else if (cell.IsOpenedDoor)
                 {
-                    c = opendDoorColor;
-                    order = tileOrder;
+                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                        opendDoorColor, openedDoorSprite, overlayOrder));
                 }
                 else if (cell.IsClosedDoor)
                 {
-                    c = closedDoorColor;
-                    order = tileOrder;
+                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
+                        closedDoorColor, closedDoorSprite, overlayOrder));
                 }
-                else
-                {
-                    c = floorColor;
-                    order = tileOrder;
-                }
-
-                _tiles.Add(MakeSprite($"T_{x}_{y}", _tileRoot, pos.ToWorld(1f), scale, c, order));
             }
         }
 
@@ -186,9 +207,9 @@ namespace MyGame2.Stage
 
                 for (int j = 0; j < cells.Count; j++)
                 {
-                    _camDetections.Add(MakeSprite(
+                    _camDetections.Add(MakeTile(
                         $"CD_{state.CameraIds[i]}_{j}", _camDetRoot,
-                        cells[j].ToWorld(1f), scale, cameraDetectionColor, detectionOrder));
+                        cells[j].ToWorld(1f), scale, cameraDetectionColor, null, detectionOrder));
                 }
             }
         }
@@ -208,9 +229,9 @@ namespace MyGame2.Stage
 
                 for (int j = 0; j < cells.Count; j++)
                 {
-                    _robotDetections.Add(MakeSprite(
+                    _robotDetections.Add(MakeTile(
                         $"RD_{state.RobotIds[i]}_{j}", _robotDetRoot,
-                        cells[j].ToWorld(1f), scale, robotDetectionColor, detectionOrder));
+                        cells[j].ToWorld(1f), scale, robotDetectionColor, null, detectionOrder));
                 }
             }
         }
@@ -234,17 +255,18 @@ namespace MyGame2.Stage
 
                 for (int j = 0; j < cells.Count; j++)
                 {
-                    _summonerDetections.Add(MakeSprite(
+                    _summonerDetections.Add(MakeTile(
                         $"SD_{summonerId}_{j}", _summonerDetRoot,
-                        cells[j].ToWorld(1f), scale, summonerDetectionColor, detectionOrder));
+                        cells[j].ToWorld(1f), scale, summonerDetectionColor, null, detectionOrder));
                 }
             }
         }
 
         // 유틸리티
 
-        private GameObject MakeSprite(string name, Transform parent, Vector3 pos,
-            float scale, Color color, int order)
+        // 스프라이트가 있으면 스프라이트 사용 (Color.white), 없으면 색상 사각형 폴백
+        private GameObject MakeTile(string name, Transform parent, Vector3 pos,
+            float scale, Color fallbackColor, Sprite tileSprite, int order)
         {
             GameObject obj = new GameObject(name);
             obj.transform.SetParent(parent, false);
@@ -252,8 +274,18 @@ namespace MyGame2.Stage
             obj.transform.localScale = new Vector3(scale, scale, 1f);
 
             SpriteRenderer sr = obj.AddComponent<SpriteRenderer>();
-            sr.sprite = GetSquare();
-            sr.color = color;
+
+            if (tileSprite != null)
+            {
+                sr.sprite = tileSprite;
+                sr.color = Color.white;
+            }
+            else
+            {
+                sr.sprite = GetSquare();
+                sr.color = fallbackColor;
+            }
+
             sr.sortingOrder = order;
             return obj;
         }
