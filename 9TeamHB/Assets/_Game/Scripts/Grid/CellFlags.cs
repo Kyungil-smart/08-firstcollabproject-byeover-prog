@@ -18,8 +18,8 @@ namespace MyGame2.Stage
         Sticky = 1 << 9,
         OpenFixed = 1 << 10,
         HiddenTrap = 1 << 11,
-        // 파괴 함정 — 상자를 부수는 함정
         DestroyTrap = 1 << 12,
+        SawTrap = 1 << 13,
 
         Switch = Button | Sticky
     }

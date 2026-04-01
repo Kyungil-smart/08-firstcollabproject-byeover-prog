@@ -21,6 +21,7 @@ namespace MyGame2.Stage
         private readonly List<int> _chaserIds;
         private readonly List<int> _launcherIds;
         private readonly List<int> _projectileIds;
+        private readonly List<int> _sawTrapIds;
         // Develop: 셀 페어 (스위치-문 등)
         private readonly Dictionary<GridPos, GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
 
@@ -44,6 +45,7 @@ namespace MyGame2.Stage
         public IReadOnlyList<int> ChaserIds { get { return _chaserIds; } }
         public IReadOnlyList<int> LauncherIds { get { return _launcherIds; } }
         public IReadOnlyList<int> ProjectileIds { get { return _projectileIds; } }
+        public IReadOnlyList<int> SawTrapIds { get { return _sawTrapIds; } }
         public IEnumerable<EntityState> Entities { get { return _entitiesById.Values; } }
         public StageEvents Events { get { return _events; } }
         public bool IsViewDirty { get; private set; }
@@ -67,6 +69,7 @@ namespace MyGame2.Stage
             _chaserIds = new List<int>(4);
             _launcherIds = new List<int>(4);
             _projectileIds = new List<int>(16);
+            _sawTrapIds = new List<int>(8);
             _cellPairs = new Dictionary<GridPos, GridPos>(16);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
@@ -128,6 +131,34 @@ namespace MyGame2.Stage
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
         public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap; }
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
+        // 바닥형 함정 02: SawTrap이 있고 Active가 아닌 상태 (위험)
+        public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
+
+        // 바닥형 함정 02: 플레이어가 톱날 커버 범위 안에 있는지 판정
+        // 각 SawTrap 엔티티의 앵커 위치 + Facing 방향으로 Size칸 범위를 검사
+        // 앵커 셀에 Active 플래그가 켜져 있으면 (버튼/스위치로 비활성화) 안전
+        public bool IsPlayerInSawTrap(GridPos playerPos)
+        {
+            for (int i = 0; i < _sawTrapIds.Count; i++)
+            {
+                if (!_entitiesById.TryGetValue(_sawTrapIds[i], out EntityState trap)) continue;
+                if (!trap.IsAlive) continue;
+
+                // 앵커 셀에 Active 플래그가 있으면 비활성화 상태 (안전)
+                CellData anchorCell = GetCell(trap.Position);
+                if (anchorCell.HasActive) continue;
+
+                SawTrapData data = trap.Get<SawTrapData>();
+                GridPos cursor = trap.Position;
+
+                for (int step = 0; step < data.Size; step++)
+                {
+                    if (cursor == playerPos) return true;
+                    cursor = cursor.Move(trap.Facing);
+                }
+            }
+            return false;
+        }
         public int GetOccupantId(GridPos pos) { return GetCell(pos).OccupantId; }
 
         public bool OriginalHasTrap(GridPos pos)
@@ -456,6 +487,7 @@ namespace MyGame2.Stage
                 case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Remove(entityId); break;
                 case EntityKind.ProjectileLauncher:   _launcherIds.Remove(entityId); break;
                 case EntityKind.Projectile:           _projectileIds.Remove(entityId); break;
+                case EntityKind.SawTrapEnemy:          _sawTrapIds.Remove(entityId); break;
             }
 
             _entitiesById.Remove(entityId);
@@ -488,6 +520,7 @@ namespace MyGame2.Stage
                 case EntityKind.ChaserEnemy:           _chaserIds.Add(entity.Id); break;
                 case EntityKind.ProjectileLauncher:    _launcherIds.Add(entity.Id); break;
                 case EntityKind.Projectile:            _projectileIds.Add(entity.Id); break;
+                case EntityKind.SawTrapEnemy:           _sawTrapIds.Add(entity.Id); break;
             }
             return entity.Id;
         }

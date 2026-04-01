@@ -241,3 +241,15 @@ MonoBehaviour:
     spawnsEntity: 0
     entityConfig: {fileID: 0}
     facing: 0
+  - symbol: 122
+    description: "1x2 \uD568\uC815"
+    cellFlags: 8192
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 4a771417019d15c4399c5898bbb38f95, type: 2}
+    facing: 0
+  - symbol: 90
+    description: "1x5 \uD568\uC815"
+    cellFlags: 8192
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2309ea45b4750604d99ca8794d547085, type: 2}
+    facing: 0

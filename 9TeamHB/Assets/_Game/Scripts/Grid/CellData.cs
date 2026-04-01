@@ -82,8 +82,7 @@ namespace MyGame2.Stage
 
         // 이동을 막을 수 있는 Flags 체크
         public bool HasBlockCandidate => HasWall || HasCrack || HasDoor;
-
-        // JSW: 히든 함정인가?
+        
         public bool HasHiddenTrap
         {
             get { return (Flags & CellFlags.HiddenTrap) != 0; }
@@ -93,6 +92,19 @@ namespace MyGame2.Stage
         public bool HasDestroyTrap
         {
             get { return (Flags & CellFlags.DestroyTrap) != 0; }
+        }
+
+        // 바닥형 함정 02 (톱날) — SawTrap 플래그 존재 여부
+        public bool HasSawTrap
+        {
+            get { return (Flags & CellFlags.SawTrap) != 0; }
+        }
+
+        // 바닥형 함정 02가 현재 위험한 상태인가?
+        // SawTrap이 있고 Active가 아니면 위험 (버튼/스위치로 Active 켜지면 안전)
+        public bool IsSawTrapActive
+        {
+            get { return HasSawTrap && !HasActive; }
         }
 
         // 엔티티가 점유 중인가?
