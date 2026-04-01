@@ -99,6 +99,25 @@ namespace MyGame2.Stage
             // 이동
             state.TryMoveEntity(boxId, next);
 
+            // 틈새 타일 → 상자가 끼면서 정지
+            if (state.HasCrackNotCovered(next))
+            {
+                state.SetCrackMovable(next, boxId);
+                StopSliding(box);
+                return true;
+            }
+
+            // 톱날 함정 범위 진입 → 반 쪼개짐 파괴
+            if (state.IsInSawTrapRange(next))
+            {
+                Direction sawFacing = state.GetSawTrapFacingAt(next);
+                // 이벤트 발행 → IceBoxSplitEffect가 수신하여 쪼개짐 연출
+                state.Events?.RaiseIceBoxSawDestroyed(boxId, next, sawFacing);
+                state.RemoveEntity(boxId);
+                state.SetViewDirty();
+                return true;
+            }
+
             // 파괴 함정 -> 상자 파괴 (함정은 유지)
             if (state.HasDestroyTrap(next))
             {

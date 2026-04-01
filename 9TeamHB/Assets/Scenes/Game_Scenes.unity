@@ -240,6 +240,56 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &134752596
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 134752598}
+  - component: {fileID: 134752597}
+  m_Layer: 0
+  m_Name: IceBoxSplitEffect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &134752597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 134752596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d48cea7729f0504fb54a0def677bc05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceBoxSplitEffect
+  stageManager: {fileID: 823654580}
+  iceBoxSprite: {fileID: 21300000, guid: c10a8a513f42c1d43af9412b10ac739b, type: 3}
+  splitDistance: 0.8
+  splitDuration: 0.5
+  rotationAngle: 25
+  dropDistance: 0.3
+--- !u!4 &134752598
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 134752596}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &311604754
 GameObject:
   m_ObjectHideFlags: 0
@@ -886,6 +936,7 @@ MonoBehaviour:
   symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
   stageStateReference: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511,
     type: 2}
+  undoRepeatInterval: 0.2
 --- !u!4 &823654581
 Transform:
   m_ObjectHideFlags: 0
@@ -1237,7 +1288,9 @@ MonoBehaviour:
   cameraDetectionColor: {r: 1, g: 0.2, b: 0.2, a: 0.25}
   robotDetectionColor: {r: 1, g: 0.6, b: 0, a: 0.3}
   summonerDetectionColor: {r: 0.2, g: 0.6, b: 1, a: 0.3}
-  tileOrder: -1
+  crackTileOrder: -4
+  tileOrder: -2
+  trapTileOrder: -1
   detectionOrder: 0
   tilePadding: 0.05
 --- !u!1 &1906414214
@@ -1278,7 +1331,7 @@ MonoBehaviour:
   activeDuration: 0.4
   rewindDuration: 0.5
   rewindDelay: 1
-  sortingOrder: 0
+  sortingOrder: -1
 --- !u!4 &1906414216
 Transform:
   m_ObjectHideFlags: 0
@@ -1316,3 +1369,4 @@ SceneRoots:
   - {fileID: 960270565}
   - {fileID: 786630470}
   - {fileID: 1906414216}
+  - {fileID: 134752598}
