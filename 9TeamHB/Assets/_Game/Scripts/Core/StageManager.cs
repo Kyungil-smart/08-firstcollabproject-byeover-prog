@@ -22,8 +22,11 @@ namespace MyGame2.Stage
         [Tooltip("MoveComponent들이 StageState에 접근하기 위한 SO. Assets/_Game/SO/Util/StageState 에셋 연결")]
         [SerializeField] private StageStateReferenceSO stageStateReference;
 
+        [Tooltip("되돌리기 반복 간격 (초)")]
+        [SerializeField] private float undoRepeatInterval = 0.2f;
+
         private MapLoader _mapLoader;
-        
+
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
         private TurnSystem _turnSystem;
@@ -31,9 +34,15 @@ namespace MyGame2.Stage
         private readonly Dictionary<int, GridEntityView> _views = new Dictionary<int, GridEntityView>(16);
         private int _currentStageIndex;
 
+        private Stack<StageSnapshot> snapshotStack = new Stack<StageSnapshot>();
+
         public StageEvents Events { get { return _events; } }
         public StageState CurrentState { get; private set; }
         public TurnOutcome LastOutcome { get; private set; }
+
+        private float _nextUndoTime;
+
+
 
         private void Awake()
         {
@@ -43,6 +52,7 @@ namespace MyGame2.Stage
             LastOutcome = TurnOutcome.None();
             _events.TurnExecuted += OnTurnExecuted;
             _events.ActivePlayerChanged += OnActivePlayerChanged;
+            _events.UndoExecuted += OnUndoExecuted;
             _events.EntityKilled += OnEntityKilled;
         }
 
@@ -51,10 +61,30 @@ namespace MyGame2.Stage
             LoadStage(startStageIndex);
         }
 
+        private void Update()
+        {
+            if (CurrentState.IsUndoProcessing)
+            {
+                if (snapshotStack.Count == 0)
+                {
+                    LeaveUndo();
+                    return;
+                }
+                if (Time.time >= _nextUndoTime)
+                {
+                    _nextUndoTime = Time.time + undoRepeatInterval;
+                    CurrentState.Restore(snapshotStack.Pop());
+                    _events.RaiseUndoExecuted();
+                    Debug.Log($"Pop SnapshotStack, Stack Size : {snapshotStack.Count}");
+                }
+            }
+        }
+
         private void OnDestroy()
         {
             _events.TurnExecuted -= OnTurnExecuted;
             _events.ActivePlayerChanged -= OnActivePlayerChanged;
+            _events.UndoExecuted -= OnUndoExecuted;
             _events.EntityKilled -= OnEntityKilled;
         }
 
@@ -67,7 +97,11 @@ namespace MyGame2.Stage
 
         private void OnActivePlayerChanged(int id) { SyncSelection(); }
 
-        // 히든 함정 등 지연 Kill 후에도 뷰가 갱신되도록 처리
+        private void OnUndoExecuted()
+        {
+            SyncViews();
+            SyncSelection();
+        }
         private void OnEntityKilled(int id)
         {
             SyncViews();
@@ -104,9 +138,9 @@ namespace MyGame2.Stage
             _events.RaiseStageLoaded(stageIndex);
         }
 
-        public void RestartCurrentStage() 
-        { 
-            LoadStage(_currentStageIndex); 
+        public void RestartCurrentStage()
+        {
+            LoadStage(_currentStageIndex);
         }
 
         public bool LoadNextStage()
@@ -120,11 +154,20 @@ namespace MyGame2.Stage
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
-            return _tagSystem.Switch(CurrentState);
+
+            bool switchResult = _tagSystem.Switch(CurrentState);
+            if (switchResult)
+            {
+                snapshotStack.Clear();
+            }
+
+            return switchResult;
         }
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
+            StageSnapshot snapshot = new StageSnapshot(CurrentState);
+
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -133,7 +176,34 @@ namespace MyGame2.Stage
                 return LastOutcome;
             }
 
-            return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+            TurnOutcome outcome = _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+
+            if (outcome.Executed)
+            {
+                snapshotStack.Push(snapshot);
+
+                Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
+            }
+
+            return outcome;
+        }
+
+        public bool TryEnterUndo()
+        {
+            if (snapshotStack.Count == 0)
+            {
+                return false;
+            }
+
+            CurrentState.UndoEnter();
+            _nextUndoTime = 0.0f;
+
+            return true;
+        }
+
+        public void LeaveUndo()
+        {
+            CurrentState.UndoLeave();
         }
 
         private bool CanAcceptInput()
