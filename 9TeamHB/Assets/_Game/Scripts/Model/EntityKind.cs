@@ -18,7 +18,8 @@ namespace MyGame2.Stage
         SawTrapEnemy = 13,        // 바닥형 함정 02 (톱날, 1×2 / 1×5)
         DoorEntity = 14,          // 문 (프리팹 + 애니메이션 + 4방향)
         LeverEntity = 15,         // 레버 (프리팹 + 활성화 애니메이션)
-        ButtonEntity = 16         // 버튼 (프리팹 + 밟기 애니메이션)
+        ButtonEntity = 16,        // 버튼 (프리팹 + 밟기 애니메이션)
+        FireTrap = 17             // 화염 발사대(벽 타일, 4방향)
     }
 
     public enum BoxType

@@ -418,4 +418,31 @@ MonoBehaviour:
     spawnsEntity: 0
     entityConfig: {fileID: 0}
     facing: 0
+  - symbol: 112
+    description: "\uBD88\uD568\uC815UP"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: dde3fdea00fa49842a098b10bb6951e6, type: 2}
+    facing: 1
+    pairGroup: 0
+  - symbol: 113
+    description: "\uBD88\uD568\uC815Down"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: dde3fdea00fa49842a098b10bb6951e6, type: 2}
+    facing: 3
+    pairGroup: 0
+  - symbol: 114
+    description: "\uBD88\uD568\uC815L"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: be5107c8bc94ff14b8f0bd8d9740f1a1, type: 2}
+    facing: 2
+    pairGroup: 0
+  - symbol: 116
+    description: "\uBD88\uD568\uC815R"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: be5107c8bc94ff14b8f0bd8d9740f1a1, type: 2}
+    facing: 4
     pairGroup: 0
