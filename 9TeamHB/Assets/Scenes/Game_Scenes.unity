@@ -980,12 +980,14 @@ MonoBehaviour:
   entityRoot: {fileID: 1332624084}
   prefabRegistry: {fileID: 127105790}
   stageFiles:
-  - {fileID: 4900000, guid: 9a0b763351ddac247bedade0cad3b1db, type: 3}
-  - {fileID: 4900000, guid: 80ac11f4fd3ff064fbc8efde2f36cb5e, type: 3}
-  - {fileID: 4900000, guid: de45bba8dafd6ba4ab7f186f5b3bf485, type: 3}
-  - {fileID: 4900000, guid: 8840970b8569b154a9d9de8a17bcff07, type: 3}
-  - {fileID: 4900000, guid: d288560c58df5684c976270f845f5128, type: 3}
-  - {fileID: 4900000, guid: 6461e17077d48804bb1546e688b80a88, type: 3}
+  - {fileID: 4900000, guid: c7dffe5b722e33e43ae5c37bcee051bf, type: 3}
+  - {fileID: 4900000, guid: 700cdbf4faec48a4488d2e5383fa76f7, type: 3}
+  - {fileID: 4900000, guid: 5e052a0b7117f8c4ab7e6d0a3b167b52, type: 3}
+  - {fileID: 4900000, guid: 27f9b64fc2e56e24694bd155f3b7c05e, type: 3}
+  - {fileID: 4900000, guid: b84f641af89418a4c8a87cbbdee68a4e, type: 3}
+  - {fileID: 4900000, guid: 823a5acd4e08baa4990301262494dd37, type: 3}
+  - {fileID: 4900000, guid: 7c9841a5070e55d448776f30ece11e5a, type: 3}
+  - {fileID: 4900000, guid: cc01f476e89943142b71b25f194e03f2, type: 3}
   - {fileID: 4900000, guid: 16b7cb031633a0448986424904aaf6c2, type: 3}
   startStageIndex: 6
   cellSize: 1
@@ -1341,9 +1343,13 @@ MonoBehaviour:
   switchColor: {r: 0.9, g: 0.6, b: 0.6, a: 1}
   opendDoorColor: {r: 0.9, g: 0.7, b: 0.4, a: 1}
   closedDoorColor: {r: 0.4, g: 0.3, b: 0.2, a: 1}
-  wallSprite: {fileID: 6299297141845413672, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+  wallSpriteFace: {fileID: 6299297141845413672, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
     type: 3}
-  floorSprite: {fileID: -4293155802867169760, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+  wallSpriteSide: {fileID: 3002277406169270607, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+    type: 3}
+  floorABase: {fileID: -7809298117800400869, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+    type: 3}
+  floorAAdd: {fileID: -4293155802867169760, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
     type: 3}
   crackSprite: {fileID: -2632005171652686020, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
     type: 3}
