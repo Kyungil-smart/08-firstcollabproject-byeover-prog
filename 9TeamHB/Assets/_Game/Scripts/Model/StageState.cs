@@ -60,10 +60,42 @@ namespace MyGame2.Stage
             // 셀 복원
             System.Array.Copy(snapshot.Cells, _cells, _cells.Length);
 
-            // 엔티티 복원
-            _entitiesById.Clear();
+            // 엔티티 복원 (원본 참조 유지 방식)
+
+            // 현재만 있고 스냅샷에 없는 엔티티 제거
+            //    (턴 중 동적 스폰된 추격자 등)
+            List<int> toRemove = null;
+            foreach (var kvp in _entitiesById)
+            {
+                if (!snapshot.EntityDict.ContainsKey(kvp.Key))
+                {
+                    // IUpdate 컴포넌트의 이벤트 구독 해제
+                    foreach (var comp in kvp.Value.Components)
+                        if (comp is System.IDisposable d) d.Dispose();
+
+                    if (toRemove == null) toRemove = new List<int>(4);
+                    toRemove.Add(kvp.Key);
+                }
+            }
+            if (toRemove != null)
+                for (int i = 0; i < toRemove.Count; i++)
+                    _entitiesById.Remove(toRemove[i]);
+
+            // 스냅샷 엔티티 복원
             foreach (var kvp in snapshot.EntityDict)
-                _entitiesById[kvp.Key] = kvp.Value;
+            {
+                if (_entitiesById.TryGetValue(kvp.Key, out EntityState existing))
+                {
+                    // 기존 엔티티에 데이터만 덮어쓰기
+                    // IUpdate 컴포넌트의 _entityState 참조가 그대로 유효
+                    existing.RestoreFrom(kvp.Value);
+                }
+                else
+                {
+                    // 턴 중 죽어서 제거된 엔티티 → 스냅샷 복사본으로 복원
+                    _entitiesById[kvp.Key] = kvp.Value;
+                }
+            }
 
             // 상태 복원
             ActivePlayerId = snapshot.ActivePlayerId;
