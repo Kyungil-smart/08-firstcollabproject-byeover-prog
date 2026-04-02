@@ -33,6 +33,11 @@ namespace MyGame2.Stage
         private SpriteRenderer _spriteRenderer;
         private Direction _lastFacing;
 
+        // Animator 파라미터 존재 여부 캐싱
+        private bool _hasDirection;
+        private bool _hasIsMoving;
+        private bool _hasIsDead;
+
         public int EntityId { get; private set; }
         public EntityKind Kind { get; private set; }
         public bool IsSliding { get { return _isSliding; } }
@@ -67,6 +72,9 @@ namespace MyGame2.Stage
                     : GetComponentInChildren<SpriteRenderer>();
             }
 
+            // Animator 파라미터 캐싱 (Bind 시 1회)
+            CacheAnimParams();
+
             Vector3 worldPos = entity.Position.ToWorld(cellSize);
             transform.position = worldPos;
             _targetPosition = worldPos;
@@ -91,7 +99,7 @@ namespace MyGame2.Stage
             if (!entity.IsAlive)
             {
                 // 사망 애니메이션 트리거
-                if (useDirectionAnim && _animator != null)
+                if (useDirectionAnim && _animator != null && _hasIsDead)
                     _animator.SetTrigger(AnimIsDead);
 
                 gameObject.SetActive(false);
@@ -165,26 +173,49 @@ namespace MyGame2.Stage
                     transform.rotation, _targetRotation, slideSpeed * dt);
             }
         }
+        
+        // Animator Controller에 실제로 존재하는 파라미터만 캐싱.
+        // Bind 시 1회 호출되어, 파라미터가 없는 엔티티에서는 SetBool/SetFloat/SetTrigger를 스킵.
+        private void CacheAnimParams()
+        {
+            _hasDirection = false;
+            _hasIsMoving = false;
+            _hasIsDead = false;
+
+            if (_animator == null || _animator.runtimeAnimatorController == null)
+                return;
+
+            foreach (var p in _animator.parameters)
+            {
+                if (p.nameHash == AnimIsMoving)       _hasIsMoving = true;
+                else if (p.nameHash == AnimDirection)  _hasDirection = true;
+                else if (p.nameHash == AnimIsDead)     _hasIsDead = true;
+            }
+        }
 
         private void UpdateDirectionAnim(Direction facing)
         {
             if (!useDirectionAnim || _animator == null) return;
 
-            // Blend Tree용 Float 파라미터
-            // 0=Down(S), 1=Up(W), 2=Left(AD), 3=Right(AD)
-            float dirValue;
-            switch (facing)
+            // Direction 파라미터가 있을 때만 Blend Tree 값 설정
+            if (_hasDirection)
             {
-                case Direction.Down:  dirValue = 0f; break;
-                case Direction.Up:    dirValue = 1f; break;
-                case Direction.Left:  dirValue = 2f; break;
-                case Direction.Right: dirValue = 2f; break; // Left와 같은 AD 애니메이션
-                default:              dirValue = 0f; break;
+                // Blend Tree용 Float 파라미터
+                // 0=Down(S), 1=Up(W), 2=Left(AD), 3=Right(AD)
+                float dirValue;
+                switch (facing)
+                {
+                    case Direction.Down:  dirValue = 0f; break;
+                    case Direction.Up:    dirValue = 1f; break;
+                    case Direction.Left:  dirValue = 2f; break;
+                    case Direction.Right: dirValue = 2f; break; // Left와 같은 AD 애니메이션
+                    default:              dirValue = 0f; break;
+                }
+
+                _animator.SetFloat(AnimDirection, dirValue);
             }
 
-            _animator.SetFloat(AnimDirection, dirValue);
-
-            // 좌우 반전 처리
+            // 좌우 반전 처리 (파라미터와 무관하므로 항상 실행)
             if (flipXOnLeft && _spriteRenderer != null)
             {
                 if (facing == Direction.Left)
@@ -196,7 +227,7 @@ namespace MyGame2.Stage
 
         private void UpdateMovingAnim(bool isMoving)
         {
-            if (!useDirectionAnim || _animator == null) return;
+            if (!useDirectionAnim || _animator == null || !_hasIsMoving) return;
             _animator.SetBool(AnimIsMoving, isMoving);
         }
 
