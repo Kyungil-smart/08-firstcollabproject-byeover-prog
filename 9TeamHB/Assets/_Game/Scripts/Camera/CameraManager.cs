@@ -12,16 +12,21 @@ public class CameraManager : MonoBehaviour
     [SerializeField] private CinemachineCamera vcamP2;
     [SerializeField] private CinemachineCamera vcamEvent;
     [SerializeField] private BoxCollider2D boundaryCollider;
+    
     [Header("경고 효과")]
     [SerializeField] private RectTransform warningIcon;
     [SerializeField] private FloatEventChannelSO eventHub;
-
+    
+    [Header("이벤트 연출")]
+    [SerializeField] private Transform marker;
+    [SerializeField] private float runningTime = 1f;
     void OnEnable()
     {
         stageManager.Events.StageLoaded += SetFollowTargets;
         stageManager.Events.StageLoaded += SetBoundary;
         stageManager.Events.ActivePlayerChanged += SwitchToPlayer;
         stageManager.Events.EntityKilled += FocusDeadPlayer;
+        stageManager.Events.PairActivated += OnOpenDoorEvent;
         eventHub.OnAlertAndChaseRaised += AlertToPlayer;
     }
 
@@ -31,6 +36,7 @@ public class CameraManager : MonoBehaviour
         stageManager.Events.StageLoaded -= SetBoundary;
         stageManager.Events.ActivePlayerChanged -= SwitchToPlayer;
         stageManager.Events.EntityKilled -= FocusDeadPlayer;
+        stageManager.Events.PairActivated -= OnOpenDoorEvent;
         eventHub.OnAlertAndChaseRaised -= AlertToPlayer;
     }
 
@@ -93,10 +99,26 @@ public class CameraManager : MonoBehaviour
         vcam.ForceCameraPosition( view.transform.position, vcam.transform.rotation );
     }
 
-    private void ShowEventCamera(GridEntityView view)
+    private void OnOpenDoorEvent(GridPos cell)
     {
-        SetFollowTargets(vcamEvent, view);
+        if(IsPointVisible(cell.ToWorld(1f))) return;
+        StartCoroutine(ShowEventCamera(cell));
+    }
+    private IEnumerator ShowEventCamera(GridPos cell)
+    {
+        var pos = cell.ToWorld(1f);
+        marker.position = pos;
+        vcamEvent.Follow = marker;
+        vcamEvent.ForceCameraPosition(pos, vcamEvent.transform.rotation);
         vcamEvent.Priority = 100;
+        yield return null;
+        // 게임 일시정지 이벤트
+        yield return new WaitForSecondsRealtime(0.1f);
+        Time.timeScale = 0f;
+        yield return new WaitForSecondsRealtime(runningTime);
+        // 게임 시작
+        Time.timeScale = 1f;
+        vcamEvent.Priority = 0;
     }
 
     private void SetBoundary(int stageindex)
@@ -153,6 +175,14 @@ public class CameraManager : MonoBehaviour
                viewPos.y >= 0 && viewPos.y <= 1 && viewPos.z > 0;
     }
 
+    private bool IsPointVisible(Vector3 worldPos)
+    {
+        Vector3 viewPos = Camera.main.WorldToViewportPoint(worldPos);
+        
+        return viewPos.x >= 0 && viewPos.x <= 1 && 
+               viewPos.y >= 0 && viewPos.y <= 1 && viewPos.z > 0;
+    }
+
     void PrintWarningIcon(GridEntityView view)
     {
         Vector3 viewPos = Camera.main.WorldToViewportPoint(view.transform.position);
@@ -163,8 +193,9 @@ public class CameraManager : MonoBehaviour
         }
         
         warningIcon.gameObject.SetActive(true);
-        float x = Mathf.Clamp(viewPos.x, 0.05f, 0.95f);
-        float y = Mathf.Clamp(viewPos.y, 0.05f, 0.95f);
+        // 화면 비율 기준으로 출력 위치 제한
+        float x = Mathf.Clamp(viewPos.x, 0.25f, 0.75f);
+        float y = Mathf.Clamp(viewPos.y, 0.25f, 0.75f);
         
         warningIcon.anchorMin = warningIcon.anchorMax = new Vector2(x, y);
             
