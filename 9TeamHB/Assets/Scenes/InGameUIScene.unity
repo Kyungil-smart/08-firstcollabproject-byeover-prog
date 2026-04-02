@@ -453,6 +453,7 @@ MonoBehaviour:
     type: 3}
   maxUndoCount: 3
   maxTagCount: 3
+  stageCount: 0
   timeElapsed: 0
 --- !u!4 &925338799
 Transform:

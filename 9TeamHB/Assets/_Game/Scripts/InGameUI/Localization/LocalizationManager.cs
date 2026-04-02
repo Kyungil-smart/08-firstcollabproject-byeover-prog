@@ -61,7 +61,7 @@ public class LocalizationManager : MonoBehaviour
         return key; 
     }
 
-    // 언어 바꿀 때 바뀔때 실행된느 함수들 실행 + currentLangauge 값 변경. 
+    // 언어 바꿀 때 바뀔때 실행되는 함수들 실행 + currentLangauge 값 변경. 
     // 나중에 드롭다운 버튼 클릭시 값을 ChangeLanguage에 넘겨줌. 
     public void ChangeLanguage(int index)
     {

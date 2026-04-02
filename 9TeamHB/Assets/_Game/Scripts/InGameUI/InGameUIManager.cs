@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 public class InGameUIManager : MonoBehaviour
@@ -28,9 +29,16 @@ public class InGameUIManager : MonoBehaviour
     public int maxTagCount = 3;
     private int currentTagCount;
     private HUDTagUI hudTagUI;
+
+    [Header("이동 횟수 관련")]
+    public int maxMoveCount;
+    public int currentMoveCount;
     
-    //흐른 시간 체크 변수  
-    public float timeElapsed = 0f; 
+    [Header("그 외 HUD 관련 설정")] 
+    public int stageCount;
+    public float timeElapsed = 0f; //흐른 시간 체크 변수 
+    private HUDController hudController;
+    
     private void Awake()
     {
         if (Instance == null)
@@ -41,6 +49,8 @@ public class InGameUIManager : MonoBehaviour
         {
             Destroy(gameObject); //싱글톤인데 씬 바뀔시 데이터초기화, 인게임 시작될때 초기화되는 
         }
+        currentMoveCount = 0;
+        maxMoveCount = 3;
     }
 
     private void Start()
@@ -49,6 +59,8 @@ public class InGameUIManager : MonoBehaviour
         Time.timeScale = 1f; //시간 흐르게
         currentUndoCount = maxUndoCount;
         currentTagCount = maxTagCount;
+        
+        // SetStageCount(1); // 스테이지 텍스트 변화 테스트용 디버깅
         ShowHUD();
     }
 
@@ -89,12 +101,14 @@ public class InGameUIManager : MonoBehaviour
     // HUD 프리펩에서 오브젝트 생성
     public void ShowHUD()
     {
+        // 오브젝트 없으면 생성, 있으면 활성화
         if (activeHUD == null)
         {
             
             activeHUD = Instantiate(hudPrefab);
             hudUndoUI = activeHUD.GetComponentInChildren<HUDUndoUI>(true);
             hudTagUI = activeHUD.GetComponentInChildren<HUDTagUI>(true);
+            hudController =  activeHUD.GetComponent<HUDController>();
         }
         else
         {
@@ -109,6 +123,12 @@ public class InGameUIManager : MonoBehaviour
         if (hudTagUI != null)
         {
             hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
+        }
+
+        if (hudController != null)
+        {
+            hudController.UpdateStageText(stageCount);
+            hudController.UpdateMoveCountText(currentMoveCount, maxMoveCount);
         }
     }
 
@@ -210,13 +230,13 @@ public class InGameUIManager : MonoBehaviour
     }
     
     // Undo 버튼 눌릴시 실행되는 Undo로직(UI포함)
-    public void ExecuteUndo()
+    public void OnClickUndoButton()
     {
         if (currentUndoCount > 0)
         {
             currentUndoCount--;
 
-            // TODO: 팀원분이 만든 되돌리기 로직 실행
+            // 팀원분이 만든 되돌리기 로직 실행
             
 
             // 
@@ -235,13 +255,13 @@ public class InGameUIManager : MonoBehaviour
     /// <summary>
     /// 
     /// </summary>
-    public void ExecuteTag()
+    public void OnClickTagButton()
     {
         if (currentTagCount > 0)
         {
             currentTagCount--;
             
-            // ToDo: 팀원분이 만든 태그 로직 실행.
+            // 팀원분이 만든 태그 로직 실행.
 
             if (hudTagUI != null)
             {
@@ -250,7 +270,28 @@ public class InGameUIManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("바키제키는 요술사인가??");
+            Debug.Log("태그 횟수가 다 닳은 상태입니다. ");
+        }
+    }
+
+    // 스테이지 진입시 몇 Stage인지 지정. (HUD 보일때 반영) InGameUiManager.SetStageCount(int stgCount); 
+    public void SetStageCount(int stgCount)
+    {
+        stageCount = stgCount;
+        
+        if (hudController != null)
+        {
+            hudController.UpdateStageText(stageCount);
+        }
+    }
+
+    // 이 함수를 사용하여 이동횟수 없데이트
+    public void SetMoveCount(int crtMoveCount, int mxMoveCount)
+    {
+        maxMoveCount = mxMoveCount;
+        if (hudController != null)
+        {
+            hudController.UpdateMoveCountText(crtMoveCount, mxMoveCount);
         }
     }
 }

@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections; 
+using System.Collections;
+using UnityEngine.InputSystem;
 
 public class HUDTagUI : MonoBehaviour
 {
@@ -27,6 +28,10 @@ public class HUDTagUI : MonoBehaviour
         buttonRectTransform = tagButton.GetComponent<RectTransform>(); //버튼을 흔들기 위해 가져옴
     }
 
+    private void Update()
+    {
+        
+    }
     // 태그 값 변경시 UI 수정
     public void UpdateTagUI(int currentCount, int maxCount)
     {
@@ -87,6 +92,6 @@ public class HUDTagUI : MonoBehaviour
     // 버튼 클릭 시 매니저 호출
     public void OnClickTagButton()
     {
-        InGameUIManager.Instance.ExecuteTag(); 
+        InGameUIManager.Instance.OnClickTagButton(); 
     }
 }

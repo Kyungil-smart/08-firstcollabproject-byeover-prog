@@ -6,7 +6,14 @@ public class HUDController : MonoBehaviour
 {
     [Header("경과 시간 텍스트")]
     public TextMeshProUGUI playTimeText;
+
+    [Header("텍스트")] 
+    public TextMeshProUGUI stageText;
+    [Header("이동 횟수 LocalizedText(텍스트 등록)")]
+    public LocalizedText moveCountLocText;
     
+    [Header("UI 연결")]
+    public HUDRestartUI hudRestartUI;
     public void Start()
     {
         // 인게임 시작할 때 브금 재생 시작. 
@@ -23,10 +30,52 @@ public class HUDController : MonoBehaviour
     {
         GetTimeElapsed();
         
-        // 신규인풋시스템간이버전으로 ESC누를때 정지화면띄움
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if(Keyboard.current != null)
         {
-            OnClickPauseButton();
+            // 키보드 인풋
+            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                OnClickPauseButton();
+            }
+            if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            {
+                InGameUIManager.Instance.OnClickUndoButton();
+            }
+
+            if (Keyboard.current.tabKey.wasPressedThisFrame)
+            {
+                InGameUIManager.Instance.OnClickTagButton();
+            }
+            
+            // 재시작 꾹누를때
+            if (hudRestartUI != null)
+            {
+                if (Keyboard.current.rKey.wasPressedThisFrame)
+                {
+                    hudRestartUI.SetHoldingByKey(true);
+                }
+                else if (Keyboard.current.rKey.wasReleasedThisFrame)
+                {
+                    hudRestartUI.SetHoldingByKey(false);
+                }
+            }
+        }
+    }
+    
+    // 텍스트를 업데이트 
+    public void UpdateStageText(int stageNum)
+    {
+        if (stageText != null)
+        {
+            stageText.text = $"Stage {stageNum}";
+        }
+    }
+
+    public void UpdateMoveCountText(int currentCount, int maxCount)
+    {
+        if (moveCountLocText != null)
+        {
+            moveCountLocText.SetVariables(currentCount, maxCount);
         }
     }
     
