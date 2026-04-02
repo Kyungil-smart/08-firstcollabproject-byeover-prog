@@ -240,6 +240,57 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &308230776
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 308230778}
+  - component: {fileID: 308230777}
+  m_Layer: 0
+  m_Name: IceBoxSplitEffect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &308230777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308230776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d48cea7729f0504fb54a0def677bc05, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceBoxSplitEffect
+  stageManager: {fileID: 823654580}
+  iceBoxSprite: {fileID: 155301619885727081, guid: 7dbd9521e9731cd469634a14c58852ce,
+    type: 3}
+  splitDistance: 0.8
+  splitDuration: 0.5
+  rotationAngle: 25
+  dropDistance: 0.3
+--- !u!4 &308230778
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308230776}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &311604754
 GameObject:
   m_ObjectHideFlags: 0
@@ -886,6 +937,7 @@ MonoBehaviour:
   symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
   stageStateReference: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511,
     type: 2}
+  undoRepeatInterval: 0.2
 --- !u!4 &823654581
 Transform:
   m_ObjectHideFlags: 0
@@ -1103,6 +1155,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1145453562
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1145453564}
+  - component: {fileID: 1145453563}
+  m_Layer: 0
+  m_Name: IceSlideProcessor (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1145453563
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1145453562}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 126dce9c5b7fa7142b2dfddef1eb1f71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceSlideProcessor
+  stageManager: {fileID: 0}
+  slideInterval: 0.08
+--- !u!4 &1145453564
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1145453562}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1332624083
 GameObject:
   m_ObjectHideFlags: 0
@@ -1234,10 +1332,28 @@ MonoBehaviour:
   switchColor: {r: 0.9, g: 0.6, b: 0.6, a: 1}
   opendDoorColor: {r: 0.9, g: 0.7, b: 0.4, a: 1}
   closedDoorColor: {r: 0.4, g: 0.3, b: 0.2, a: 1}
+  wallSprite: {fileID: 6299297141845413672, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+    type: 3}
+  floorSprite: {fileID: -4293155802867169760, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+    type: 3}
+  crackSprite: {fileID: -2632005171652686020, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+    type: 3}
+  goalSprite: {fileID: -6893335053683956167, guid: 9d7ff6149922fb64092a92d137de3f9b,
+    type: 3}
+  trapSprite: {fileID: 7186704498997533104, guid: 94c7625bc636adf4da9079c171cce859,
+    type: 3}
+  teleportSprite: {fileID: 8212777935605795489, guid: 33a406febcd87ef4cbaea2e60b66b1fc,
+    type: 3}
+  buttonSprite: {fileID: 0}
+  switchSprite: {fileID: 0}
+  openedDoorSprite: {fileID: 0}
+  closedDoorSprite: {fileID: 0}
   cameraDetectionColor: {r: 1, g: 0.2, b: 0.2, a: 0.25}
   robotDetectionColor: {r: 1, g: 0.6, b: 0, a: 0.3}
   summonerDetectionColor: {r: 0.2, g: 0.6, b: 1, a: 0.3}
-  tileOrder: -1
+  crackTileOrder: -4
+  tileOrder: -2
+  trapTileOrder: -1
   detectionOrder: 0
   tilePadding: 0.05
 --- !u!1 &1906414214
@@ -1294,6 +1410,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1909252388
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1909252390}
+  - component: {fileID: 1909252389}
+  m_Layer: 0
+  m_Name: IceSlideProcessor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1909252389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1909252388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 126dce9c5b7fa7142b2dfddef1eb1f71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceSlideProcessor
+  stageManager: {fileID: 0}
+  slideInterval: 0.08
+--- !u!4 &1909252390
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1909252388}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1316,3 +1478,6 @@ SceneRoots:
   - {fileID: 960270565}
   - {fileID: 786630470}
   - {fileID: 1906414216}
+  - {fileID: 308230778}
+  - {fileID: 1909252390}
+  - {fileID: 1145453564}

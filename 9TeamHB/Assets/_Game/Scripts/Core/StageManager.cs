@@ -22,8 +22,11 @@ namespace MyGame2.Stage
         [Tooltip("MoveComponent들이 StageState에 접근하기 위한 SO. Assets/_Game/SO/Util/StageState 에셋 연결")]
         [SerializeField] private StageStateReferenceSO stageStateReference;
 
+        [Tooltip("되돌리기 반복 간격 (초)")]
+        [SerializeField] private float undoRepeatInterval = 0.2f;
+
         private MapLoader _mapLoader;
-        
+
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
         private TurnSystem _turnSystem;
@@ -31,9 +34,13 @@ namespace MyGame2.Stage
         private readonly Dictionary<int, GridEntityView> _views = new Dictionary<int, GridEntityView>(16);
         private int _currentStageIndex;
 
+        private Stack<StageSnapshot> snapshotStack = new Stack<StageSnapshot>();
+
         public StageEvents Events { get { return _events; } }
         public StageState CurrentState { get; private set; }
         public TurnOutcome LastOutcome { get; private set; }
+
+        private float _nextUndoTime;
 
         private void Awake()
         {
@@ -44,6 +51,7 @@ namespace MyGame2.Stage
             _events.TurnExecuted += OnTurnExecuted;
             _events.ActivePlayerChanged += OnActivePlayerChanged;
             _events.EntityKilled += OnEntityKilled;
+            _events.UndoExecuted += OnUndoExecuted;
         }
 
         private void Start()
@@ -51,11 +59,32 @@ namespace MyGame2.Stage
             LoadStage(startStageIndex);
         }
 
+        private void Update()
+        {
+            if (CurrentState == null) return;
+            if (CurrentState.IsUndoProcessing)
+            {
+                if (snapshotStack.Count == 0)
+                {
+                    LeaveUndo();
+                    return;
+                }
+                if (Time.time >= _nextUndoTime)
+                {
+                    _nextUndoTime = Time.time + undoRepeatInterval;
+                    CurrentState.Restore(snapshotStack.Pop());
+                    _events.RaiseUndoExecuted();
+                    Debug.Log($"Pop SnapshotStack, Stack Size : {snapshotStack.Count}");
+                }
+            }
+        }
+
         private void OnDestroy()
         {
             _events.TurnExecuted -= OnTurnExecuted;
             _events.ActivePlayerChanged -= OnActivePlayerChanged;
             _events.EntityKilled -= OnEntityKilled;
+            _events.UndoExecuted -= OnUndoExecuted;
         }
 
         private void OnTurnExecuted(TurnOutcome outcome)
@@ -69,6 +98,12 @@ namespace MyGame2.Stage
 
         // 히든 함정 등 지연 Kill 후에도 뷰가 갱신되도록 처리
         private void OnEntityKilled(int id)
+        {
+            SyncViews();
+            SyncSelection();
+        }
+
+        private void OnUndoExecuted()
         {
             SyncViews();
             SyncSelection();
@@ -92,6 +127,9 @@ namespace MyGame2.Stage
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
 
+            // 자동 페어링: 맵 텍스트를 다시 스캔해서 같은 pairGroup끼리 SetCellPair
+            ApplyPairGroups(file, CurrentState);
+
             // 핵심 추가: MoveComponent들이 StageState에 접근할 수 있도록 등록
             if (stageStateReference != null)
                 stageStateReference.Register(CurrentState);
@@ -104,9 +142,9 @@ namespace MyGame2.Stage
             _events.RaiseStageLoaded(stageIndex);
         }
 
-        public void RestartCurrentStage() 
-        { 
-            LoadStage(_currentStageIndex); 
+        public void RestartCurrentStage()
+        {
+            LoadStage(_currentStageIndex);
         }
 
         public bool LoadNextStage()
@@ -120,11 +158,20 @@ namespace MyGame2.Stage
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
-            return _tagSystem.Switch(CurrentState);
+
+            bool switchResult = _tagSystem.Switch(CurrentState);
+            if (switchResult)
+            {
+                snapshotStack.Clear();
+            }
+
+            return switchResult;
         }
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
+            StageSnapshot snapshot = new StageSnapshot(CurrentState);
+
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -133,7 +180,42 @@ namespace MyGame2.Stage
                 return LastOutcome;
             }
 
-            return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+            TurnOutcome outcome = _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+
+            if (outcome.Executed)
+            {
+                snapshotStack.Push(snapshot);
+
+                Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
+            }
+
+            return outcome;
+        }
+
+        public bool TryEnterUndo()
+        {
+            if (snapshotStack.Count == 0)
+            {
+                return false;
+            }
+
+            CurrentState.UndoEnter();
+            _nextUndoTime = 0.0f;
+
+            return true;
+        }
+
+        public void LeaveUndo()
+        {
+            CurrentState.UndoLeave();
+
+            // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
+            foreach (var pair in _views)
+            {
+                if (pair.Value == null) continue;
+                if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
+                    pair.Value.ForceSnap(e, cellSize);
+            }
         }
 
         private bool CanAcceptInput()
@@ -154,7 +236,7 @@ namespace MyGame2.Stage
         // 단일 엔티티의 View 생성 (동적 스폰 지원)
         private void SpawnViewForEntity(EntityState e)
         {
-            if (_views.ContainsKey(e.Id)) return; // 이미 있으면 건너뜀
+            if (_views.ContainsKey(e.Id)) return;
 
             GridEntityView prefab = e.Prefab;
             if (prefab == null) return;
@@ -162,6 +244,21 @@ namespace MyGame2.Stage
             GridEntityView view = Instantiate(prefab, entityRoot);
             view.name = $"{e.Kind}_{e.Id}";
             view.Bind(e, cellSize);
+
+            // 톱날 함정: 멀티셀 비주얼 자동 생성
+            SawTrapVisual sawVisual = view.GetComponent<SawTrapVisual>();
+            if (sawVisual != null && e.Has<SawTrapData>())
+            {
+                sawVisual.BuildVisual(e.Get<SawTrapData>().Size, e.Facing);
+            }
+
+            // 문/레버/버튼: 셀 상태 감시 초기화
+            InteractableTileVisual interactable = view.GetComponent<InteractableTileVisual>();
+            if (interactable != null)
+            {
+                interactable.Initialize(e.Id);
+            }
+
             Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
             _views[e.Id] = view;
         }
@@ -171,7 +268,6 @@ namespace MyGame2.Stage
         {
             if (CurrentState == null) return;
 
-            // 새로 생긴 엔티티의 View 생성
             foreach (EntityState e in CurrentState.Entities)
             {
                 if (!_views.ContainsKey(e.Id))
@@ -189,14 +285,49 @@ namespace MyGame2.Stage
                 }
                 else
                 {
-                    // 엔티티가 StageState에서 제거됨 (RemoveEntity로 소멸)
                     Destroy(pair.Value.gameObject);
                     if (toRemove == null) toRemove = new List<int>(4);
                     toRemove.Add(pair.Key);
                 }
             }
 
-            // Dictionary 순회 중 삭제 방지
+            if (toRemove != null)
+            {
+                for (int i = 0; i < toRemove.Count; i++)
+                    _views.Remove(toRemove[i]);
+            }
+        }
+
+        // Undo 전용: Lerp 없이 즉시 위치 복원 (틈새 상자 Y 포지션 문제 방지)
+        private void ForceSnapViews()
+        {
+            if (CurrentState == null) return;
+
+            // 새로 생긴 엔티티 View 생성
+            foreach (EntityState e in CurrentState.Entities)
+            {
+                if (!_views.ContainsKey(e.Id))
+                    SpawnViewForEntity(e);
+            }
+
+            // 기존 View: ForceSnap 또는 제거
+            List<int> toRemove = null;
+            foreach (var pair in _views)
+            {
+                if (pair.Value == null) continue;
+
+                if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
+                {
+                    pair.Value.ForceSnap(e, cellSize);
+                }
+                else
+                {
+                    Destroy(pair.Value.gameObject);
+                    if (toRemove == null) toRemove = new List<int>(4);
+                    toRemove.Add(pair.Key);
+                }
+            }
+
             if (toRemove != null)
             {
                 for (int i = 0; i < toRemove.Count; i++)
@@ -222,6 +353,59 @@ namespace MyGame2.Stage
             foreach (var pair in _views)
                 if (pair.Value != null) Destroy(pair.Value.gameObject);
             _views.Clear();
+        }
+
+        // 자동 페어링
+        private void ApplyPairGroups(TextAsset file, StageState state)
+        {
+            if (symbolRegistry == null || file == null) return;
+
+            string rawText = file.text;
+            if (rawText.Length > 0 && rawText[0] == '\uFEFF')
+                rawText = rawText.Substring(1);
+
+            string normalized = rawText.Replace("\r\n", "\n").Replace('\r', '\n');
+            string[] split = normalized.Split('\n');
+            List<string> validLines = new List<string>(split.Length);
+
+            for (int i = 0; i < split.Length; i++)
+            {
+                string line = split[i].TrimEnd();
+                if (string.IsNullOrWhiteSpace(line)) continue;
+                if (line.TrimStart().StartsWith("//")) continue;
+                validLines.Add(line);
+            }
+
+            Dictionary<int, List<GridPos>> groups = new Dictionary<int, List<GridPos>>();
+
+            for (int y = 0; y < validLines.Count; y++)
+            {
+                string row = validLines[y];
+                for (int x = 0; x < row.Length; x++)
+                {
+                    char ch = row[x];
+                    if (!symbolRegistry.TryGetEntry(ch, out MapSymbolEntry entry)) continue;
+                    if (entry.pairGroup <= 0) continue;
+
+                    if (!groups.ContainsKey(entry.pairGroup))
+                        groups[entry.pairGroup] = new List<GridPos>(2);
+                    groups[entry.pairGroup].Add(new GridPos(x, y));
+                }
+            }
+
+            foreach (var kvp in groups)
+            {
+                if (kvp.Value.Count == 2)
+                {
+                    state.SetCellPair(kvp.Value[0], kvp.Value[1]);
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"[StageManager] PairGroup {kvp.Key}: " +
+                        $"{kvp.Value.Count}개 셀 발견 (2개여야 페어 성립). 무시됨.");
+                }
+            }
         }
     }
 }

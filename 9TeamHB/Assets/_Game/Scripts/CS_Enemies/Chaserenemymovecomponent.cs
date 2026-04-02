@@ -99,6 +99,11 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
                 UpdateDespawn(state, dt);
                 break;
         }
+
+        if (_currentState == EnemyAIState.Chase)
+        {
+            _eventChannel.OnAlertAndChaseRaised(_targetPlayerId);
+        }
     }
 
     private void ResolveTarget(StageState state)

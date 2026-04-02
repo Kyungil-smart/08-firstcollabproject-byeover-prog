@@ -105,10 +105,10 @@ namespace MyGame2.Stage
                 return trapDeath;
             }
 
-            // 바닥형 함정 02 (톱날) 판정
+            // 바닥형 함정 판정
             // 엔티티 기반: 각 SawTrap의 커버 범위에 플레이어가 있는지 체크
             // 앵커 셀에 Active 플래그가 켜져 있으면 (버튼/스위치로 비활성화) 안전
-            if (state.IsPlayerInSawTrap(moveResult.To))
+            if (state.IsInSawTrapRange(moveResult.To))
             {
                 state.KillEntity(playerId);
                 state.MarkGameOver();
