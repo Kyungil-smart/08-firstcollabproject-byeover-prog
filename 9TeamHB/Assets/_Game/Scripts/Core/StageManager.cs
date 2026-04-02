@@ -170,7 +170,7 @@ namespace MyGame2.Stage
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
-            TurnOutcome outcome = _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+            StageSnapshot snapshot = new StageSnapshot(CurrentState);
 
             if (!CanAcceptInput())
             {
@@ -180,9 +180,10 @@ namespace MyGame2.Stage
                 return LastOutcome;
             }
 
+            TurnOutcome outcome = _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+
             if (outcome.Executed)
             {
-                StageSnapshot snapshot = new StageSnapshot(CurrentState);
                 snapshotStack.Push(snapshot);
 
                 Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
