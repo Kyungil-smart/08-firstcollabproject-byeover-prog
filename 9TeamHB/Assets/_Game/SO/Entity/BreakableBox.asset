@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
+  m_Name: BreakableBox
+  m_EditorClassIdentifier: Assembly-CSharp::EntitySO
+  _kind: 2
+  isBlocking: 1
+  blocksCameraSight: 1
+  isLethal: 0
+  _viewPrefab: {fileID: 4211085404945142338, guid: 03675c415bcfa0e4d80ed92b63bfc312,
+    type: 3}
+  Functions:
+  - {fileID: 11400000, guid: f9b1787d4df413c4cb61db9f951667a7, type: 2}
+  - {fileID: 11400000, guid: 5da8af1216947c3428c3f0d49d931735, type: 2}
+  - {fileID: 11400000, guid: 104b6cac201e0e94e85c4e8048e3e321, type: 2}
+  - {fileID: 11400000, guid: 82815105112f30f428f7e1f341c4ae79, type: 2}

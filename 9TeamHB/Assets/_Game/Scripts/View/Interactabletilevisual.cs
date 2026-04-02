@@ -19,7 +19,7 @@ namespace MyGame2.Stage
         [SerializeField] private float transitionDuration = 0.3f;
 
         [Header("렌더링")]
-        [SerializeField] private int sortingOrder = 1;
+        [SerializeField] private int sortingOrder = -1;
 
         [Header("대상 SpriteRenderer (비우면 자식에서 자동 탐색)")]
         [SerializeField] private SpriteRenderer targetSpriteRenderer;

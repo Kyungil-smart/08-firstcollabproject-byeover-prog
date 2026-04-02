@@ -446,3 +446,10 @@ MonoBehaviour:
     entityConfig: {fileID: 11400000, guid: be5107c8bc94ff14b8f0bd8d9740f1a1, type: 2}
     facing: 4
     pairGroup: 0
+  - symbol: 70
+    description: "\uBD80\uC11C\uC9C0\uB294\uC0C1\uC790"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: cd42e0f781c704f44b8637b8bfd14f9f, type: 2}
+    facing: 0
+    pairGroup: 0

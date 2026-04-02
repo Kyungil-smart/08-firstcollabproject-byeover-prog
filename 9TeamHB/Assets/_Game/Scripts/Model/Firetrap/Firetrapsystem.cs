@@ -7,7 +7,7 @@ namespace MyGame2.Stage
     // 불 함정 시스템: 주기적으로 불을 발사하여 범위 내 엔티티에 피해.
     // 부서지는 상자, 얼음 상자 -> 파괴
     // 플레이어 -> 즉사 (게임오버)
-    // 일반 상자, P1 상자, 철 상자 -> 불을 차단 (뒤쪽은 안전)
+    // 일반 상자, P1 상자, 철 상자 ->불을 차단 (뒤쪽은 안전)
     // 벽 -> 차단
 
     public sealed class FireTrapSystem : MonoBehaviour
@@ -222,6 +222,7 @@ namespace MyGame2.Stage
         }
 
         // 불을 차단하는 오브젝트가 있는지 (일반 상자, P1 상자, 철 상자)
+        // 부서지는 상자는 차단하지 않음 (불에 파괴됨)
         private bool HasFireBlocker(StageState state, GridPos pos)
         {
             foreach (EntityState e in state.Entities)
@@ -229,10 +230,10 @@ namespace MyGame2.Stage
                 if (!e.IsAlive) continue;
                 if (e.Position.X != pos.X || e.Position.Y != pos.Y) continue;
 
-                if (e.IsBox && e.Has<BoxData>())
+                if (e.IsBox && e.Has<BoxData>() && !e.Has<BreakableData>())
                 {
                     BoxType bt = e.Get<BoxData>().Ownership;
-                    // 일반(Shared), P1전용, 철 상자 -> 차단
+                    // 일반(Shared), P1전용, 철 상자 → 차단
                     if (bt == BoxType.Shared || bt == BoxType.Player1Only || bt == BoxType.Iron)
                         return true;
                 }
@@ -259,7 +260,7 @@ namespace MyGame2.Stage
                     if (!e.IsAlive) continue;
                     if (e.Position.X != pos.X || e.Position.Y != pos.Y) continue;
 
-                    // 플레이어 -> 즉사
+                    // 플레이어 → 즉사
                     if (e.IsPlayer)
                     {
                         state.KillEntity(e.Id);
@@ -268,7 +269,7 @@ namespace MyGame2.Stage
                         continue;
                     }
 
-                    // 부서지는 상자 / 얼음 상자 -> 파괴
+                    // 부서지는 상자 / 얼음 상자 → 파괴
                     if (e.IsBox && e.Has<BoxData>())
                     {
                         BoxType bt = e.Get<BoxData>().Ownership;
