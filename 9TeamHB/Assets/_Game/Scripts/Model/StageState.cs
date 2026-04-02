@@ -395,6 +395,8 @@ namespace MyGame2.Stage
             if (GetCell(destination).HasSignalButton)
             {
                 ActivePairCell(destination);
+                if(TryGetCellPair(destination, out var pairGridPos))
+                    _events.RaisePairActivated(pairGridPos);
             }
 
             entity.Position = destination;

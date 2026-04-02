@@ -12,5 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 664a880078be3da4488ffda1bc83375a, type: 3}
   m_Name: Pocket
   m_EditorClassIdentifier: Assembly-CSharp::PocketCmp
-  _prefab: {fileID: 0}
-  _interval: 0.5
+  _prefab: {fileID: 7704667943424868507, guid: 2391cf519ac1a994c8b4733280f1bc0e, type: 3}

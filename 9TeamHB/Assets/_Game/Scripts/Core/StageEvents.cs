@@ -52,6 +52,8 @@ namespace MyGame2.Stage
         public event Action<int, GridPos> HiddenTrapPlayerKill;
         // 얼음 상자가 톱날에 의해 파괴됨 (entityId, position, sawFacing)
         public event Action<int, GridPos, Direction> IceBoxSawDestroyed;
+        // 페어 활성화 시
+        public event Action<GridPos> PairActivated;
         // Undo 실행 완료 시 (다른 팀원 구현용 스텁)
         public event Action UndoExecuted;
 
@@ -146,6 +148,11 @@ namespace MyGame2.Stage
         public void RaiseUndoExecuted()
         {
             UndoExecuted?.Invoke();
+        }
+
+        public void RaisePairActivated(GridPos pairPosition)
+        {
+            PairActivated?.Invoke(pairPosition);
         }
 
         public void RaiseViewRequest(ViewRequest request)
