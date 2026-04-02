@@ -170,6 +170,8 @@ namespace MyGame2.Stage
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
+            TurnOutcome outcome = _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -177,8 +179,6 @@ namespace MyGame2.Stage
                     MoveBlockReason.DeadEntity));
                 return LastOutcome;
             }
-
-            TurnOutcome outcome = _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
 
             if (outcome.Executed)
             {
