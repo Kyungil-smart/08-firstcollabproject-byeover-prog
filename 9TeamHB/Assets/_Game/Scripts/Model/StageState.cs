@@ -97,6 +97,23 @@ namespace MyGame2.Stage
                 }
             }
 
+            // 투사체는 일시적 엔티티이므로 Undo 시 강제 제거
+            List<int> projectilesToRemove = null;
+            foreach (var kvp in _entitiesById)
+            {
+                if (kvp.Value.Kind == EntityKind.Projectile)
+                {
+                    foreach (var comp in kvp.Value.Components)
+                        if (comp is System.IDisposable d) d.Dispose();
+
+                    if (projectilesToRemove == null) projectilesToRemove = new List<int>(4);
+                    projectilesToRemove.Add(kvp.Key);
+                }
+            }
+            if (projectilesToRemove != null)
+                for (int i = 0; i < projectilesToRemove.Count; i++)
+                    _entitiesById.Remove(projectilesToRemove[i]);
+
             // 상태 복원
             ActivePlayerId = snapshot.ActivePlayerId;
             TurnIndex = snapshot.TurnIndex;

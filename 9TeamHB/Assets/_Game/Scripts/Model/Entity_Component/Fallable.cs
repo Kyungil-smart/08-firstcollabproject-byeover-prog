@@ -57,5 +57,8 @@ public class Fallable : IComponentData
             yield return null;
         }
         firstChild.position = targetPosition;
+        
+        // Undo 시 복원할 수 있도록 플래그 설정
+        view.MarkAsFallen();
     }
 }
