@@ -67,6 +67,7 @@ public class CameraManager : MonoBehaviour
                 vcamP2.Priority = (playerNumber == 2) ? 20 : 10;
             }
         }
+        StartCoroutine( TurnOffWarningIcon());
     }
     private void SetFollowTargets(int stageindex)
     {
@@ -148,14 +149,8 @@ public class CameraManager : MonoBehaviour
         confiner.InvalidateBoundingShapeCache();
     }
 
-    void AlertToPlayer()
+    void AlertToPlayer(int playerId)
     {
-        // Id 찾기
-        StageState state = stageManager.CurrentState;
-        int p1Id = state.GetPlayerIdBySlot(1);
-        int p2Id = state.GetPlayerIdBySlot(2);
-        int playerId;
-        playerId = (vcamP1.Priority == 20) ? p2Id : p1Id;
         var request = new ViewRequest
         {
             Id = playerId,
@@ -198,8 +193,10 @@ public class CameraManager : MonoBehaviour
         float y = Mathf.Clamp(viewPos.y, 0.25f, 0.75f);
         
         warningIcon.anchorMin = warningIcon.anchorMax = new Vector2(x, y);
-            
-        
-        
+    }
+    IEnumerator TurnOffWarningIcon()
+    {
+        yield return new WaitForSecondsRealtime(0.5f);
+        warningIcon.gameObject.SetActive(false);
     }
 }
