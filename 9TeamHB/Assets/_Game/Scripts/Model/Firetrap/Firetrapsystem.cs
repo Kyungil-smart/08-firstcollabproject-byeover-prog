@@ -5,10 +5,10 @@ using UnityEngine;
 namespace MyGame2.Stage
 {
     // 불 함정 시스템: 주기적으로 불을 발사하여 범위 내 엔티티에 피해.
-    // 부서지는 상자, 얼음 상자 -> 파괴
-    // 플레이어 -> 즉사 (게임오버)
-    // 일반 상자, P1 상자, 철 상자 -> 불을 차단 (뒤쪽은 안전)
-    // 벽 -> 차단
+    // 부서지는 상자, 얼음 상자 → 파괴
+    // 플레이어 → 즉사 (게임오버)
+    // 일반 상자, P1 상자, 철 상자 → 불을 차단 (뒤쪽은 안전)
+    // 벽 → 차단
 
     public sealed class FireTrapSystem : MonoBehaviour
     {
@@ -230,7 +230,7 @@ namespace MyGame2.Stage
                 if (e.IsBox && e.Has<BoxData>() && !e.Has<BreakableData>())
                 {
                     BoxType bt = e.Get<BoxData>().Ownership;
-                    // 일반(Shared), P1전용, 철 상자 -> 차단
+                    // 일반(Shared), P1전용, 철 상자 → 차단
                     if (bt == BoxType.Shared || bt == BoxType.Player1Only || bt == BoxType.Iron)
                         return true;
                 }
@@ -257,7 +257,7 @@ namespace MyGame2.Stage
                     if (!e.IsAlive) continue;
                     if (e.Position.X != pos.X || e.Position.Y != pos.Y) continue;
 
-                    // 플레이어 -> 즉사
+                    // 플레이어 → 즉사
                     if (e.IsPlayer)
                     {
                         state.KillEntity(e.Id);
@@ -266,15 +266,11 @@ namespace MyGame2.Stage
                         continue;
                     }
 
-                    // 부서지는 상자 / 얼음 상자 -> 파괴
-                    if (e.IsBox && e.Has<BoxData>())
+                    // 부서지는 상자 / 얼음 상자 → 파괴
+                    if (e.IsBox && e.Has<IceSlideData>())
                     {
-                        BoxType bt = e.Get<BoxData>().Ownership;
-                        if (bt == BoxType.Ice)
-                        {
-                            if (toDamage == null) toDamage = new List<int>(2);
-                            toDamage.Add(e.Id);
-                        }
+                        if (toDamage == null) toDamage = new List<int>(2);
+                        toDamage.Add(e.Id);
                     }
 
                     // 부서지는 상자 (BreakableBox) 체크
