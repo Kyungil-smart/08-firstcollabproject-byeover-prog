@@ -245,8 +245,6 @@ namespace MyGame2.Stage
 
         private void OnUndoStarted(InputAction.CallbackContext ctx)
         {
-            Debug.Log($"Undo Key Pressed, isUndoHeld : {_isUndoHeld}");
-
             if (!IsPlayable())
             {
                 return;
@@ -256,19 +254,14 @@ namespace MyGame2.Stage
             {
                 _isUndoHeld = true;
                 bool enterUndoResult = stageManager.TryEnterUndo();
-
-                Debug.Log($"Enter Undo Result : {enterUndoResult}");
             }
         }
 
         private void OnUndoCanceled(InputAction.CallbackContext ctx)
         {
-            Debug.Log($"Undo Key Released, isUndoHeld : {_isUndoHeld}");
-
             if (stageManager.CurrentState.IsUndoProcessing)
             {
                 stageManager.LeaveUndo();
-                Debug.Log("Leave Undo");
             }
 
             if (_isUndoHeld)
