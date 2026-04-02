@@ -170,8 +170,6 @@ namespace MyGame2.Stage
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
-            StageSnapshot snapshot = new StageSnapshot(CurrentState);
-
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -184,6 +182,7 @@ namespace MyGame2.Stage
 
             if (outcome.Executed)
             {
+                StageSnapshot snapshot = new StageSnapshot(CurrentState);
                 snapshotStack.Push(snapshot);
 
                 Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
@@ -257,6 +256,13 @@ namespace MyGame2.Stage
             if (interactable != null)
             {
                 interactable.Initialize(e.Id);
+            }
+
+            // 부서지는 상자: 파괴 애니메이션 초기화
+            BreakableBoxVisual breakable = view.GetComponent<BreakableBoxVisual>();
+            if (breakable != null)
+            {
+                breakable.Initialize(e.Id);
             }
 
             Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
