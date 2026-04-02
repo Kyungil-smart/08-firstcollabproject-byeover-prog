@@ -63,7 +63,6 @@ namespace MyGame2.Stage
             // 엔티티 복원 (원본 참조 유지 방식)
 
             // 현재만 있고 스냅샷에 없는 엔티티 제거
-            //    (턴 중 동적 스폰된 추격자 등)
             List<int> toRemove = null;
             foreach (var kvp in _entitiesById)
             {
@@ -163,6 +162,7 @@ namespace MyGame2.Stage
                     case EntityKind.DoorEntity:
                     case EntityKind.LeverEntity:
                     case EntityKind.ButtonEntity:
+                    case EntityKind.FireTrap:
                         break;
                 }
             }
@@ -359,7 +359,7 @@ namespace MyGame2.Stage
             return bestPos;
         }
 
-        // 셀 페어 (스위치↔문 등)
+        // 셀 페어 (스위치<->문 등)
         public void SetCellPair(GridPos a, GridPos b)
         {
             _cellPairs[a] = b;
@@ -682,6 +682,7 @@ namespace MyGame2.Stage
                     case EntityKind.DoorEntity:
                     case EntityKind.LeverEntity:
                     case EntityKind.ButtonEntity:
+                    case EntityKind.FireTrap:
                         break;
             }
             return entity.Id;
