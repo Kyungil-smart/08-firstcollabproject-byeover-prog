@@ -72,11 +72,15 @@ namespace MyGame2.Stage
             if (!state.TryGetEntity(boxId, out EntityState box)) return false;
 
             if (!pusher.IsPlayer) return false;
-            if (box.Get<BoxData>().Ownership != BoxType.Breakable) return false;
+            if (!box.Has<BreakableData>()) return false;
 
             GridPos dest = box.Position.Move(direction);
-            bool isBlocked = !state.IsInside(dest) || state.GetCell(dest).HasWall || state.GetCell(dest).IsOccupied;
+            bool isBlocked = !state.IsInside(dest)
+                || state.GetCell(dest).HasWall
+                || state.GetCell(dest).IsClosedDoor
+                || state.GetCell(dest).IsOccupied;
 
+            Debug.Log($"[PushRule] ShouldBreak: boxId={boxId}, dest={dest}, isBlocked={isBlocked}");
             return isBlocked;
         }
 
@@ -99,8 +103,8 @@ namespace MyGame2.Stage
             if (cell.HasWall || cell.IsClosedDoor || cell.IsOccupied) return false;
 
             // 부서지는 상자 또는 얼음 상자만 파괴 가능
+            if (box.Has<BreakableData>()) return true;
             BoxData boxData = box.Get<BoxData>();
-            if (boxData.Ownership == BoxType.Breakable) return true;
             if (boxData.Ownership == BoxType.Ice) return true;
 
             return false;
@@ -119,8 +123,24 @@ namespace MyGame2.Stage
             {
                 Direction sawFacing = state.GetSawTrapFacingAt(dest);
                 state.Events?.RaiseIceBoxSawDestroyed(boxId, dest, sawFacing);
+                state.RemoveEntity(boxId);
+                state.SetViewDirty();
+                return;
             }
 
+            // 부서지는 상자면 IsBreaking 플래그 -> BreakableBoxManager가 애니메이션 처리
+            if (box.Has<BreakableData>())
+            {
+                BreakableData bd = box.Get<BreakableData>();
+                bd.IsBreaking = true;
+                box.Set(bd);
+                box.IsAlive = false;
+                box.IsBlocking = false;
+                state.SetViewDirty();
+                return;
+            }
+
+            // 그 외 -> 즉시 제거
             state.RemoveEntity(boxId);
             state.SetViewDirty();
         }
@@ -128,11 +148,20 @@ namespace MyGame2.Stage
         // 부숴지는 상자를 파괴
         public void ExecuteBreak(StageState state, int boxId)
         {
-            if (state.TryGetEntity(boxId, out EntityState box))
+            if (!state.TryGetEntity(boxId, out EntityState box)) return;
+
+            // BreakableBoxManager가 감지할 수 있도록 IsBreaking 플래그 설정
+            if (box.Has<BreakableData>())
             {
-                box.IsAlive = false;
-                Debug.Log($"[PushRule] 부숴지는 상자 파괴: {boxId}");
+                BreakableData bd = box.Get<BreakableData>();
+                bd.IsBreaking = true;
+                box.Set(bd);
             }
+
+            box.IsAlive = false;
+            box.IsBlocking = false;
+            state.SetViewDirty();
+            Debug.Log($"[PushRule] ExecuteBreak 완료: boxId={boxId}, IsBreaking=true");
         }
     }
 }

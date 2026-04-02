@@ -453,3 +453,59 @@ MonoBehaviour:
     entityConfig: {fileID: 11400000, guid: cd42e0f781c704f44b8637b8bfd14f9f, type: 2}
     facing: 0
     pairGroup: 0
+  - symbol: 105
+    description: "\uD788\uB4E0\uD568\uC8151"
+    cellFlags: 2048
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2659d1d1eade0064198f4757ded5d122, type: 2}
+    facing: 0
+    pairGroup: 9
+  - symbol: 106
+    description: "\uD788\uB4E0\uD568\uC8152"
+    cellFlags: 2048
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2659d1d1eade0064198f4757ded5d122, type: 2}
+    facing: 0
+    pairGroup: 10
+  - symbol: 107
+    description: "\uD788\uB4E0\uD568\uC8153"
+    cellFlags: 2048
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2659d1d1eade0064198f4757ded5d122, type: 2}
+    facing: 0
+    pairGroup: 11
+  - symbol: 108
+    description: "\uD788\uB4E0\uD568\uC8154"
+    cellFlags: 2048
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2659d1d1eade0064198f4757ded5d122, type: 2}
+    facing: 0
+    pairGroup: 12
+  - symbol: 41
+    description: "\uB808\uBC845"
+    cellFlags: 768
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: b24182348c800cb439e5244cf9de8b56, type: 2}
+    facing: 0
+    pairGroup: 9
+  - symbol: 47
+    description: "\uB808\uBC846"
+    cellFlags: 768
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: b24182348c800cb439e5244cf9de8b56, type: 2}
+    facing: 0
+    pairGroup: 10
+  - symbol: 61
+    description: "\uBC84\uD2BC5"
+    cellFlags: 256
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 1bfe51277bdf6534e833d56f64e7b3ed, type: 2}
+    facing: 0
+    pairGroup: 11
+  - symbol: 43
+    description: "\uBC84\uD2BC6"
+    cellFlags: 256
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 1bfe51277bdf6534e833d56f64e7b3ed, type: 2}
+    facing: 0
+    pairGroup: 12

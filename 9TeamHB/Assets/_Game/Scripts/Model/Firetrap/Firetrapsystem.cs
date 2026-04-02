@@ -7,7 +7,7 @@ namespace MyGame2.Stage
     // 불 함정 시스템: 주기적으로 불을 발사하여 범위 내 엔티티에 피해.
     // 부서지는 상자, 얼음 상자 -> 파괴
     // 플레이어 -> 즉사 (게임오버)
-    // 일반 상자, P1 상자, 철 상자 ->불을 차단 (뒤쪽은 안전)
+    // 일반 상자, P1 상자, 철 상자 -> 불을 차단 (뒤쪽은 안전)
     // 벽 -> 차단
 
     public sealed class FireTrapSystem : MonoBehaviour
@@ -200,22 +200,19 @@ namespace MyGame2.Stage
 
             for (int i = 0; i < trap.Range; i++)
             {
-                // 첫 번째 셀은 발사대 본체 위치
                 if (i > 0)
                     current = current.Move(trap.Facing);
 
-                // 맵 밖이면 중단
                 if (!state.IsInside(current)) break;
 
-                // 벽이면 중단
                 CellData cell = state.GetCell(current);
                 if (cell.HasWall) break;
 
-                cells.Add(current);
-
-                // 차단 오브젝트 체크 (발사대 본체 위치는 스킵)
+                // 차단 오브젝트가 있으면 이 셀부터 불 표시 안 함
                 if (i > 0 && HasFireBlocker(state, current))
                     break;
+
+                cells.Add(current);
             }
 
             return cells;
@@ -233,7 +230,7 @@ namespace MyGame2.Stage
                 if (e.IsBox && e.Has<BoxData>() && !e.Has<BreakableData>())
                 {
                     BoxType bt = e.Get<BoxData>().Ownership;
-                    // 일반(Shared), P1전용, 철 상자 → 차단
+                    // 일반(Shared), P1전용, 철 상자 -> 차단
                     if (bt == BoxType.Shared || bt == BoxType.Player1Only || bt == BoxType.Iron)
                         return true;
                 }
@@ -260,7 +257,7 @@ namespace MyGame2.Stage
                     if (!e.IsAlive) continue;
                     if (e.Position.X != pos.X || e.Position.Y != pos.Y) continue;
 
-                    // 플레이어 → 즉사
+                    // 플레이어 -> 즉사
                     if (e.IsPlayer)
                     {
                         state.KillEntity(e.Id);
@@ -269,7 +266,7 @@ namespace MyGame2.Stage
                         continue;
                     }
 
-                    // 부서지는 상자 / 얼음 상자 → 파괴
+                    // 부서지는 상자 / 얼음 상자 -> 파괴
                     if (e.IsBox && e.Has<BoxData>())
                     {
                         BoxType bt = e.Get<BoxData>().Ownership;

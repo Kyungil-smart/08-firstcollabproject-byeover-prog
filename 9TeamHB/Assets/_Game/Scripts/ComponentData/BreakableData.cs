@@ -5,15 +5,14 @@ using MyGame2.Stage;
 
 public struct BreakableData : IComponentData
 {
-    // 활성화된 캐릭터가 직접 밀 때만 파괴 가능
     public bool OnlyByActivePlayer;
-
-    // 현재 막힌 상태인지 (다음 Push 시 파괴 판정용)
     public bool IsBlocked;
+    public bool IsBreaking;  // 파괴 애니메이션 트리거 (TurnSystem이 설정)
 
     public BreakableData(bool onlyByActivePlayer)
     {
         OnlyByActivePlayer = onlyByActivePlayer;
         IsBlocked = false;
+        IsBreaking = false;
     }
 }
