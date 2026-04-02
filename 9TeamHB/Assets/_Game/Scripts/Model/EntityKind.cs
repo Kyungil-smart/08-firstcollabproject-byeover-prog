@@ -15,7 +15,10 @@ namespace MyGame2.Stage
         Bush = 10,              // 부쉬 엔티티 오브젝트
         ProjectileLauncher = 11,  // 투사체 발사기 (벽 타일, 4방향)
         Projectile = 12,          // 투사체 (실시간 이동, 접촉 즉사/파괴)
-        SawTrapEnemy = 13         // 바닥형 함정 02 (톱날, 1×2 / 1×5)
+        SawTrapEnemy = 13,        // 바닥형 함정 02 (톱날, 1×2 / 1×5)
+        DoorEntity = 14,          // 문 (프리팹 + 애니메이션 + 4방향)
+        LeverEntity = 15,         // 레버 (프리팹 + 활성화 애니메이션)
+        ButtonEntity = 16         // 버튼 (프리팹 + 밟기 애니메이션)
     }
 
     public enum BoxType

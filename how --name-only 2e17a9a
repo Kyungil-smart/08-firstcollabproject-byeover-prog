@@ -1,0 +1,158 @@
+=== cdef9cd Resolve Merge Conflict ===
+=== f2ed512 1x2함정/1x5함정 구현 후 상자 부서지는 시스템 구현중 ===
+9TeamHB/Assets/BreakableBox.meta
+9TeamHB/Assets/BreakableBox/Animation.meta
+9TeamHB/Assets/BreakableBox/Animation/AM BrokenBox.anim
+9TeamHB/Assets/BreakableBox/Animation/AM BrokenBox.anim.meta
+9TeamHB/Assets/BreakableBox/Animation/breakable_box_sprite_0.controller
+9TeamHB/Assets/BreakableBox/Animation/breakable_box_sprite_0.controller.meta
+9TeamHB/Assets/BreakableBox/Prefab.meta
+9TeamHB/Assets/BreakableBox/Prefab/BreakableBox.prefab
+9TeamHB/Assets/BreakableBox/Prefab/BreakableBox.prefab.meta
+9TeamHB/Assets/BreakableBox/Texture.meta
+9TeamHB/Assets/BreakableBox/Texture/breakable_box_sprite.png
+9TeamHB/Assets/BreakableBox/Texture/breakable_box_sprite.png.meta
+9TeamHB/Assets/_Game/Data/MapSymbolRegistry.asset
+9TeamHB/Assets/_Game/Data/Stage/stage_Test.txt
+9TeamHB/Assets/_Game/Prefabs/PF_Tile/1x2Trap.prefab
+9TeamHB/Assets/_Game/Prefabs/PF_Tile/1x2Trap.prefab.meta
+9TeamHB/Assets/_Game/Prefabs/PF_Tile/1x5Trap.prefab
+9TeamHB/Assets/_Game/Prefabs/PF_Tile/1x5Trap.prefab.meta
+9TeamHB/Assets/_Game/SO/Entity/1x2Trap.asset
+9TeamHB/Assets/_Game/SO/Entity/1x2Trap.asset.meta
+9TeamHB/Assets/_Game/SO/Entity/1x5Trap.asset
+9TeamHB/Assets/_Game/SO/Entity/1x5Trap.asset.meta
+9TeamHB/Assets/_Game/SO/EntityFunction/1x2Trap_Cmp.asset
+9TeamHB/Assets/_Game/SO/EntityFunction/1x2Trap_Cmp.asset.meta
+9TeamHB/Assets/_Game/SO/EntityFunction/1x5Trap_Cmp.asset
+9TeamHB/Assets/_Game/SO/EntityFunction/1x5Trap_Cmp.asset.meta
+9TeamHB/Assets/_Game/Scripts/Core/TurnSystem.cs
+9TeamHB/Assets/_Game/Scripts/Grid/CellData.cs
+9TeamHB/Assets/_Game/Scripts/Grid/CellFlags.cs
+9TeamHB/Assets/_Game/Scripts/Model/EntityKind.cs
+9TeamHB/Assets/_Game/Scripts/Model/Entity_Component/Sawtrapdata.cs
+9TeamHB/Assets/_Game/Scripts/Model/Entity_Component/Sawtrapdata.cs.meta
+9TeamHB/Assets/_Game/Scripts/Model/Entity_SO/Sawtrapcmp.cs
+9TeamHB/Assets/_Game/Scripts/Model/Entity_SO/Sawtrapcmp.cs.meta
+9TeamHB/Assets/_Game/Scripts/Model/StageState.cs
+
+=== 37696f2 Fix Timing of Snapshot ===
+9TeamHB/Assets/_Game/Scripts/Core/StageManager.cs
+
+=== 47c212c 1x2/1x5 함정 작업중 ===
+9TeamHB/Assets/Scenes/Game_Scenes.unity
+9TeamHB/Assets/_Game/Data/MapSymbolRegistry.asset
+9TeamHB/Assets/_Game/Data/Stage/stage_Test.txt
+9TeamHB/Assets/_Game/Scripts/Core/StageEvents.cs
+9TeamHB/Assets/_Game/Scripts/Core/StageManager.cs
+9TeamHB/Assets/_Game/Scripts/Core/TurnSystem.cs
+9TeamHB/Assets/_Game/Scripts/Grid/CellData.cs
+9TeamHB/Assets/_Game/Scripts/Grid/CellFlags.cs
+9TeamHB/Assets/_Game/Scripts/Model/EntityKind.cs
+9TeamHB/Assets/_Game/Scripts/Model/Iceslideprocessor.cs
+9TeamHB/Assets/_Game/Scripts/Model/StageState.cs
+9TeamHB/Assets/_Game/Scripts/Rules/MovementRule.cs
+9TeamHB/Assets/_Game/Scripts/Rules/Pushrule.cs
+9TeamHB/Assets/_Recovery.meta
+
+=== 296f746 Merge pull request #29 from Kyungil-smart/JSW3 ===
+=== 3f97cef Merge branch 'Develop' into JSW3 ===
+=== c86ee32 바닥 함정/히든 함정 구현 완료 ===
+9TeamHB/Assets/_Game/Data/MapSymbolRegistry.asset
+9TeamHB/Assets/_Game/Data/Stage/stage_Test.txt
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Launcher.prefab
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Launcher.prefab.meta
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Projectile.prefab
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Projectile.prefab.meta
+9TeamHB/Assets/_Game/SO/Entity/Projectile.asset
+9TeamHB/Assets/_Game/SO/Entity/Projectile.asset.meta
+9TeamHB/Assets/_Game/SO/Entity/ProjectileLauncer.asset
+9TeamHB/Assets/_Game/SO/Entity/ProjectileLauncer.asset.meta
+9TeamHB/Assets/_Game/SO/EntityFunction/ProjectileLauncherMove_Fn.asset
+9TeamHB/Assets/_Game/SO/EntityFunction/ProjectileLauncherMove_Fn.asset.meta
+9TeamHB/Assets/_Game/SO/EntityFunction/ProjectileMove_Fn.asset
+9TeamHB/Assets/_Game/SO/EntityFunction/ProjectileMove_Fn.asset.meta
+9TeamHB/Assets/_Game/Scripts/CS_Enemies/Summonerenemymovecomponent.cs
+9TeamHB/Assets/_Game/Scripts/Model/EntityKind.cs
+9TeamHB/Assets/_Game/Scripts/Model/Projectile.meta
+9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilelaunchermove fn.cs
+9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilelaunchermove fn.cs.meta
+9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilelaunchermovecomponent.cs
+9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilelaunchermovecomponent.cs.meta
+"9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilemove fn \302\267.cs"
+"9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilemove fn \302\267.cs.meta"
+9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilemovecomponent.cs
+9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilemovecomponent.cs.meta
+9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilespeedregistry.cs
+9TeamHB/Assets/_Game/Scripts/Model/Projectile/Projectilespeedregistry.cs.meta
+9TeamHB/Assets/_Game/Scripts/Model/StageState.cs
+
+=== 49ab302 Merge pull request #28 from Kyungil-smart/UI_JHJ ===
+=== 1495efd Merge branch 'Develop' into UI_JHJ ===
+=== f34cc4a [Create] 부숴지는 상자 ===
+9TeamHB/Assets/Scenes/Game_Scenes.unity
+9TeamHB/Assets/Scenes/Test_Scene.unity
+9TeamHB/Assets/_Game/Prefabs/PF_Box/Box_Breakable.prefab
+9TeamHB/Assets/_Game/Prefabs/PF_Box/Box_Breakable.prefab.meta
+9TeamHB/Assets/_Game/Scripts/Model/EntityKind.cs
+9TeamHB/Assets/_Game/Scripts/Model/Entity_Component/BoxData.cs
+9TeamHB/Assets/_Game/Scripts/Rules/MovementRule.cs
+9TeamHB/Assets/_Game/Scripts/Rules/Pushrule.cs
+9TeamHB/Assets/_Game/Scripts/View/StagePrefabRegistry.cs
+
+=== c66cd7f Merge pull request #21 from Kyungil-smart/JJH ===
+=== 83d9752 20260331/17:52 ===
+9TeamHB/Assets/Scenes/Game_Scenes.unity
+9TeamHB/Assets/_Game/Data/MapSymbolRegistry.asset
+9TeamHB/Assets/_Game/Data/Stage/stage_Test.txt
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Animal_Chase.prefab
+9TeamHB/Assets/_Game/SO/Entity/Enemy_B.asset
+9TeamHB/Assets/_Game/SO/Entity/Enemy_Chaser.asset
+9TeamHB/Assets/_Game/SO/EntityFunction/AnimalEnemyMove_Fn.asset
+9TeamHB/Assets/_Game/SO/EntityFunction/ChaserEnemyMove_Fn.asset
+9TeamHB/Assets/_Game/SO/EntityFunction/ChaserEnemyMove_Fn.asset.meta
+9TeamHB/Assets/_Game/SO/EntityFunction/SummonerEnemyMove_Fn.asset
+9TeamHB/Assets/_Game/Scripts/CS_Enemies/Chaserenemymovecomponent.cs
+9TeamHB/Assets/_Game/Scripts/CS_Enemies/Chasertargetregistry.cs
+9TeamHB/Assets/_Game/Scripts/CS_Enemies/Chasertargetregistry.cs.meta
+9TeamHB/Assets/_Game/Scripts/CS_Enemies/Summonerenemymovecomponent.cs
+9TeamHB/Assets/_Game/Scripts/Core/StageEvents.cs
+9TeamHB/Assets/_Game/Scripts/Core/TurnSystem.cs
+9TeamHB/Assets/_Game/Scripts/Grid/CellData.cs
+9TeamHB/Assets/_Game/Scripts/Grid/CellFlags.cs
+9TeamHB/Assets/_Game/Scripts/Model/Entity_SO/EntityFunctionSO/Chaserenemymove fn.cs
+9TeamHB/Assets/_Game/Scripts/Model/StageState.cs
+9TeamHB/Assets/_Game/Scripts/View/Chaservieweffect.cs
+9TeamHB/Assets/_Game/Scripts/View/Chaservieweffect.cs.meta
+9TeamHB/Assets/_Game/Scripts/View/Hiddentrapvisualmanager.cs
+9TeamHB/Assets/_Game/Scripts/View/Hiddentrapvisualmanager.cs.meta
+9TeamHB/Assets/_Recovery/0 (1).unity
+9TeamHB/Assets/_Recovery/0 (1).unity.meta
+
+=== bbfed72 Merge pull request #27 from Kyungil-smart/KSH ===
+=== 6cf5978 밀기 룰 관련 예외처리 추가 ===
+9TeamHB/Assets/_Game/Scripts/Camera.meta
+9TeamHB/Assets/_Game/Scripts/Camera/CameraManager.cs
+9TeamHB/Assets/_Game/Scripts/Camera/CameraManager.cs.meta
+9TeamHB/Assets/_Game/Scripts/Rules/Pushrule.cs
+
+=== 9b99f40 시네머신 패키지 설치 ===
+9TeamHB/Packages/manifest.json
+9TeamHB/Packages/packages-lock.json
+
+=== 827a60d Merge pull request #26 from Kyungil-smart/KSH ===
+=== 4745706 열쇠 구현 ===
+9TeamHB/Assets/_Game/Data/MapSymbolRegistry.asset
+9TeamHB/Assets/_Game/Data/Stage/TestMap.txt
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Key.prefab
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Key.prefab.meta
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Key_Follower.prefab
+9TeamHB/Assets/_Game/Prefabs/PF_Entity/Key_Follower.prefab.meta
+9TeamHB/Assets/_Game/SO/Entity/Key.asset
+9TeamHB/Assets/_Game/SO/Entity/Key.asset.meta
+9TeamHB/Assets/_Game/SO/Entity/PlayerA.asset
+9TeamHB/Assets/_Game/SO/Entity/PlayerB.asset
+9TeamHB/Assets/_Game/SO/EntityCmp/Pickable.asset
+9TeamHB/Assets/_Game/SO/EntityCmp/Pickable.asset.meta
+9TeamHB/Assets/_Game/SO/EntityCmp/Pocket.asset
+9TeamH

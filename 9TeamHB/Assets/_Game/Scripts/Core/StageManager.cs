@@ -243,6 +243,13 @@ namespace MyGame2.Stage
                 sawVisual.BuildVisual(e.Get<SawTrapData>().Size, e.Facing);
             }
 
+            // 문/레버/버튼: 셀 상태 감시 초기화
+            InteractableTileVisual interactable = view.GetComponent<InteractableTileVisual>();
+            if (interactable != null)
+            {
+                interactable.Initialize(e.Id);
+            }
+
             Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
             _views[e.Id] = view;
         }

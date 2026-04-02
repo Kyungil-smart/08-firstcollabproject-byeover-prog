@@ -20,7 +20,7 @@ namespace MyGame2.Stage
         private void Update()
         {
             if (stageManager == null || stageManager.CurrentState == null) return;
-            if (stageManager.CurrentState.IsGameOver || stageManager.CurrentState.IsStageClear) return;
+            if (stageManager.CurrentState.IsUpdatable()) return;
 
             StageState state = stageManager.CurrentState;
 
