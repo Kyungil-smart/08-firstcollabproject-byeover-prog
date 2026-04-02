@@ -16,6 +16,10 @@ namespace MyGame2.Stage
         private readonly List<int> _projectileIds;
         private readonly List<int> _sawTrapIds;
 
+        //현재 Player가 갖고 있는 key 정보
+        private Dictionary<int, List<KeyFollower>> _keysDict = new Dictionary<int, List<KeyFollower>>();
+        public Dictionary<int, List<KeyFollower>> KeysDict { get { return _keysDict; } }
+
         public CellData[] Cells { get { return _cells; } }
         public int ActivePlayerId { get; private set; }
         public int TurnIndex { get; private set; }
@@ -58,7 +62,18 @@ namespace MyGame2.Stage
             foreach (KeyValuePair<int, EntityState> elem in state.EntityDict)
             {
                 _entitiesById[elem.Key] = elem.Value.CopyFrom();
+                if (elem.Value.Has<PocketData>() == true)
+                {
+                    PocketData pocketData = elem.Value.Get<PocketData>();
+
+                    List<KeyFollower> keys = new List<KeyFollower>();
+                    keys.AddRange(pocketData.Keys);
+                    _keysDict.Add(elem.Key, keys);
+
+                    UnityEngine.Debug.Log($"PlayerID : {elem.Key}, Keys Num : {keys.Count}");
+                }
             }
+
         }
     }
 }

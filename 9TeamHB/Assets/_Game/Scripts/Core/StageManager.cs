@@ -74,7 +74,6 @@ namespace MyGame2.Stage
                     _nextUndoTime = Time.time + undoRepeatInterval;
                     CurrentState.Restore(snapshotStack.Pop());
                     _events.RaiseUndoExecuted();
-                    Debug.Log($"Pop SnapshotStack, Stack Size : {snapshotStack.Count}");
                 }
             }
         }
