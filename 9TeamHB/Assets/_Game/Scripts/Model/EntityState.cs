@@ -101,7 +101,7 @@ namespace MyGame2.Stage
             return false;
         }
 
-        // EntitySO 기반 생성자 (런타임 표준)
+        // EntitySO 기반 생성자
         // SO의 Functions 리스트에 등록된 EntityFunctionSO들이
         // CreateComponent()를 통해 자동으로 컴포넌트를 부착한다.
 
@@ -228,7 +228,8 @@ namespace MyGame2.Stage
                 Facing = this.Facing,
                 IsAlive = this.IsAlive,
                 IsBlocking = this.IsBlocking,
-                BlocksCameraSight = this.BlocksCameraSight
+                BlocksCameraSight = this.BlocksCameraSight,
+                Definition = this.Definition   // SO 참조 복원 (View 생성에 필수)
             };
 
             foreach (KeyValuePair<Type, IComponentData> elem in _components)
@@ -237,6 +238,19 @@ namespace MyGame2.Stage
             }
 
             return copy;
+        }
+        
+        // 스냅샷 복사본의 데이터를 이 엔티티에 덮어쓴다.
+        // _components와 Definition은 건드리지 않아 IUpdate 컴포넌트의 참조가 유지된다.
+        
+        public void RestoreFrom(EntityState source)
+        {
+            Position = source.Position;
+            SpawnPosition = source.SpawnPosition;
+            Facing = source.Facing;
+            IsAlive = source.IsAlive;
+            IsBlocking = source.IsBlocking;
+            BlocksCameraSight = source.BlocksCameraSight;
         }
     }
 }

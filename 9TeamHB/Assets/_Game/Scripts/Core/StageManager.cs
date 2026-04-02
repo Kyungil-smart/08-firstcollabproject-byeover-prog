@@ -170,8 +170,6 @@ namespace MyGame2.Stage
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
-            StageSnapshot snapshot = new StageSnapshot(CurrentState);
-
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -184,7 +182,9 @@ namespace MyGame2.Stage
 
             if (outcome.Executed)
             {
+                StageSnapshot snapshot = new StageSnapshot(CurrentState);
                 snapshotStack.Push(snapshot);
+
                 Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
             }
 
@@ -241,6 +241,13 @@ namespace MyGame2.Stage
             if (sawVisual != null && e.Has<SawTrapData>())
             {
                 sawVisual.BuildVisual(e.Get<SawTrapData>().Size, e.Facing);
+            }
+
+            // 문/레버/버튼: 셀 상태 감시 초기화
+            InteractableTileVisual interactable = view.GetComponent<InteractableTileVisual>();
+            if (interactable != null)
+            {
+                interactable.Initialize(e.Id);
             }
 
             Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
