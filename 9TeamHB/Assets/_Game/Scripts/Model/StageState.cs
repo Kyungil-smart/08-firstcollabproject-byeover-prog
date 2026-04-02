@@ -92,7 +92,7 @@ namespace MyGame2.Stage
                     if (existing.Has<PocketData>() == true)
                     {
                         PocketData pocketData = existing.Get<PocketData>();
-                        pocketData.Keys.Clear();
+                        pocketData.ClearKeyFollowers();
                         pocketData.Keys.AddRange(snapshot.KeysDict[kvp.Key]);
                         Debug.Log($"Player ID : {kvp.Key}, Restored Keys Num : {pocketData.Keys.Count}");
                     }
