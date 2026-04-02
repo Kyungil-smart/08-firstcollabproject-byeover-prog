@@ -70,7 +70,7 @@ public class AnimalEnemyMoveComponent : IComponentData, IUpdate, IDisposable
 
         if (_currentState == EnemyAIState.Alert || _currentState == EnemyAIState.Chase)
         {
-            _eventChannel.OnAlertAndChaseRaised();
+            _eventChannel.OnAlertAndChaseRaised(_detectedPlayerId);
         }
     }
 

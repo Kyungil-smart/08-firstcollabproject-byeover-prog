@@ -80,7 +80,7 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         }
         if (_currentState == EnemyAIState.Alert || _currentState == EnemyAIState.Chase)
         {
-            _eventChannel.OnAlertAndChaseRaised();
+            _eventChannel.OnAlertAndChaseRaised(_alertTargetPlayerId);
         }
     }
 

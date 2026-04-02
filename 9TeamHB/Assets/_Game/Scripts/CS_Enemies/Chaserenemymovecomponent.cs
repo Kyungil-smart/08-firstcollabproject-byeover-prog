@@ -102,7 +102,7 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
 
         if (_currentState == EnemyAIState.Chase)
         {
-            _eventChannel.OnAlertAndChaseRaised();
+            _eventChannel.OnAlertAndChaseRaised(_targetPlayerId);
         }
     }
 
