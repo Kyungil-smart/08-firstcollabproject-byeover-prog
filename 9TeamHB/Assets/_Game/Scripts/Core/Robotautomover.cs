@@ -178,7 +178,7 @@ namespace MyGame2.Stage
         private bool IsActive()
         {
             if (stageManager == null || stageManager.CurrentState == null) return false;
-            if (stageManager.CurrentState.IsGameOver || stageManager.CurrentState.IsStageClear) return false;
+            if (stageManager.CurrentState.IsUpdatable()) return false;
             if (gameManager != null && gameManager.CurrentState != GameFlowState.Playing) return false;
             return stageManager.CurrentState.RobotIds.Count > 0;
         }
