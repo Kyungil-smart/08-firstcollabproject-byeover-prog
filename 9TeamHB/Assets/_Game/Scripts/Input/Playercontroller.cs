@@ -26,20 +26,23 @@ namespace MyGame2.Stage
         [Header("입력 설정")]
         [Tooltip("이동 반복 간격 (초)")]
         [SerializeField] private float moveRepeatInterval = 0.2f;
-        
+
         // InputAction 정의
-        
         private InputAction _moveUpAction;
         private InputAction _moveLeftAction;
         private InputAction _moveDownAction;
         private InputAction _moveRightAction;
         private InputAction _tagSwitchAction;
-        
+
+        private InputAction _undoAction;
+
         // 입력 추적 상태
-        
+
         private readonly Dictionary<Direction, float> _pressedAt = new Dictionary<Direction, float>(4);
         private Direction _lockedDirection = Direction.None;
         private float _nextMoveTime;
+
+        private bool _isUndoHeld;
 
         private void Awake()
         {
@@ -75,6 +78,11 @@ namespace MyGame2.Stage
                 return;
             }
 
+            if (stageManager.CurrentState.IsUndoProcessing)
+            {
+                return;
+            }
+
             // 잠긴 방향의 키가 떼어졌으면 잠금 해제
             if (_lockedDirection != Direction.None && !_pressedAt.ContainsKey(_lockedDirection))
             {
@@ -83,7 +91,7 @@ namespace MyGame2.Stage
 
             HandleMoveInput();
         }
-     
+
         private void CreateInputActions()
         {
             _moveUpAction = new InputAction("MoveUp", InputActionType.Button,
@@ -96,6 +104,9 @@ namespace MyGame2.Stage
                 "<Keyboard>/d");
             _tagSwitchAction = new InputAction("TagSwitch", InputActionType.Button,
                 "<Keyboard>/tab");
+
+            _undoAction = new InputAction("Undo", InputActionType.Button,
+                "<Keyboard>/space");
         }
 
         private void EnableInputActions()
@@ -105,6 +116,7 @@ namespace MyGame2.Stage
             _moveDownAction.Enable();
             _moveRightAction.Enable();
             _tagSwitchAction.Enable();
+            _undoAction.Enable();
         }
 
         private void DisableInputActions()
@@ -114,6 +126,7 @@ namespace MyGame2.Stage
             _moveDownAction.Disable();
             _moveRightAction.Disable();
             _tagSwitchAction.Disable();
+            _undoAction.Disable();
         }
 
         private void DisposeInputActions()
@@ -123,8 +136,9 @@ namespace MyGame2.Stage
             _moveDownAction?.Dispose();
             _moveRightAction?.Dispose();
             _tagSwitchAction?.Dispose();
+            _undoAction?.Dispose();
         }
-        
+
         // 콜백 구독 / 해제
 
         private void SubscribeInputCallbacks()
@@ -142,6 +156,9 @@ namespace MyGame2.Stage
             _moveRightAction.canceled += OnMoveRightCanceled;
 
             _tagSwitchAction.started += OnTagSwitchStarted;
+
+            _undoAction.started += OnUndoStarted;
+            _undoAction.canceled += OnUndoCanceled;
         }
 
         private void UnsubscribeInputCallbacks()
@@ -159,8 +176,11 @@ namespace MyGame2.Stage
             _moveRightAction.canceled -= OnMoveRightCanceled;
 
             _tagSwitchAction.started -= OnTagSwitchStarted;
+
+            _undoAction.started -= OnUndoStarted;
+            _undoAction.canceled -= OnUndoCanceled;
         }
-        
+
         // InputAction 콜백 (키 누름 / 뗌 추적)
 
         private void OnMoveUpStarted(InputAction.CallbackContext ctx)
@@ -222,7 +242,41 @@ namespace MyGame2.Stage
                 _nextMoveTime = 0f;
             }
         }
-        
+
+        private void OnUndoStarted(InputAction.CallbackContext ctx)
+        {
+            Debug.Log($"Undo Key Pressed, isUndoHeld : {_isUndoHeld}");
+
+            if (!IsPlayable())
+            {
+                return;
+            }
+
+            if (!_isUndoHeld)
+            {
+                _isUndoHeld = true;
+                bool enterUndoResult = stageManager.TryEnterUndo();
+
+                Debug.Log($"Enter Undo Result : {enterUndoResult}");
+            }
+        }
+
+        private void OnUndoCanceled(InputAction.CallbackContext ctx)
+        {
+            Debug.Log($"Undo Key Released, isUndoHeld : {_isUndoHeld}");
+
+            if (stageManager.CurrentState.IsUndoProcessing)
+            {
+                stageManager.LeaveUndo();
+                Debug.Log("Leave Undo");
+            }
+
+            if (_isUndoHeld)
+            {
+                _isUndoHeld = false;
+            }
+        }
+
         private bool IsPlayable()
         {
             // 워프 연출 중에는 입력 차단
@@ -271,9 +325,9 @@ namespace MyGame2.Stage
                 _lockedDirection = Direction.None;
             }
         }
-        
+
         // 방향 선택 (최근 입력 우선, 동률 시 W>A>S>D)
-        
+
         private Direction PickDirection()
         {
             if (_pressedAt.Count == 0)
@@ -308,11 +362,11 @@ namespace MyGame2.Stage
         {
             switch (direction)
             {
-                case Direction.Up:    return 0;
-                case Direction.Left:  return 1;
-                case Direction.Down:  return 2;
+                case Direction.Up: return 0;
+                case Direction.Left: return 1;
+                case Direction.Down: return 2;
                 case Direction.Right: return 3;
-                default:              return 99;
+                default: return 99;
             }
         }
     }

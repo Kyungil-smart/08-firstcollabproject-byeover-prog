@@ -14,6 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SummonerEnemyMove_Fn
   moveInterval: 0.2
   alertDuration: 0.5
-  chaserDefinition: {fileID: 0}
-  stageStateReference: {fileID: 0}
-  onUpdateEvent: {fileID: 0}
+  patrolRadius: 3
+  chaserDefinition: {fileID: 11400000, guid: fe699ce4ae355834f8a230066d5037ea, type: 2}
+  stageStateReference: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511,
+    type: 2}
+  onUpdateEvent: {fileID: 11400000, guid: 0ddfe81bad0c68148a65346f1f702aa1, type: 2}

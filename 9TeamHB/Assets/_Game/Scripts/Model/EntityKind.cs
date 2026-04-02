@@ -12,21 +12,23 @@ namespace MyGame2.Stage
         SummonerEnemy = 7,      // 새 감시자B (적발 시 추격자 소환, 본체 피격 판정 없음)
         ChaserEnemy = 8,        // 추격 감시자 (SummonerEnemy가 소환, A* 추격 후 소멸)
         Gap = 9,                // 틈새 타일 오브젝트
-        Bush = 10               // 부쉬 엔티티 오브젝트
+        Bush = 10,              // 부쉬 엔티티 오브젝트
+        ProjectileLauncher = 11,  // 투사체 발사기 (벽 타일, 4방향)
+        Projectile = 12,          // 투사체 (실시간 이동, 접촉 즉사/파괴)
+        SawTrapEnemy = 13,        // 바닥형 함정 02 (톱날, 1×2 / 1×5)
+        DoorEntity = 14,          // 문 (프리팹 + 애니메이션 + 4방향)
+        LeverEntity = 15,         // 레버 (프리팹 + 활성화 애니메이션)
+        ButtonEntity = 16         // 버튼 (프리팹 + 밟기 애니메이션)
     }
 
     public enum BoxType
     {
-        // 녹색 — 양쪽 다 밀기 가능
         Shared = 0,
-        // 노란색 — Player1만 밀기 가능
         Player1Only = 1,
-        // 주황색 — Player2만 밀기 가능
         Player2Only = 2,
-        // 빨간색 — 아무도 못 밂 (철 상자)
         Iron = 3,
-        // 파란색 — 밀면 벽이나 오브젝트에 닿을 때까지 미끄러짐
-        Ice = 4
+        Ice = 4,
+        Breakable = 5
     }
 
     public enum CameraType
@@ -35,7 +37,6 @@ namespace MyGame2.Stage
         LineLong = 1,
         PyramidSmall = 2,
         PyramidLarge = 3,
-        // 본인 위치 포함 3×3 고정형
         Fixed3x3 = 4
     }
 

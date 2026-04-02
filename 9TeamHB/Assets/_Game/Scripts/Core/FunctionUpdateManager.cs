@@ -8,8 +8,6 @@ namespace MyGame2.Stage
     {
         [SerializeField] private StageManager stageManager;
         [SerializeField] private GameManager gameManager;
-        // todo 스테이지 생성시 이전 구독을 안전하게 해제하고 엔티티들이 새로 구독하는 구조 필요
-        //  - StageEvent와 같은 시기에 하면 아마도 될거 같다. 혹은 엔티티 생성 전에 초기화
         [SerializeField] FloatEventChannelSO deltaTimeEvent;
 
         // IUpdate 이벤트를 구독하는 컴포넌트 목록 (이벤트 채널의 구독자 리스트)
@@ -32,7 +30,6 @@ namespace MyGame2.Stage
             _subscribers.Clear();
             StageState state = stageManager.CurrentState;
             if (state == null) return;
-            // ---
             
         }
 
@@ -57,6 +54,7 @@ namespace MyGame2.Stage
         {
             if (stageManager == null || stageManager.CurrentState == null) return false;
             if (stageManager.CurrentState.IsGameOver || stageManager.CurrentState.IsStageClear) return false;
+            if (stageManager.CurrentState.IsUndoProcessing) return false;
             if (gameManager != null && gameManager.CurrentState != GameFlowState.Playing) return false;
             return true;
         }
