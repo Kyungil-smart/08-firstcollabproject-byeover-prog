@@ -78,6 +78,10 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
                 UpdateAlert(state, dt);
                 break;
         }
+        if (_currentState == EnemyAIState.Alert || _currentState == EnemyAIState.Chase)
+        {
+            _eventChannel.OnAlertAndChaseRaised();
+        }
     }
 
     private void UpdatePatrol(StageState state, float dt)

@@ -1,15 +1,20 @@
+using System.Collections;
 using UnityEngine;
 using MyGame2.Stage;
 using Unity.Cinemachine;
 
 public class CameraManager : MonoBehaviour
 {
+    [Header("시네머신 관리")]
     [SerializeField] private StageManager stageManager;
+    [SerializeField] private CinemachineCamera vcamStart;
     [SerializeField] private CinemachineCamera vcamP1;
     [SerializeField] private CinemachineCamera vcamP2;
     [SerializeField] private CinemachineCamera vcamEvent;
     [SerializeField] private BoxCollider2D boundaryCollider;
-
+    [Header("경고 효과")]
+    [SerializeField] private RectTransform warningIcon;
+    [SerializeField] private FloatEventChannelSO eventHub;
 
     void OnEnable()
     {
@@ -17,6 +22,7 @@ public class CameraManager : MonoBehaviour
         stageManager.Events.StageLoaded += SetBoundary;
         stageManager.Events.ActivePlayerChanged += SwitchToPlayer;
         stageManager.Events.EntityKilled += FocusDeadPlayer;
+        eventHub.OnAlertAndChaseRaised += AlertToPlayer;
     }
 
     void OnDisable()
@@ -25,6 +31,7 @@ public class CameraManager : MonoBehaviour
         stageManager.Events.StageLoaded -= SetBoundary;
         stageManager.Events.ActivePlayerChanged -= SwitchToPlayer;
         stageManager.Events.EntityKilled -= FocusDeadPlayer;
+        eventHub.OnAlertAndChaseRaised -= AlertToPlayer;
     }
 
     private void SwitchToPlayer(int playerId)
@@ -43,14 +50,16 @@ public class CameraManager : MonoBehaviour
     {
         //Id로 Slot찾기
         StageState state = stageManager.CurrentState;
-        state.TryGetEntity(playerId, out EntityState player);
-        if (player.Has<PlayerData>())
+        if(state.TryGetEntity(playerId, out EntityState player))
         {
-            int playerNumber = player.Get<PlayerData>().Slot;
+            if (player.Has<PlayerData>())
+            {
+                int playerNumber = player.Get<PlayerData>().Slot;
             
-            // 활성 플래이어를 입력 받으면 카메라 우선 순위 변경
-            vcamP1.Priority = (playerNumber == 1) ? 20 : 10;
-            vcamP2.Priority = (playerNumber == 2) ? 20 : 10;
+                // 활성 플래이어를 입력 받으면 카메라 우선 순위 변경
+                vcamP1.Priority = (playerNumber == 1) ? 20 : 10;
+                vcamP2.Priority = (playerNumber == 2) ? 20 : 10;
+            }
         }
     }
     private void SetFollowTargets(int stageindex)
@@ -72,6 +81,8 @@ public class CameraManager : MonoBehaviour
         state.Events.RaiseViewRequest(request);
         
         // 카메라 우선도 - 최초 p1
+        // 처음만 컷 방식 이동
+        vcamStart.Priority = 0;
         vcamP1.Priority = 20;
         vcamP2.Priority = 10;
     }
@@ -108,7 +119,6 @@ public class CameraManager : MonoBehaviour
         if( camH < height ) camH = height;
         boundaryCollider.size = new Vector2(width, height);
         
-        
         // 컨파이너 캐시 업데이트
         var confiner = vcamP1.GetComponent<CinemachineConfiner2D>();
         confiner.InvalidateBoundingShapeCache();
@@ -116,17 +126,49 @@ public class CameraManager : MonoBehaviour
         confiner.InvalidateBoundingShapeCache();
     }
 
-    
-    
-    
-    
-    public bool IsPointVisible(Vector3 worldPos)
+    void AlertToPlayer()
     {
+        // Id 찾기
+        StageState state = stageManager.CurrentState;
+        int p1Id = state.GetPlayerIdBySlot(1);
+        int p2Id = state.GetPlayerIdBySlot(2);
+        int playerId;
+        playerId = (vcamP1.Priority == 20) ? p2Id : p1Id;
+        var request = new ViewRequest
+        {
+            Id = playerId,
+            Callback = v => PrintWarningIcon(v)
+        };
+        stageManager.CurrentState.Events.RaiseViewRequest(request);
+    }
+    private bool IsPointVisible(GridEntityView view)
+    {
+        Vector3 worldPos = view.transform.position;
+        
         // 월드 좌표를 뷰포트 좌표(0~1 사이)로 변환
         Vector3 viewPos = Camera.main.WorldToViewportPoint(worldPos);
     
         // 0~1 사이라면 화면 안
         return viewPos.x >= 0 && viewPos.x <= 1 && 
                viewPos.y >= 0 && viewPos.y <= 1 && viewPos.z > 0;
+    }
+
+    void PrintWarningIcon(GridEntityView view)
+    {
+        Vector3 viewPos = Camera.main.WorldToViewportPoint(view.transform.position);
+        if (IsPointVisible(view))
+        {
+            warningIcon.gameObject.SetActive(false);
+            return;
+        }
+        
+        warningIcon.gameObject.SetActive(true);
+        float x = Mathf.Clamp(viewPos.x, 0.05f, 0.95f);
+        float y = Mathf.Clamp(viewPos.y, 0.05f, 0.95f);
+        
+        warningIcon.anchorMin = warningIcon.anchorMax = new Vector2(x, y);
+            
+        
+        
     }
 }

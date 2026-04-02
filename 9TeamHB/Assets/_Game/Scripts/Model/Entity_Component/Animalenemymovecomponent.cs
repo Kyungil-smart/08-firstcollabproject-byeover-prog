@@ -67,6 +67,11 @@ public class AnimalEnemyMoveComponent : IComponentData, IUpdate, IDisposable
             case EnemyAIState.Lost:         UpdateLost(state, dt); break;
             case EnemyAIState.ReturnToZone: UpdateReturnToZone(state, dt); break;
         }
+
+        if (_currentState == EnemyAIState.Alert || _currentState == EnemyAIState.Chase)
+        {
+            _eventChannel.OnAlertAndChaseRaised();
+        }
     }
 
     private void UpdatePatrol(StageState state, float dt)
