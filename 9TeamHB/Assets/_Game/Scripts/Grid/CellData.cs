@@ -18,6 +18,20 @@ namespace MyGame2.Stage
             get { return (Flags & CellFlags.Wall) != 0; }
         }
 
+        public bool IsSide
+        {
+            get { return (Flags & CellFlags.SideWall) != 0; }
+        }
+
+        public bool IsExtraTile
+        {
+            get { return (HasExtra && !HasWall); }
+        }
+        public bool HasExtra
+        {
+            get { return (Flags & CellFlags.Extra) != 0; }
+        }
+
         // 골 지점인가?
         public bool HasGoal
         {
