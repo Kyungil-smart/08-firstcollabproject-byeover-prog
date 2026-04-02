@@ -106,10 +106,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e904a46383b92942b4ed02a9a565b1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.GridEntityView
-  rotateWithFacing: 1
+  rotateWithFacing: 0
   selectedMarker: {fileID: 0}
   slideSpeed: 12
   snapThreshold: 0.01
+  useDirectionAnim: 1
+  targetAnimator: {fileID: 5722729821283309178}
+  flipXOnLeft: 1
+  targetSpriteRenderer: {fileID: 6999098118098516013}
 --- !u!1 &6089652741347096152
 GameObject:
   m_ObjectHideFlags: 0
@@ -213,7 +217,7 @@ Animator:
   m_GameObject: {fileID: 6089652741347096152}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 9933dfe0e16c50d4a89595f7b5d4996f, type: 2}
+  m_Controller: {fileID: 9100000, guid: e5a94ba112c91bf4594adede304107d4, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

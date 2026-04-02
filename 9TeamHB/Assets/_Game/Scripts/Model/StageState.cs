@@ -89,6 +89,14 @@ namespace MyGame2.Stage
                     // 기존 엔티티에 데이터만 덮어쓰기
                     // IUpdate 컴포넌트의 _entityState 참조가 그대로 유효
                     existing.RestoreFrom(kvp.Value);
+
+                    if (existing.Has<PocketData>() == true)
+                    {
+                        PocketData pocketData = existing.Get<PocketData>();
+                        pocketData.ClearKeyFollowers();
+                        pocketData.Keys.AddRange(snapshot.KeysDict[kvp.Key]);
+                        Debug.Log($"Player ID : {kvp.Key}, Restored Keys Num : {pocketData.Keys.Count}");
+                    }
                 }
                 else
                 {
@@ -150,16 +158,16 @@ namespace MyGame2.Stage
                     case EntityKind.Player:
                         _playerIds.Add(e.Id);
                         break;
-                    case EntityKind.Box:                  _boxIds.Add(e.Id); break;
-                    case EntityKind.CameraEnemy:          _cameraIds.Add(e.Id); break;
-                    case EntityKind.RobotEnemy:           _robotIds.Add(e.Id); break;
-                    case EntityKind.AnimalEnemy:          _animalIds.Add(e.Id); break;
-                    case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Add(e.Id); break;
-                    case EntityKind.SummonerEnemy:        _summonerIds.Add(e.Id); break;
-                    case EntityKind.ChaserEnemy:          _chaserIds.Add(e.Id); break;
-                    case EntityKind.ProjectileLauncher:   _launcherIds.Add(e.Id); break;
-                    case EntityKind.Projectile:           _projectileIds.Add(e.Id); break;
-                    case EntityKind.SawTrapEnemy:         _sawTrapIds.Add(e.Id); break;
+                    case EntityKind.Box: _boxIds.Add(e.Id); break;
+                    case EntityKind.CameraEnemy: _cameraIds.Add(e.Id); break;
+                    case EntityKind.RobotEnemy: _robotIds.Add(e.Id); break;
+                    case EntityKind.AnimalEnemy: _animalIds.Add(e.Id); break;
+                    case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Add(e.Id); break;
+                    case EntityKind.SummonerEnemy: _summonerIds.Add(e.Id); break;
+                    case EntityKind.ChaserEnemy: _chaserIds.Add(e.Id); break;
+                    case EntityKind.ProjectileLauncher: _launcherIds.Add(e.Id); break;
+                    case EntityKind.Projectile: _projectileIds.Add(e.Id); break;
+                    case EntityKind.SawTrapEnemy: _sawTrapIds.Add(e.Id); break;
                     case EntityKind.DoorEntity:
                     case EntityKind.LeverEntity:
                     case EntityKind.ButtonEntity:
@@ -695,13 +703,13 @@ namespace MyGame2.Stage
 
             switch (entity.Kind)
             {
-                case EntityKind.Box:                  _boxIds.Remove(entityId); break;
-                case EntityKind.ChaserEnemy:          _chaserIds.Remove(entityId); break;
-                case EntityKind.SummonerEnemy:        _summonerIds.Remove(entityId); break;
-                case EntityKind.PatrolCameraEnemy:    _patrolCameraIds.Remove(entityId); break;
-                case EntityKind.ProjectileLauncher:   _launcherIds.Remove(entityId); break;
-                case EntityKind.Projectile:           _projectileIds.Remove(entityId); break;
-                case EntityKind.SawTrapEnemy:          _sawTrapIds.Remove(entityId); break;
+                case EntityKind.Box: _boxIds.Remove(entityId); break;
+                case EntityKind.ChaserEnemy: _chaserIds.Remove(entityId); break;
+                case EntityKind.SummonerEnemy: _summonerIds.Remove(entityId); break;
+                case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Remove(entityId); break;
+                case EntityKind.ProjectileLauncher: _launcherIds.Remove(entityId); break;
+                case EntityKind.Projectile: _projectileIds.Remove(entityId); break;
+                case EntityKind.SawTrapEnemy: _sawTrapIds.Remove(entityId); break;
             }
 
             _entitiesById.Remove(entityId);
