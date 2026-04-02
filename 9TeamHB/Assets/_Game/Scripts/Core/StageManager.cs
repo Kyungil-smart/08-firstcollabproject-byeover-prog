@@ -170,6 +170,8 @@ namespace MyGame2.Stage
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
+            StageSnapshot snapshot = new StageSnapshot(CurrentState);
+
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -182,7 +184,6 @@ namespace MyGame2.Stage
 
             if (outcome.Executed)
             {
-                StageSnapshot snapshot = new StageSnapshot(CurrentState);
                 snapshotStack.Push(snapshot);
 
                 Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
@@ -207,6 +208,14 @@ namespace MyGame2.Stage
         public void LeaveUndo()
         {
             CurrentState.UndoLeave();
+
+            // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
+            foreach (var pair in _views)
+            {
+                if (pair.Value == null) continue;
+                if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
+                    pair.Value.ForceSnap(e, cellSize);
+            }
         }
 
         private bool CanAcceptInput()
@@ -273,6 +282,43 @@ namespace MyGame2.Stage
                 if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
                 {
                     pair.Value.Sync(e, cellSize);
+                }
+                else
+                {
+                    Destroy(pair.Value.gameObject);
+                    if (toRemove == null) toRemove = new List<int>(4);
+                    toRemove.Add(pair.Key);
+                }
+            }
+
+            if (toRemove != null)
+            {
+                for (int i = 0; i < toRemove.Count; i++)
+                    _views.Remove(toRemove[i]);
+            }
+        }
+
+        // Undo 전용: Lerp 없이 즉시 위치 복원 (틈새 상자 Y 포지션 문제 방지)
+        private void ForceSnapViews()
+        {
+            if (CurrentState == null) return;
+
+            // 새로 생긴 엔티티 View 생성
+            foreach (EntityState e in CurrentState.Entities)
+            {
+                if (!_views.ContainsKey(e.Id))
+                    SpawnViewForEntity(e);
+            }
+
+            // 기존 View: ForceSnap 또는 제거
+            List<int> toRemove = null;
+            foreach (var pair in _views)
+            {
+                if (pair.Value == null) continue;
+
+                if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
+                {
+                    pair.Value.ForceSnap(e, cellSize);
                 }
                 else
                 {

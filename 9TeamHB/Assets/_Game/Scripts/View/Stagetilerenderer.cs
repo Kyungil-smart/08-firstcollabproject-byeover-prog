@@ -141,11 +141,15 @@ namespace MyGame2.Stage
                     continue;
                 }
 
-                // 벽이 아닌 모든 셀에 바닥 깔기
-                _tiles.Add(MakeTile($"F_{x}_{y}", _tileRoot, worldPos, scale,
-                    floorColor, floorSprite, tileOrder));
+                // 벽이 아닌 모든 셀에 바닥 깔기 (틈새는 바닥 없이 틈새만)
+                if (!cell.HasCrack)
+                {
+                    _tiles.Add(MakeTile($"F_{x}_{y}", _tileRoot, worldPos, scale,
+                        floorColor, floorSprite, tileOrder));
+                }
 
                 // 특수 타일은 바닥 위에 오버레이 (tileOrder + 1)
+                // 문/버튼/레버는 엔티티 프리팹이 비주얼을 담당하므로 오버레이 없음
                 int overlayOrder = tileOrder + 1;
 
                 if (cell.HasTrap)
@@ -168,29 +172,7 @@ namespace MyGame2.Stage
                     _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
                         teleportColor, teleportSprite, overlayOrder));
                 }
-                else if (cell.HasSignalButton)
-                {
-                    if (!cell.IsSticky)
-                    {
-                        _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
-                            buttonColor, buttonSprite, overlayOrder));
-                    }
-                    else
-                    {
-                        _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
-                            switchColor, switchSprite, overlayOrder));
-                    }
-                }
-                else if (cell.IsOpenedDoor)
-                {
-                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
-                        opendDoorColor, openedDoorSprite, overlayOrder));
-                }
-                else if (cell.IsClosedDoor)
-                {
-                    _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
-                        closedDoorColor, closedDoorSprite, overlayOrder));
-                }
+                // 문/버튼/레버 오버레이 제거 — InteractableTileVisual(엔티티 프리팹)이 처리
             }
         }
 
