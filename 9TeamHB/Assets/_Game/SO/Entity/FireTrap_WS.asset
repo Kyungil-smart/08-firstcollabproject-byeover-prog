@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
+  m_Name: FireTrap_WS
+  m_EditorClassIdentifier: Assembly-CSharp::EntitySO
+  _kind: 17
+  isBlocking: 1
+  blocksCameraSight: 0
+  isLethal: 0
+  _viewPrefab: {fileID: 660672730712042334, guid: 58861faede91f0144a6af00fa4e1d2e8,
+    type: 3}
+  Functions:
+  - {fileID: 11400000, guid: 07caed9ff8fa2e64299bb6e695e13464, type: 2}
