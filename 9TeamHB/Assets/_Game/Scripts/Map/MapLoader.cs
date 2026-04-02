@@ -81,10 +81,10 @@ namespace MyGame2.Stage
                             $"MapSymbolRegistrySO에 이 기호를 추가해주세요.");
                     }
 
-                    // 1) 지형 적용
+                    // 지형 적용
                     cellFlags[index] = entry.cellFlags;
 
-                    // 2) 엔티티 스폰
+                    // 엔티티 스폰
                     if (entry.spawnsEntity)
                     {
                         if (entry.entityConfig == null)
@@ -116,11 +116,8 @@ namespace MyGame2.Stage
             return new SpawnData(
                 config,
                 position,
-                entry.facing
-                // playerSlot: config.usePlayerData ? config.playerSlot : 0,
-                // boxOwnership: config.useBoxData ? config.boxOwnership : BoxType.Shared,
-                // detectionPattern: config.useCameraData ? config.cameraPattern : CameraType.LineShort,
-                // reverseRotation: config.useCameraData && config.reverseRotation
+                entry.facing,
+                entry.pairGroup          // pairGroup 전달
             );
         }
 

@@ -258,13 +258,6 @@ namespace MyGame2.Stage
                 interactable.Initialize(e.Id);
             }
 
-            // 부서지는 상자: 파괴 애니메이션 초기화
-            BreakableBoxVisual breakable = view.GetComponent<BreakableBoxVisual>();
-            if (breakable != null)
-            {
-                breakable.Initialize(e.Id);
-            }
-
             Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
             _views[e.Id] = view;
         }
