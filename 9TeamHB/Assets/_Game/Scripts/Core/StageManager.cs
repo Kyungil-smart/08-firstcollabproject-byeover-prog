@@ -163,8 +163,6 @@ namespace MyGame2.Stage
         // 플레이어 턴을 실행한다.
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
-=======
->>>>>>> Stashed changes
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -224,12 +222,12 @@ namespace MyGame2.Stage
         public void LeaveUndo()
         {
             if (_undoCoroutine != null)
-            // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
-            foreach (var pair in _views)
-            {
-                StopCoroutine(_undoCoroutine);
-            }
-        }
+                // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
+                foreach (var pair in _views)
+                {
+                    StopCoroutine(_undoCoroutine);
+                }
+
 
             if (CurrentState == null) return;
             CurrentState.IsUndoProcessing = false;
