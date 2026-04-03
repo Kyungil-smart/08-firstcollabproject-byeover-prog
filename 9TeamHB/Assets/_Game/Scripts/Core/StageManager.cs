@@ -170,8 +170,6 @@ namespace MyGame2.Stage
 
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
-            StageSnapshot snapshot = new StageSnapshot(CurrentState);
-
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -184,6 +182,7 @@ namespace MyGame2.Stage
 
             if (outcome.Executed)
             {
+                StageSnapshot snapshot = new StageSnapshot(CurrentState);
                 snapshotStack.Push(snapshot);
 
                 Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
@@ -257,6 +256,14 @@ namespace MyGame2.Stage
             if (interactable != null)
             {
                 interactable.Initialize(e.Id);
+            }
+
+            // 상자 아래에 그려져야 하는 엔티티: 모든 SpriteRenderer를 -1로 강제
+            if (e.Kind == EntityKind.DoorEntity || e.Kind == EntityKind.LeverEntity
+                || e.Kind == EntityKind.ButtonEntity || e.Kind == EntityKind.SawTrapEnemy)
+            {
+                foreach (SpriteRenderer sr in view.GetComponentsInChildren<SpriteRenderer>())
+                    sr.sortingOrder = -1;
             }
 
             Events.ViewRequestSubscribe(e.Id, view.OnRequestView);

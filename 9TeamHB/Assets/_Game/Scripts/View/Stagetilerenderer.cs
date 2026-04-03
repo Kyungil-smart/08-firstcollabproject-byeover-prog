@@ -21,8 +21,10 @@ namespace MyGame2.Stage
         [SerializeField] private Color closedDoorColor = new Color(0.4f, 0.3f, 0.2f, 1f);
 
         [Header("타일 스프라이트 (비우면 색상 사각형 사용)")]
-        [SerializeField] private Sprite wallSprite;
-        [SerializeField] private Sprite floorSprite;
+        [SerializeField] private Sprite wallSpriteFace;
+        [SerializeField] private Sprite wallSpriteSide;
+        [SerializeField] private Sprite floorABase;
+        [SerializeField] private Sprite floorAAdd;
         [SerializeField] private Sprite crackSprite;
         [SerializeField] private Sprite goalSprite;
         [SerializeField] private Sprite trapSprite;
@@ -134,6 +136,7 @@ namespace MyGame2.Stage
                 // 벽은 바닥 없이 벽만
                 if (cell.HasWall)
                 {
+                    Sprite wallSprite = cell.HasExtra ? wallSpriteSide : wallSpriteFace;
                     _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
                         wallColor, wallSprite, tileOrder));
                     continue;
@@ -142,6 +145,7 @@ namespace MyGame2.Stage
                 // 벽이 아닌 모든 셀에 바닥 깔기 (틈새는 바닥 없이 틈새만)
                 if (!cell.HasCrack)
                 {
+                    Sprite floorSprite = cell.IsExtraTile ? floorAAdd : floorABase;
                     _tiles.Add(MakeTile($"F_{x}_{y}", _tileRoot, worldPos, scale,
                         floorColor, floorSprite, tileOrder));
                 }

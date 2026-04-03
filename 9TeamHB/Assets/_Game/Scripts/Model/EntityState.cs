@@ -239,10 +239,10 @@ namespace MyGame2.Stage
 
             return copy;
         }
-        
+
         // 스냅샷 복사본의 데이터를 이 엔티티에 덮어쓴다.
         // _components와 Definition은 건드리지 않아 IUpdate 컴포넌트의 참조가 유지된다.
-        
+
         public void RestoreFrom(EntityState source)
         {
             Position = source.Position;

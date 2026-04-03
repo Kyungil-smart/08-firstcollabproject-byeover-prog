@@ -72,11 +72,15 @@ namespace MyGame2.Stage
             if (!state.TryGetEntity(boxId, out EntityState box)) return false;
 
             if (!pusher.IsPlayer) return false;
-            if (box.Get<BoxData>().Ownership != BoxType.Breakable) return false;
+            if (!box.Has<BreakableData>()) return false;
 
             GridPos dest = box.Position.Move(direction);
-            bool isBlocked = !state.IsInside(dest) || state.GetCell(dest).HasWall || state.GetCell(dest).IsOccupied;
+            bool isBlocked = !state.IsInside(dest)
+                || state.GetCell(dest).HasWall
+                || state.GetCell(dest).IsClosedDoor
+                || state.GetCell(dest).IsOccupied;
 
+            Debug.Log($"[PushRule] ShouldBreak: boxId={boxId}, dest={dest}, isBlocked={isBlocked}");
             return isBlocked;
         }
 
@@ -94,14 +98,21 @@ namespace MyGame2.Stage
             // 톱날 범위가 아니면 해당 없음
             if (!state.IsInSawTrapRange(dest)) return false;
 
-            // 목적지에 벽/문/점유가 있으면 안 됨
+            // 목적지에 벽/문이 있으면 안 됨
             CellData cell = state.GetCell(dest);
-            if (cell.HasWall || cell.IsClosedDoor || cell.IsOccupied) return false;
+            if (cell.HasWall || cell.IsClosedDoor) return false;
+
+            // 점유 셀이면 톱날 엔티티인 경우만 허용
+            if (cell.IsOccupied)
+            {
+                if (!state.TryGetEntity(cell.OccupantId, out EntityState occ)
+                    || occ.Kind != EntityKind.SawTrapEnemy)
+                    return false;
+            }
 
             // 부서지는 상자 또는 얼음 상자만 파괴 가능
-            BoxData boxData = box.Get<BoxData>();
-            if (boxData.Ownership == BoxType.Breakable) return true;
-            if (boxData.Ownership == BoxType.Ice) return true;
+            if (box.Has<BreakableData>()) return true;
+            if (box.Has<IceSlideData>()) return true;
 
             return false;
         }
@@ -112,13 +123,27 @@ namespace MyGame2.Stage
             if (!state.TryGetEntity(boxId, out EntityState box)) return;
 
             GridPos dest = box.Position.Move(direction);
-            state.TryMoveEntity(boxId, dest);
 
             // 얼음 상자면 쪼개짐 이벤트 발행
             if (box.Has<IceSlideData>())
             {
                 Direction sawFacing = state.GetSawTrapFacingAt(dest);
                 state.Events?.RaiseIceBoxSawDestroyed(boxId, dest, sawFacing);
+                state.RemoveEntity(boxId);
+                state.SetViewDirty();
+                return;
+            }
+
+            // 부서지는 상자면 IsBreaking 플래그
+            if (box.Has<BreakableData>())
+            {
+                BreakableData bd = box.Get<BreakableData>();
+                bd.IsBreaking = true;
+                box.Set(bd);
+                box.IsAlive = false;
+                box.IsBlocking = false;
+                state.SetViewDirty();
+                return;
             }
 
             state.RemoveEntity(boxId);
@@ -128,11 +153,20 @@ namespace MyGame2.Stage
         // 부숴지는 상자를 파괴
         public void ExecuteBreak(StageState state, int boxId)
         {
-            if (state.TryGetEntity(boxId, out EntityState box))
+            if (!state.TryGetEntity(boxId, out EntityState box)) return;
+
+            // BreakableBoxManager가 감지할 수 있도록 IsBreaking 플래그 설정
+            if (box.Has<BreakableData>())
             {
-                box.IsAlive = false;
-                Debug.Log($"[PushRule] 부숴지는 상자 파괴: {boxId}");
+                BreakableData bd = box.Get<BreakableData>();
+                bd.IsBreaking = true;
+                box.Set(bd);
             }
+
+            box.IsAlive = false;
+            box.IsBlocking = false;
+            state.SetViewDirty();
+            Debug.Log($"[PushRule] ExecuteBreak 완료: boxId={boxId}, IsBreaking=true");
         }
     }
 }

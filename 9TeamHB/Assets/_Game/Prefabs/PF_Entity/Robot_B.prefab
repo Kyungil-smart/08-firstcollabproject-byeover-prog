@@ -142,7 +142,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5484438449288238273}
@@ -220,11 +220,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e904a46383b92942b4ed02a9a565b1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.GridEntityView
-  rotateWithFacing: 1
+  rotateWithFacing: 0
   selectedMarker: {fileID: 0}
   slideSpeed: 12
   snapThreshold: 0.01
-  useDirectionAnim: 0
-  targetAnimator: {fileID: 0}
+  useDirectionAnim: 1
+  targetAnimator: {fileID: 3502337482470973503}
   flipXOnLeft: 1
-  targetSpriteRenderer: {fileID: 0}
+  targetSpriteRenderer: {fileID: 3821396308809338388}

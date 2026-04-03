@@ -658,6 +658,61 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &646144535
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 646144537}
+  - component: {fileID: 646144536}
+  m_Layer: 0
+  m_Name: BreakableBoxManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &646144536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 646144535}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4d9cd7b1872a8b4a87e88fe4d424ddb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.BreakableBoxManager
+  stageManager: {fileID: 823654580}
+  frames:
+  - {fileID: -3773198988818612929, guid: a9eb669a0e4f483429579877d08cd725, type: 3}
+  - {fileID: 8363552375552299738, guid: a9eb669a0e4f483429579877d08cd725, type: 3}
+  - {fileID: 4151695817187256840, guid: a9eb669a0e4f483429579877d08cd725, type: 3}
+  - {fileID: -4484251355656187676, guid: a9eb669a0e4f483429579877d08cd725, type: 3}
+  - {fileID: -7667320118526703989, guid: a9eb669a0e4f483429579877d08cd725, type: 3}
+  - {fileID: 7810645651493689844, guid: a9eb669a0e4f483429579877d08cd725, type: 3}
+  - {fileID: -2594938203995627444, guid: a9eb669a0e4f483429579877d08cd725, type: 3}
+  - {fileID: -5137263867889017547, guid: a9eb669a0e4f483429579877d08cd725, type: 3}
+  breakDuration: 0.4
+--- !u!4 &646144537
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 646144535}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.7, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &651220624
 GameObject:
   m_ObjectHideFlags: 0
@@ -925,12 +980,14 @@ MonoBehaviour:
   entityRoot: {fileID: 1332624084}
   prefabRegistry: {fileID: 127105790}
   stageFiles:
-  - {fileID: 4900000, guid: 9a0b763351ddac247bedade0cad3b1db, type: 3}
-  - {fileID: 4900000, guid: 80ac11f4fd3ff064fbc8efde2f36cb5e, type: 3}
-  - {fileID: 4900000, guid: de45bba8dafd6ba4ab7f186f5b3bf485, type: 3}
-  - {fileID: 4900000, guid: 8840970b8569b154a9d9de8a17bcff07, type: 3}
-  - {fileID: 4900000, guid: d288560c58df5684c976270f845f5128, type: 3}
-  - {fileID: 4900000, guid: 6461e17077d48804bb1546e688b80a88, type: 3}
+  - {fileID: 4900000, guid: c7dffe5b722e33e43ae5c37bcee051bf, type: 3}
+  - {fileID: 4900000, guid: 700cdbf4faec48a4488d2e5383fa76f7, type: 3}
+  - {fileID: 4900000, guid: 5e052a0b7117f8c4ab7e6d0a3b167b52, type: 3}
+  - {fileID: 4900000, guid: 27f9b64fc2e56e24694bd155f3b7c05e, type: 3}
+  - {fileID: 4900000, guid: b84f641af89418a4c8a87cbbdee68a4e, type: 3}
+  - {fileID: 4900000, guid: 823a5acd4e08baa4990301262494dd37, type: 3}
+  - {fileID: 4900000, guid: 7c9841a5070e55d448776f30ece11e5a, type: 3}
+  - {fileID: 4900000, guid: cc01f476e89943142b71b25f194e03f2, type: 3}
   - {fileID: 4900000, guid: 16b7cb031633a0448986424904aaf6c2, type: 3}
   startStageIndex: 6
   cellSize: 1
@@ -1155,52 +1212,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1145453562
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1145453564}
-  - component: {fileID: 1145453563}
-  m_Layer: 0
-  m_Name: IceSlideProcessor (1)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1145453563
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1145453562}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 126dce9c5b7fa7142b2dfddef1eb1f71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceSlideProcessor
-  stageManager: {fileID: 0}
-  slideInterval: 0.08
---- !u!4 &1145453564
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1145453562}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1332624083
 GameObject:
   m_ObjectHideFlags: 0
@@ -1332,9 +1343,13 @@ MonoBehaviour:
   switchColor: {r: 0.9, g: 0.6, b: 0.6, a: 1}
   opendDoorColor: {r: 0.9, g: 0.7, b: 0.4, a: 1}
   closedDoorColor: {r: 0.4, g: 0.3, b: 0.2, a: 1}
-  wallSprite: {fileID: 6299297141845413672, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+  wallSpriteFace: {fileID: 6299297141845413672, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
     type: 3}
-  floorSprite: {fileID: -4293155802867169760, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+  wallSpriteSide: {fileID: 3002277406169270607, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+    type: 3}
+  floorABase: {fileID: -7809298117800400869, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
+    type: 3}
+  floorAAdd: {fileID: -4293155802867169760, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
     type: 3}
   crackSprite: {fileID: -2632005171652686020, guid: 2cbabf1bb6cf7554aadddbd4606b11e2,
     type: 3}
@@ -1480,4 +1495,4 @@ SceneRoots:
   - {fileID: 1906414216}
   - {fileID: 308230778}
   - {fileID: 1909252390}
-  - {fileID: 1145453564}
+  - {fileID: 646144537}
