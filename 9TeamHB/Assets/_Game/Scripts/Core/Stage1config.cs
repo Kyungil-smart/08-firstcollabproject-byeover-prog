@@ -32,6 +32,7 @@ namespace MyGame2.Stage
         {
             switch (stageIndex)
             {
+                case 0: ConfigureStage2(); break;
                 case 7: ConfigureTutorial7(); break;
                 case 9: ConfigureStage2(); break;
                 case 11: ConfigureStage4(); break;
@@ -55,6 +56,11 @@ namespace MyGame2.Stage
             state.SetCellPair(new GridPos(9,6), new GridPos(13,5));
             state.SetCellPair(new GridPos(9, 13), new GridPos(10, 14));
             state.SetCellPair(new GridPos(17, 12), new GridPos(16, 14));
+        }
+
+        private void ConfigureStage3()
+        {
+            // 로봇 경로 주입
         }
 
         private void ConfigureStage4()
@@ -118,6 +124,17 @@ namespace MyGame2.Stage
                 new GridPos(1, 8),
                 new GridPos(1, 6),
                 new GridPos(5, 6)
+            })
+        };
+        
+        private PatrolData[] stage3 = new PatrolData[]
+        {
+            new PatrolData(new GridPos[]
+            {
+                new GridPos(16, 2),
+                new GridPos(18, 2),
+                new GridPos(18, 4),
+                new GridPos(16, 4)
             })
         };
 
