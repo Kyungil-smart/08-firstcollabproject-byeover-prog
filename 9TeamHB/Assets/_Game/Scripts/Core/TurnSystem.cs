@@ -107,7 +107,6 @@ namespace MyGame2.Stage
             if (state.HasHiddenTrap(moveResult.To))
             {
                 state.RevealHiddenTrap(moveResult.To);
-                state.MarkGameOver();
 
                 state.Events?.RaiseHiddenTrapPlayerKill(playerId, moveResult.To);
 

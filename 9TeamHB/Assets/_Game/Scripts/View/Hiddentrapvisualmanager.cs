@@ -91,6 +91,7 @@ namespace MyGame2.Stage
                     SpriteRenderer sr = tileObj.AddComponent<SpriteRenderer>();
                     sr.sprite = frames[0];
                     sr.sortingOrder = sortingOrder;
+                    Debug.Log($"설정된 Order: {sr.sortingOrder}");
 
                     long key = PosKey(pos);
                     _tiles[key] = new TrapTile
