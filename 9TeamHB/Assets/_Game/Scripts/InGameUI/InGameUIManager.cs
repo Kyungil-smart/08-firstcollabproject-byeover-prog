@@ -38,6 +38,7 @@ public class InGameUIManager : MonoBehaviour
     public int stageCount;
     public float timeElapsed = 0f;      // 흐른 시간 체크 변수 
     private HUDController hudController;
+    public bool isTutorialStage; // 튜토리얼인지 스테이지인지 확인함. 
 
     public bool IsPausePopupActive => activePausePopup != null && activePausePopup.activeSelf;
 
@@ -65,10 +66,19 @@ public class InGameUIManager : MonoBehaviour
         
         currentUndoCount = maxUndoCount;
         currentTagCount = maxTagCount;
-        
+        SetStageCount(1, true); //Stage Title Text변환확인용 
         ShowHUD();
     }
 
+    private void OnEnable()
+    {
+        LocalizationManager.LanguageChangedEvent += OnLanguageChanged;
+    }
+    
+    private void OnDisable()
+    {
+        LocalizationManager.LanguageChangedEvent -= OnLanguageChanged;
+    }
     public void Update()
     {
         timeElapsed += Time.deltaTime; 
@@ -118,7 +128,7 @@ public class InGameUIManager : MonoBehaviour
 
         if (hudController != null)
         {
-            hudController.UpdateStageText(stageCount);
+            hudController.UpdateStageText(stageCount, isTutorialStage);
             hudController.UpdateMoveCountText(currentMoveCount, maxMoveCount);
         }
     }
@@ -227,6 +237,21 @@ public class InGameUIManager : MonoBehaviour
         UpdateTimeScale();
     }
     
+    // activeGameQuit의 GameClearUIController 스크립트를 가져와서 리트라이 하는 코드 가져오기.
+    public void ExecuteGameQuitRetry()
+    {
+        if (activeGameQuit == null)
+        {
+            activeGameQuit = Instantiate(gameQuitPrefab);
+            activeGameQuit.SetActive(false); 
+        }
+        
+        GameQuitUIController quitUIController = activeGameQuit.GetComponent<GameQuitUIController>();
+        if (quitUIController != null)
+        {
+            quitUIController.OnClickRetryButton();
+        }
+    }
     // Undo 버튼 눌릴시 실행되는 Undo로직(UI포함)
     public void OnClickUndoButton() 
     {
@@ -277,14 +302,14 @@ public class InGameUIManager : MonoBehaviour
         }
     }
 
-    // 스테이지 진입시 몇 Stage인지 지정. (HUD 보일때 반영)
-    public void SetStageCount(int stgCount)
+    // Todo: 스테이지 Or 튜토리얼 진입시 몇 Stage인지 지정. (겜씬 HUD 보이기 전 반영)
+    public void SetStageCount(int stgCount, bool isTutorial)
     {
         stageCount = stgCount;
-        
+        isTutorialStage = isTutorial; 
         if (hudController != null)
         {
-            hudController.UpdateStageText(stageCount);
+            hudController.UpdateStageText(stageCount, isTutorial);
         }
     }
 
@@ -295,6 +320,15 @@ public class InGameUIManager : MonoBehaviour
         if (hudController != null)
         {
             hudController.UpdateMoveCountText(crtMoveCount, mxMoveCount);
+        }
+    }
+    
+    // 언어 바뀔때 새로고침. 
+    private void OnLanguageChanged()
+    {
+        if (hudController != null)
+        {
+            hudController.UpdateStageText(stageCount, isTutorialStage);
         }
     }
 }

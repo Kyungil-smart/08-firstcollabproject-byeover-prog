@@ -33,12 +33,14 @@ public class HUDController : MonoBehaviour
             // ESC: 일시정지 토글 
             if (Keyboard.current.escapeKey.wasPressedThisFrame)
             {
+                InGameSoundManager.Instance.PlayBasicButtonClickSound();
                 HandleEscapeKey();
             }
 
             // Tab: 태그 버튼 
             if (Keyboard.current.tabKey.wasPressedThisFrame)
             {
+                InGameSoundManager.Instance.PlayBasicButtonClickSound();
                 InGameUIManager.Instance.OnClickTagButton();
             }
             
@@ -47,7 +49,9 @@ public class HUDController : MonoBehaviour
             {
                 if (Keyboard.current.rKey.wasPressedThisFrame)
                 {
+                    InGameSoundManager.Instance.PlayBasicButtonClickSound();
                     hudRestartUI.SetHoldingByKey(true);
+                    
                 }
                 else if (Keyboard.current.rKey.wasReleasedThisFrame)
                 {
@@ -65,11 +69,29 @@ public class HUDController : MonoBehaviour
     }
     
     
-    public void UpdateStageText(int stageNum)
+    /// <summary>
+    /// 스테이지, 튜토리얼 타이틀 텍스트 업데이트용 함수.
+    /// ex) 스테이지 1 -> UpdateStageText(1, false); , 튜토리얼 2 -> UpdateStageText(2, true); 
+    /// </summary>
+    /// <param name="stageNum"></param>
+    /// <param name="isTutorial"></param>
+    public void UpdateStageText(int stageNum, bool isTutorial)
     {
-        if (stageText != null)
+        // 일반 스테이지의 경우.
+        if (stageText != null && !isTutorial)
         {
-            stageText.text = $"Stage {stageNum}";
+            string titleKey = $"Stage{stageNum}_Title_Text";
+            string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
+            
+            stageText.text = $"Stage {stageNum}: {localizedTitle}";
+        }
+        // 튜토리얼의 경우.
+        else if(stageText != null && isTutorial)
+        {
+            string titleKey = $"Tutorial{stageNum}_Title_Text";
+            string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
+            
+            stageText.text = $"Tutorial {stageNum}: {localizedTitle}";
         }
     }
 
