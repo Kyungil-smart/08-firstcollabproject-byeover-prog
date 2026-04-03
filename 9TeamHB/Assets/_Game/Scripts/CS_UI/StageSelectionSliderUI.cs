@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SceneManagement;
 
 [System.Serializable]
 public struct SliderStageData
@@ -9,7 +8,7 @@ public struct SliderStageData
     public string stageNumberName;
     public Sprite thumbnail;
     public string difficulty;
-    public bool isLocked;
+    // isLocked 제거 — 런타임에 StageProgressManager로 판정
 }
 
 public class StageSelectionSliderUI : MonoBehaviour
@@ -19,6 +18,7 @@ public class StageSelectionSliderUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI stageNumberText;
     [SerializeField] private Image stageThumbnail;
     [SerializeField] private TextMeshProUGUI difficultyText;
+    [SerializeField] private TextMeshProUGUI clearStatusText;    // 클리어 여부 표시 (선택)
 
     [Header("Buttons")]
     [SerializeField] private Button prevButton;
@@ -27,8 +27,8 @@ public class StageSelectionSliderUI : MonoBehaviour
     [SerializeField] private Button backButton;
 
     [Header("Scene Settings")]
-    [SerializeField] private string targetSceneName = "Game_Scenes"; //추후에 GamePlay_Scene 등으로 변경할 필요 있음
-    [SerializeField] private string backSceneName = "Title_Scene"; //맨 처음 시작화면
+    [SerializeField] private string targetSceneName = "Game_Scenes";
+    [SerializeField] private string backSceneName = "Title_Scene";
 
     [Header("Stage Data")]
     [SerializeField] private SliderStageData[] stages;
@@ -46,17 +46,15 @@ public class StageSelectionSliderUI : MonoBehaviour
         UpdateStageUI();
     }
 
-    // 무한 순환 로직 적용
+    // 무한 순환 로직
     private void ChangeStage(int direction)
     {
         currentIndex += direction;
 
-        // 인덱스가 0보다 작아지면(1번에서 왼쪽 클릭) 배열의 맨 끝(10번)으로 보냄
         if (currentIndex < 0)
         {
             currentIndex = stages.Length - 1;
         }
-        // 인덱스가 배열 크기를 넘어가면(10번에서 오른쪽 클릭) 배열의 처음(1번)으로 보냄
         else if (currentIndex >= stages.Length)
         {
             currentIndex = 0;
@@ -71,6 +69,7 @@ public class StageSelectionSliderUI : MonoBehaviour
 
         SliderStageData currentData = stages[currentIndex];
 
+        // 기본 정보 표시
         if (stageNumberText != null) stageNumberText.text = currentData.stageNumberName;
         if (difficultyText != null) difficultyText.text = currentData.difficulty;
         if (stageThumbnail != null && currentData.thumbnail != null)
@@ -78,39 +77,76 @@ public class StageSelectionSliderUI : MonoBehaviour
             stageThumbnail.sprite = currentData.thumbnail;
         }
 
-        // 양쪽 화살표는 항상 켜질 수 있도록 제작함
+        // 런타임 잠금/클리어 판정
+        bool isUnlocked = StageProgressManager.IsUnlocked(currentIndex);
+        bool isCleared = StageProgressManager.IsCleared(currentIndex);
+
+        // 양쪽 화살표는 항상 활성
         if (prevButton != null) prevButton.interactable = true;
         if (nextButton != null) nextButton.interactable = true;
 
+        // 시작 버튼: 해금된 스테이지만 활성
         if (startButton != null)
         {
-            startButton.interactable = !currentData.isLocked;
-            if (stageThumbnail != null)
+            startButton.interactable = isUnlocked;
+        }
+
+        // 썸네일: 잠긴 스테이지는 회색
+        if (stageThumbnail != null)
+        {
+            stageThumbnail.color = isUnlocked ? Color.white : Color.gray;
+        }
+
+        // 클리어 상태 텍스트 (clearStatusText가 없으면 무시)
+        if (clearStatusText != null)
+        {
+            if (!isUnlocked)
             {
-                stageThumbnail.color = currentData.isLocked ? Color.gray : Color.white;
+                clearStatusText.text = "LOCKED";
+                clearStatusText.color = Color.gray;
+            }
+            else if (isCleared)
+            {
+                clearStatusText.text = "CLEAR!";
+                clearStatusText.color = Color.yellow;
+            }
+            else
+            {
+                clearStatusText.text = "";
             }
         }
 
-        if (useDebugLog) Debug.Log($"현재 화면: {currentData.stageNumberName} ");
+        if (useDebugLog)
+        {
+            Debug.Log($"[StageSelect] {currentData.stageNumberName} " +
+                      $"| index={currentIndex} | unlocked={isUnlocked} | cleared={isCleared}");
+        }
     }
 
     public void OnClickStart()
     {
-        if (useDebugLog) Debug.Log($"{stages[currentIndex].stageNumberName} 선택. {targetSceneName}으로 입장.");
+        if (!StageProgressManager.IsUnlocked(currentIndex))
+        {
+            Debug.LogWarning("[StageSelect] 잠긴 스테이지는 시작할 수 없습니다.");
+            return;
+        }
 
+        if (useDebugLog)
+        {
+            Debug.Log($"{stages[currentIndex].stageNumberName} 선택. " +
+                      $"index={currentIndex} → {targetSceneName}으로 입장.");
+        }
+
+        // StageManager가 읽을 인덱스를 PlayerPrefs에 저장
         PlayerPrefs.SetInt("SelectedStage", currentIndex);
         PlayerPrefs.Save();
-        // 로딩 씬 추가
-        // 변경전: SceneManager.LoadScene(targetSceneName);
+
         LoadingManager.LoadScene(targetSceneName);
     }
 
-    // back 버튼
     public void OnClickBack()
     {
         if (useDebugLog) Debug.Log($"{backSceneName}으로 복귀.");
-        // 로딩 씬 추가
-        // 변경전: SceneManager.LoadScene(backSceneName);
         LoadingManager.LoadScene(backSceneName);
     }
 }

@@ -78,11 +78,17 @@ namespace MyGame2.Stage
                 stageManager.Events.StageLoaded += OnStageLoaded;
             }
 
-            // 초기 상태: 비활성 프레임
-            if (_spriteRenderer != null && frames != null && frames.Length > 0)
+            // 초기 상태: 비활성 프레임 + 모든 SpriteRenderer sortingOrder 강제 적용
+            if (frames != null && frames.Length > 0)
             {
-                _spriteRenderer.sprite = frames[0];
-                _spriteRenderer.sortingOrder = sortingOrder;
+                if (_spriteRenderer != null)
+                    _spriteRenderer.sprite = frames[0];
+            }
+
+            // 프리팹 내 모든 SpriteRenderer의 sortingOrder를 강제 설정
+            foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                sr.sortingOrder = sortingOrder;
             }
 
             UpdateVisual();
@@ -97,6 +103,12 @@ namespace MyGame2.Stage
             if (!_initialized || stageManager == null) return;
             if (frames == null || frames.Length == 0) return;
             if (_spriteRenderer == null) return;
+
+            // 매 업데이트마다 모든 SpriteRenderer sortingOrder 재적용
+            foreach (SpriteRenderer sr in GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                sr.sortingOrder = sortingOrder;
+            }
 
             StageState state = stageManager.CurrentState;
             if (state == null) return;

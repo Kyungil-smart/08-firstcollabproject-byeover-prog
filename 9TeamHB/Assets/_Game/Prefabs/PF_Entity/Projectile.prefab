@@ -111,6 +111,8 @@ MonoBehaviour:
   snapThreshold: 0.01
   useDirectionAnim: 0
   targetAnimator: {fileID: 0}
+  flipXOnLeft: 1
+  targetSpriteRenderer: {fileID: 0}
 --- !u!1 &693895463435221714
 GameObject:
   m_ObjectHideFlags: 0

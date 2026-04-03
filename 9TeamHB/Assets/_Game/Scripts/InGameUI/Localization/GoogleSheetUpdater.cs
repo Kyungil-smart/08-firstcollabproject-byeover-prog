@@ -3,40 +3,65 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.IO;
 
-public class GoogleSheetDownloader : MonoBehaviour
+[System.Serializable]
+public class GoogleSheetData
 {
-    // 구글 시트에서 파일 -> 공유 -> 웹에 게시에서 게시했을때 나오는 CSV링크
-    [Header("구글 시트 CSV 링크")]
-    public string sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT2UZqE-l6VeUOQfEa7j8TFFuU0lqMopMzXBgBqE4BfsJlpzjc0t4mtkFtSKVfohXwZZ3PiqwwsUIYC/pub?gid=0&single=true&output=csv";
+    [Tooltip("저장될 시트 이름")]
+    public string fileName;
+    
+    [Tooltip("테이블 CSV 링크")]
+    public string sheetURL;
+}
 
-    // Inspector 창에서 마우스 우클릭으로 웹 데이터 가져오기  
-    [ContextMenu("시트 데이터 가져오기")] //우클릭 시 아래 한 개의 함수 실행
+public class GoogleSheetUpdater : MonoBehaviour
+{
+    [Header("다운로드할 구글 시트 목록")]
+    public GoogleSheetData[] sheetsToDownload;
+
+    [ContextMenu("시트 데이터 가져오기")]
     public void DownloadData()
     {
-        StartCoroutine(DownloadCSV()); //웹은 요청시간이 걸려서 게임이 멈추지 않게 비동기로. (게임 키고 안해서 큰 상관없긴 함)
+        StartCoroutine(DownloadAllCSV());
     }
 
-    IEnumerator DownloadCSV()
+    IEnumerator DownloadAllCSV()
     {
-        using (UnityWebRequest www = UnityWebRequest.Get(sheetURL))
+        bool hasError = false;
+        
+        foreach (GoogleSheetData sheet in sheetsToDownload)
         {
-            yield return www.SendWebRequest();
+            if (string.IsNullOrEmpty(sheet.sheetURL) || string.IsNullOrEmpty(sheet.fileName))
+            {
+                continue;
+            }
 
-            if (www.result == UnityWebRequest.Result.Success)
+            using (UnityWebRequest www = UnityWebRequest.Get(sheet.sheetURL))
             {
-                // Assets/_Game/Resources 폴더 안에 LocalizationTable.csv 라는 이름으로 덮어쓰기 저장
-                string path = Application.dataPath + "/_Game/Resources/LocalizationTable.csv";
-                File.WriteAllText(path, www.downloadHandler.text, System.Text.Encoding.UTF8);
-                
+                yield return www.SendWebRequest();
+
+                if (www.result == UnityWebRequest.Result.Success)
+                {
+                    // 지정된 이름으로 csv 파일 저장
+                    string path = Application.dataPath + $"/_Game/Resources/{sheet.fileName}.csv";
+                    File.WriteAllText(path, www.downloadHandler.text, System.Text.Encoding.UTF8);
+                    Debug.Log($"[{sheet.fileName}] 업데이트 완료");
+                }
+                else
+                {
+                    Debug.LogError($"[{sheet.fileName}] 다운로드 실패: " + www.error);
+                    hasError = true;
+                }
+            }
+        }
+        
 #if UNITY_EDITOR
-                UnityEditor.AssetDatabase.Refresh();
+        // 다운로드 후 에셋 데이터베이스 새로고침
+        UnityEditor.AssetDatabase.Refresh();
 #endif
-                Debug.Log("업데이트 완료");
-            }
-            else
-            {
-                Debug.LogError("다운로드 실패: " + www.error);
-            }
+        
+        if (!hasError)
+        {
+            
         }
     }
 }
