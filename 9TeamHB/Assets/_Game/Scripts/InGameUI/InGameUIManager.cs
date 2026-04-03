@@ -66,7 +66,7 @@ public class InGameUIManager : MonoBehaviour
         
         currentUndoCount = maxUndoCount;
         currentTagCount = maxTagCount;
-        SetStageCount(1, true); //Stage Title Text변환확인용 
+        SetStageCount(1, true); // Todo: Stage Title Text변환확인용 
         ShowHUD();
     }
 
