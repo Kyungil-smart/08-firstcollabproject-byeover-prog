@@ -112,28 +112,47 @@ namespace MyGame2.Stage
             Direction left = facing.RotateClockwise().RotateClockwise().RotateClockwise();
             Direction right = facing.RotateClockwise();
 
-            // 본인 줄 (본인 + 좌우)
-            AddIfValid(state, camera.Position, result);
-            AddIfValid(state, camera.Position.Move(left), result);
-            AddIfValid(state, camera.Position.Move(right), result);
+            // 본인 줄
+            AddLineCellsbyPosition(state, camera, camera.Position,3, result);
+            // 옆 줄
+            AddLineCellsbyPosition(state, camera, camera.Position.Move(left),3, result);
+            AddLineCellsbyPosition(state, camera, camera.Position.Move(right),3, result);
+            // // 본인 줄 (본인 + 좌우)
+            // AddIfValid(state, camera.Position, result);
+            // AddIfValid(state, camera.Position.Move(left), result);
+            // AddIfValid(state, camera.Position.Move(right), result);
 
-            // 앞 1줄
-            GridPos front1 = camera.Position.Move(facing);
-            AddIfValid(state, front1, result);
-            AddIfValid(state, front1.Move(left), result);
-            AddIfValid(state, front1.Move(right), result);
+            // // 앞 1줄
+            // GridPos front1 = camera.Position.Move(facing);
+            // AddIfValid(state, front1, result);
+            // AddIfValid(state, front1.Move(left), result);
+            // AddIfValid(state, front1.Move(right), result);
 
-            // 앞 2줄
-            GridPos front2 = front1.Move(facing);
-            AddIfValid(state, front2, result);
-            AddIfValid(state, front2.Move(left), result);
-            AddIfValid(state, front2.Move(right), result);
+            // // 앞 2줄
+            // GridPos front2 = front1.Move(facing);
+            // AddIfValid(state, front2, result);
+            // AddIfValid(state, front2.Move(left), result);
+            // AddIfValid(state, front2.Move(right), result);
         }
 
         private static void AddIfValid(StageState state, GridPos pos, List<GridPos> result)
         {
             if (state.IsInside(pos) && !state.GetCell(pos).HasWall)
                 result.Add(pos);
+        }
+        private void AddLineCellsbyPosition(StageState state, EntityState camera, GridPos pos, int range, List<GridPos> result)
+        {
+            for (int i = 0; i < range; i++)
+            {
+                if (!state.IsInside(pos)) break;
+                CellData cell = state.GetCell(pos);
+                if (cell.HasWall) break;
+                result.Add(pos);
+                if (cell.IsOccupied &&
+                    state.TryGetEntity(cell.OccupantId, out EntityState occ) &&
+                    occ.BlocksCameraSight && occ.IsAlive) break;
+                pos = pos.Move(camera.Facing);
+            }
         }
     }
 }
