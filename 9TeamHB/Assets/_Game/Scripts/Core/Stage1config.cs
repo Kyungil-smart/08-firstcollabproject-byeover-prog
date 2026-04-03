@@ -32,9 +32,10 @@ namespace MyGame2.Stage
         {
             switch (stageIndex)
             {
-                case 0: ConfigureStage2(); break;
+                case 0: ConfigureStage3(); break;
                 case 7: ConfigureTutorial7(); break;
                 case 9: ConfigureStage2(); break;
+                case 10: ConfigureStage3(); break;
                 case 11: ConfigureStage4(); break;
                 case 14: ConfigureStage7(); break;
                 
@@ -61,6 +62,7 @@ namespace MyGame2.Stage
         private void ConfigureStage3()
         {
             // 로봇 경로 주입
+            ConfigureRobotPatrols(stage3);
         }
 
         private void ConfigureStage4()
