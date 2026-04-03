@@ -31,7 +31,7 @@ namespace MyGame2.Stage
         [SerializeField] private float undoStepInterval = 0.15f;
 
         private MapLoader _mapLoader;
-        
+
         // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
@@ -56,6 +56,8 @@ namespace MyGame2.Stage
 
         // 마지막 턴의 결과.
         public TurnOutcome LastOutcome { get; private set; }
+
+        bool _isUndoDone = false;
 
         private void Awake()
         {
@@ -130,9 +132,9 @@ namespace MyGame2.Stage
         }
 
         // 현재 스테이지를 다시 로드한다.
-        public void RestartCurrentStage() 
-        { 
-            LoadStage(_currentStageIndex); 
+        public void RestartCurrentStage()
+        {
+            LoadStage(_currentStageIndex);
         }
 
         // 다음 스테이지를 로드한다.
@@ -148,7 +150,14 @@ namespace MyGame2.Stage
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
-            return _tagSystem.Switch(CurrentState);
+
+            bool switchResult = _tagSystem.Switch(CurrentState);
+            if (switchResult)
+            {
+                _undoStack.Clear();
+            }
+
+            return switchResult;
         }
 
         // 플레이어 턴을 실행한다.
@@ -213,10 +222,12 @@ namespace MyGame2.Stage
         public void LeaveUndo()
         {
             if (_undoCoroutine != null)
-            {
-                StopCoroutine(_undoCoroutine);
-                _undoCoroutine = null;
-            }
+                // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
+                foreach (var pair in _views)
+                {
+                    StopCoroutine(_undoCoroutine);
+                }
+
 
             if (CurrentState == null) return;
             CurrentState.IsUndoProcessing = false;
@@ -443,6 +454,9 @@ namespace MyGame2.Stage
 
         private void SyncViews()
         {
+            // 제거된 엔티티의 View 파괴 (투사체 소멸 등)
+            CleanupOrphanViews();
+
             // 동적 생성된 엔티티의 View가 없으면 자동 생성
             foreach (EntityState e in CurrentState.Entities)
             {

@@ -95,7 +95,6 @@ namespace MyGame2.Stage
                         PocketData pocketData = existing.Get<PocketData>();
                         pocketData.ClearKeyFollowers();
                         pocketData.Keys.AddRange(snapshot.KeysDict[kvp.Key]);
-                        Debug.Log($"Player ID : {kvp.Key}, Restored Keys Num : {pocketData.Keys.Count}");
                     }
                 }
                 else
@@ -282,10 +281,10 @@ namespace MyGame2.Stage
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
         public bool HasCrackNotCovered(GridPos pos) { return GetCell(pos).HasCrack && !GetCell(pos).HasActive; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
-        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap; }
+        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap&& !GetCell(pos).HasActive; }
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
-        
+
         // 톱날 판정: 심볼 위치 기준 좌우 1칸씩 총 3칸 (항상 가로)
         public bool IsInSawTrapRange(GridPos pos)
         {
@@ -733,20 +732,21 @@ namespace MyGame2.Stage
                         _entitiesById[a].Get<PlayerData>().Slot
                             .CompareTo(_entitiesById[b].Get<PlayerData>().Slot));
                     break;
-                case EntityKind.Box:                  _boxIds.Add(entity.Id); break;
-                case EntityKind.CameraEnemy:          _cameraIds.Add(entity.Id); break;
-                case EntityKind.RobotEnemy:           _robotIds.Add(entity.Id); break;
-                case EntityKind.AnimalEnemy:           _animalIds.Add(entity.Id); break;
-                case EntityKind.PatrolCameraEnemy:     _patrolCameraIds.Add(entity.Id); break;
-                case EntityKind.SummonerEnemy:         _summonerIds.Add(entity.Id); break;
-                case EntityKind.ChaserEnemy:           _chaserIds.Add(entity.Id); break;
-                case EntityKind.ProjectileLauncher:    _launcherIds.Add(entity.Id); break;
-                case EntityKind.Projectile:            _projectileIds.Add(entity.Id); break;
-                case EntityKind.SawTrapEnemy:           _sawTrapIds.Add(entity.Id); break;
-                    case EntityKind.DoorEntity:
-                    case EntityKind.LeverEntity:
-                    case EntityKind.ButtonEntity:
-                        break;
+                case EntityKind.Box: _boxIds.Add(entity.Id); break;
+                case EntityKind.CameraEnemy: _cameraIds.Add(entity.Id); break;
+                case EntityKind.RobotEnemy: _robotIds.Add(entity.Id); break;
+                case EntityKind.AnimalEnemy: _animalIds.Add(entity.Id); break;
+                case EntityKind.PatrolCameraEnemy: _patrolCameraIds.Add(entity.Id); break;
+                case EntityKind.SummonerEnemy: _summonerIds.Add(entity.Id); break;
+                case EntityKind.ChaserEnemy: _chaserIds.Add(entity.Id); break;
+                case EntityKind.ProjectileLauncher: _launcherIds.Add(entity.Id); break;
+                case EntityKind.Projectile: _projectileIds.Add(entity.Id); break;
+                case EntityKind.SawTrapEnemy: _sawTrapIds.Add(entity.Id); break;
+                case EntityKind.DoorEntity:
+                case EntityKind.LeverEntity:
+                case EntityKind.ButtonEntity:
+                case EntityKind.FireTrap:
+                    break;
             }
             return entity.Id;
         }

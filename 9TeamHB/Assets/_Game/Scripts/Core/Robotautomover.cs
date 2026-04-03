@@ -170,7 +170,10 @@ namespace MyGame2.Stage
 
         private void EnsureRobotTracked(int robotId)
         {
-            if (_states.ContainsKey(robotId)) return;
+            if (_states.ContainsKey(robotId))
+            {
+                return;
+            }
             _states[robotId] = RobotAIState.Patrol;
             _timers[robotId] = 0f;
         }
@@ -178,7 +181,7 @@ namespace MyGame2.Stage
         private bool IsActive()
         {
             if (stageManager == null || stageManager.CurrentState == null) return false;
-            if (stageManager.CurrentState.IsUpdatable()) return false;
+            if (!stageManager.CurrentState.IsUpdatable()) return false;
             if (gameManager != null && gameManager.CurrentState != GameFlowState.Playing) return false;
             return stageManager.CurrentState.RobotIds.Count > 0;
         }

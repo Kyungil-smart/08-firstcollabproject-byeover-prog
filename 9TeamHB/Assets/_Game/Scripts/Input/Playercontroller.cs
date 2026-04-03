@@ -250,6 +250,11 @@ namespace MyGame2.Stage
                 return;
             }
 
+            if (_lockedDirection != Direction.None && !_pressedAt.ContainsKey(_lockedDirection))
+            {
+                return;
+            }
+
             if (!_isUndoHeld)
             {
                 _isUndoHeld = true;
