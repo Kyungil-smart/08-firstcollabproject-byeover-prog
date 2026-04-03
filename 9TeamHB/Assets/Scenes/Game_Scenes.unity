@@ -851,8 +851,15 @@ MonoBehaviour:
   - {fileID: 4900000, guid: 823a5acd4e08baa4990301262494dd37, type: 3}
   - {fileID: 4900000, guid: 7c9841a5070e55d448776f30ece11e5a, type: 3}
   - {fileID: 4900000, guid: cc01f476e89943142b71b25f194e03f2, type: 3}
-  - {fileID: 4900000, guid: 16b7cb031633a0448986424904aaf6c2, type: 3}
-  startStageIndex: 6
+  - {fileID: 4900000, guid: b98f1760da5d2954f9d9a0bac085a4e3, type: 3}
+  - {fileID: 4900000, guid: 80a90c836090ae94dbe403672a9e4029, type: 3}
+  - {fileID: 4900000, guid: c3098529a593c6b4f8b8d369f7ff8eae, type: 3}
+  - {fileID: 4900000, guid: 673b44c133125a848ae37b5b96e42cc7, type: 3}
+  - {fileID: 4900000, guid: ac728bf079c752943952f6a1b137cbdc, type: 3}
+  - {fileID: 4900000, guid: 2d1e6febb8724b54792e8b59bee66cc8, type: 3}
+  - {fileID: 4900000, guid: 00ac4dc607b08d1419d0c84400d56872, type: 3}
+  - {fileID: 4900000, guid: 161c77c22590c3c4985f88d43cfa9f56, type: 3}
+  startStageIndex: 14
   cellSize: 1
   symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
   stageStateReference: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511,
