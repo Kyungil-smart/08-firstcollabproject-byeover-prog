@@ -94,7 +94,6 @@ namespace MyGame2.Stage
                         PocketData pocketData = existing.Get<PocketData>();
                         pocketData.ClearKeyFollowers();
                         pocketData.Keys.AddRange(snapshot.KeysDict[kvp.Key]);
-                        Debug.Log($"Player ID : {kvp.Key}, Restored Keys Num : {pocketData.Keys.Count}");
                     }
                 }
                 else
@@ -278,8 +277,12 @@ namespace MyGame2.Stage
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
 
+<<<<<<< Updated upstream
         // 각 SawTrap 엔티티의 앵커 위치 + Facing 방향으로 Size칸 범위를 검사
         // 앵커 셀에 Active 플래그가 켜져 있으면 (버튼/스위치로 비활성화) 안전
+=======
+        // 톱날 판정: 심볼 위치 기준 좌우 1칸씩 총 3칸 (항상 가로)
+>>>>>>> Stashed changes
         public bool IsInSawTrapRange(GridPos pos)
         {
             for (int i = 0; i < _sawTrapIds.Count; i++)
@@ -690,7 +693,10 @@ namespace MyGame2.Stage
                 case EntityKind.DoorEntity:
                 case EntityKind.LeverEntity:
                 case EntityKind.ButtonEntity:
+<<<<<<< Updated upstream
                 case EntityKind.FireTrap:
+=======
+>>>>>>> Stashed changes
                     break;
             }
             return entity.Id;

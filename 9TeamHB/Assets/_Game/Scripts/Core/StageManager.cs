@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -41,6 +42,9 @@ namespace MyGame2.Stage
         public TurnOutcome LastOutcome { get; private set; }
 
         private float _nextUndoTime;
+        WaitForSeconds _undoPostWaitTime = new WaitForSeconds(0.1f);
+
+        bool _isUndoDone = false;
 
         private void Awake()
         {
@@ -64,7 +68,7 @@ namespace MyGame2.Stage
             if (CurrentState == null) return;
             if (CurrentState.IsUndoProcessing)
             {
-                if (snapshotStack.Count == 0)
+                if (snapshotStack.Count == 0 && _isUndoDone == false)
                 {
                     LeaveUndo();
                     return;
@@ -170,7 +174,10 @@ namespace MyGame2.Stage
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
             StageSnapshot snapshot = new StageSnapshot(CurrentState);
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
             if (!CanAcceptInput())
             {
                 LastOutcome = TurnOutcome.Ignored(MoveResult.Blocked(
@@ -198,6 +205,7 @@ namespace MyGame2.Stage
                 return false;
             }
 
+            _isUndoDone = false;
             CurrentState.UndoEnter();
             _nextUndoTime = 0.0f;
 
@@ -206,8 +214,6 @@ namespace MyGame2.Stage
 
         public void LeaveUndo()
         {
-            CurrentState.UndoLeave();
-
             // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
             foreach (var pair in _views)
             {
@@ -215,6 +221,15 @@ namespace MyGame2.Stage
                 if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
                     pair.Value.ForceSnap(e, cellSize);
             }
+
+            _isUndoDone = true;
+            StartCoroutine(UndoPostProcessing());
+        }
+
+        IEnumerator UndoPostProcessing()
+        {
+            yield return _undoPostWaitTime;
+            CurrentState.UndoLeave();
         }
 
         private bool CanAcceptInput()
