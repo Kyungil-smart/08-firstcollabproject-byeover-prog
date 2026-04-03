@@ -6,7 +6,15 @@ public class HUDController : MonoBehaviour
 {
     [Header("경과 시간 텍스트")]
     public TextMeshProUGUI playTimeText;
+
+    [Header("텍스트")] 
+    public TextMeshProUGUI stageText;
+    [Header("이동 횟수 LocalizedText(텍스트 등록)")]
+    public LocalizedText moveCountLocText;
     
+    [Header("UI 연결")]
+    public HUDRestartUI hudRestartUI;
+
     public void Start()
     {
         // 인게임 시작할 때 브금 재생 시작. 
@@ -20,20 +28,60 @@ public class HUDController : MonoBehaviour
     {
         GetTimeElapsed();
         
-        if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+        if (Keyboard.current != null)
         {
-            HandleEscapeKey();
-        }
+            // ESC: 일시정지 토글 
+            if (Keyboard.current.escapeKey.wasPressedThisFrame)
+            {
+                HandleEscapeKey();
+            }
 
-        // Home키: 클리어 진행 초기화 (디버그/테스트용)
-        if (Keyboard.current != null && Keyboard.current.homeKey.wasPressedThisFrame)
+            // Tab: 태그 버튼 
+            if (Keyboard.current.tabKey.wasPressedThisFrame)
+            {
+                InGameUIManager.Instance.OnClickTagButton();
+            }
+            
+            // R: 재시작 꾹 누르기 
+            if (hudRestartUI != null)
+            {
+                if (Keyboard.current.rKey.wasPressedThisFrame)
+                {
+                    hudRestartUI.SetHoldingByKey(true);
+                }
+                else if (Keyboard.current.rKey.wasReleasedThisFrame)
+                {
+                    hudRestartUI.SetHoldingByKey(false);
+                }
+            }
+
+        
+            if (Keyboard.current.homeKey.wasPressedThisFrame)
+            {
+                StageProgressManager.ResetAll(15); // 튜토리얼 7 + 메인 8 = 15
+                Debug.Log("[HUD] Home키 → 전체 클리어 기록 초기화 완료");
+            }
+        }
+    }
+    
+    
+    public void UpdateStageText(int stageNum)
+    {
+        if (stageText != null)
         {
-            StageProgressManager.ResetAll(15); // 튜토리얼 7 + 메인 8 = 15
-            Debug.Log("[HUD] Home키 → 전체 클리어 기록 초기화 완료");
+            stageText.text = $"Stage {stageNum}";
         }
     }
 
-    // ESC 토글: 일시정지 열기/닫기
+    public void UpdateMoveCountText(int currentCount, int maxCount)
+    {
+        if (moveCountLocText != null)
+        {
+            moveCountLocText.SetVariables(currentCount, maxCount);
+        }
+    }
+
+
     private void HandleEscapeKey()
     {
         if (InGameUIManager.Instance == null) return;
