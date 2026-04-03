@@ -10,31 +10,58 @@ public class HUDController : MonoBehaviour
     public void Start()
     {
         // 인게임 시작할 때 브금 재생 시작. 
-        // 브금 재생
         // if (InGameSoundManager.Instance.mainBGM != null)
         // {
         //     InGameSoundManager.Instance.PlayBGM(InGameSoundManager.Instance.mainBGM);
         // }
-        // 시작 시 타이머 재생
-        
     }
 
     public void Update()
     {
         GetTimeElapsed();
         
-        // 신규인풋시스템간이버전으로 ESC누를때 정지화면띄움
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            OnClickPauseButton();
+            HandleEscapeKey();
+        }
+
+        // Home키: 클리어 진행 초기화 (디버그/테스트용)
+        if (Keyboard.current != null && Keyboard.current.homeKey.wasPressedThisFrame)
+        {
+            StageProgressManager.ResetAll(15); // 튜토리얼 7 + 메인 8 = 15
+            Debug.Log("[HUD] Home키 → 전체 클리어 기록 초기화 완료");
         }
     }
-    
-    //프리펩화했을때 InGameUIManger 참조 못하는 문제 해결을 위해 프리펩 안에 스크립트로 참조
+
+    // ESC 토글: 일시정지 열기/닫기
+    private void HandleEscapeKey()
+    {
+        if (InGameUIManager.Instance == null) return;
+
+        // 이미 일시정지 팝업이 열려있으면 -> 닫기
+        if (InGameUIManager.Instance.IsPausePopupActive)
+        {
+            InGameUIManager.Instance.ClosePausePopup();
+            return;
+        }
+
+        // StageClear/GameOver 상태에서는 ESC 차단
+        var gameManager = FindAnyObjectByType<MyGame2.Stage.GameManager>();
+        if (gameManager != null)
+        {
+            if (gameManager.CurrentState != MyGame2.Stage.GameFlowState.Playing)
+            {
+                return;
+            }
+        }
+
+        // Playing 상태 -> 일시정지 열기
+        OnClickPauseButton();
+    }
+
     public void OnClickPauseButton()
     {
-            // 버튼 누르면 InGameUIManger 싱글톤에 정의된 ShowPausePopup으로 일시정지화면 생성
-            InGameUIManager.Instance.ShowPausePopup();   
+        InGameUIManager.Instance.ShowPausePopup();   
     }
 
     public void OnClickSettingButton()
@@ -52,7 +79,6 @@ public class HUDController : MonoBehaviour
             int seconds = Mathf.FloorToInt(time % 60f);
 
             playTimeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-            //Debug.Log(minutes + ":" + seconds);
         } 
     }
 }

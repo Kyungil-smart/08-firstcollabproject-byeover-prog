@@ -1,8 +1,12 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace MyGame2.Stage
 {
+    // 스테이지 생명주기와 View 동기화를 관리
+    // StageEvents를 소유하고, TurnSystem과 View 사이를 연결
+
     public sealed class StageManager : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -18,29 +22,40 @@ namespace MyGame2.Stage
         [Tooltip("맵 텍스트의 문자 매핑 SO")]
         [SerializeField] private MapSymbolRegistrySO symbolRegistry;
 
-        [Header("상태 참조 SO")]
-        [Tooltip("MoveComponent들이 StageState에 접근하기 위한 SO. Assets/_Game/SO/Util/StageState 에셋 연결")]
+        [Header("상태 참조")]
+        [Tooltip("EntityFunctionSO 등이 StageState에 접근하기 위한 SO")]
         [SerializeField] private StageStateReferenceSO stageStateReference;
 
-        [Tooltip("되돌리기 반복 간격 (초)")]
-        [SerializeField] private float undoRepeatInterval = 0.2f;
+        [Header("되돌리기 설정")]
+        [Tooltip("되감기 시 한 턴당 소요 시간 (초)")]
+        [SerializeField] private float undoStepInterval = 0.15f;
 
         private MapLoader _mapLoader;
-
+        
+        // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
         private TurnSystem _turnSystem;
 
+        // 런타임 상태
         private readonly Dictionary<int, GridEntityView> _views = new Dictionary<int, GridEntityView>(16);
         private int _currentStageIndex;
 
-        private Stack<StageSnapshot> snapshotStack = new Stack<StageSnapshot>();
+        // Undo 스냅샷 스택
+        private readonly Stack<StageSnapshot> _undoStack = new Stack<StageSnapshot>(64);
+        private Coroutine _undoCoroutine;
 
+        // 외부에서 현재 스테이지 인덱스 참조용
+        public int CurrentStageIndex => _currentStageIndex;
+
+        // 이벤트 허브. GameManager, PlayerInputReader 등이 구독한다.
         public StageEvents Events { get { return _events; } }
-        public StageState CurrentState { get; private set; }
-        public TurnOutcome LastOutcome { get; private set; }
 
-        private float _nextUndoTime;
+        // 현재 스테이지 상태 (null이면 아직 로드 전).
+        public StageState CurrentState { get; private set; }
+
+        // 마지막 턴의 결과.
+        public TurnOutcome LastOutcome { get; private set; }
 
         private void Awake()
         {
@@ -50,43 +65,22 @@ namespace MyGame2.Stage
             LastOutcome = TurnOutcome.None();
             _events.TurnExecuted += OnTurnExecuted;
             _events.ActivePlayerChanged += OnActivePlayerChanged;
-            _events.EntityKilled += OnEntityKilled;
-            _events.UndoExecuted += OnUndoExecuted;
         }
 
+        // PlayerPrefs에서 선택된 스테이지 읽기
         private void Start()
         {
-            LoadStage(startStageIndex);
-        }
-
-        private void Update()
-        {
-            if (CurrentState == null) return;
-            if (CurrentState.IsUndoProcessing)
-            {
-                if (snapshotStack.Count == 0)
-                {
-                    LeaveUndo();
-                    return;
-                }
-                if (Time.time >= _nextUndoTime)
-                {
-                    _nextUndoTime = Time.time + undoRepeatInterval;
-                    CurrentState.Restore(snapshotStack.Pop());
-                    _events.RaiseUndoExecuted();
-                    Debug.Log($"Pop SnapshotStack, Stack Size : {snapshotStack.Count}");
-                }
-            }
+            int selected = PlayerPrefs.GetInt("SelectedStage", startStageIndex);
+            LoadStage(selected);
         }
 
         private void OnDestroy()
         {
             _events.TurnExecuted -= OnTurnExecuted;
             _events.ActivePlayerChanged -= OnActivePlayerChanged;
-            _events.EntityKilled -= OnEntityKilled;
-            _events.UndoExecuted -= OnUndoExecuted;
         }
 
+        // 턴 실행 완료 시 View 일괄 동기화.
         private void OnTurnExecuted(TurnOutcome outcome)
         {
             LastOutcome = outcome;
@@ -94,21 +88,10 @@ namespace MyGame2.Stage
             SyncSelection();
         }
 
+        // 활성 플레이어 전환 시 선택 마커 갱신.
         private void OnActivePlayerChanged(int id) { SyncSelection(); }
 
-        // 히든 함정 등 지연 Kill 후에도 뷰가 갱신되도록 처리
-        private void OnEntityKilled(int id)
-        {
-            SyncViews();
-            SyncSelection();
-        }
-
-        private void OnUndoExecuted()
-        {
-            SyncViews();
-            SyncSelection();
-        }
-
+        // 지정한 인덱스의 스테이지를 로드한다.
         public void LoadStage(int stageIndex)
         {
             if (stageFiles == null || stageFiles.Length == 0)
@@ -123,18 +106,19 @@ namespace MyGame2.Stage
 
             _currentStageIndex = stageIndex;
             ClearViews();
+            _undoStack.Clear(); // Undo 스택 초기화
 
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
 
-            // 자동 페어링: 맵 텍스트를 다시 스캔해서 같은 pairGroup끼리 SetCellPair
-            ApplyPairGroups(file, CurrentState);
-
-            // 핵심 추가: MoveComponent들이 StageState에 접근할 수 있도록 등록
+            // StageStateReferenceSO에 현재 상태 등록
             if (stageStateReference != null)
                 stageStateReference.Register(CurrentState);
 
             _tagSystem.Initialize(CurrentState);
+
+            // PairGroup 기반으로 버튼/레버 <-> 문 위치를 자동 연결
+            ResolvePairGroups();
 
             SpawnViews();
             SyncSelection();
@@ -142,11 +126,13 @@ namespace MyGame2.Stage
             _events.RaiseStageLoaded(stageIndex);
         }
 
-        public void RestartCurrentStage()
-        {
-            LoadStage(_currentStageIndex);
+        // 현재 스테이지를 다시 로드한다.
+        public void RestartCurrentStage() 
+        { 
+            LoadStage(_currentStageIndex); 
         }
 
+        // 다음 스테이지를 로드한다.
         public bool LoadNextStage()
         {
             int next = _currentStageIndex + 1;
@@ -155,19 +141,14 @@ namespace MyGame2.Stage
             return true;
         }
 
+        // 활성 플레이어를 전환한다.
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
-
-            bool switchResult = _tagSystem.Switch(CurrentState);
-            if (switchResult)
-            {
-                snapshotStack.Clear();
-            }
-
-            return switchResult;
+            return _tagSystem.Switch(CurrentState);
         }
 
+        // 플레이어 턴을 실행한다.
         public TurnOutcome TryExecuteTurn(Direction direction)
         {
             if (!CanAcceptInput())
@@ -178,167 +159,267 @@ namespace MyGame2.Stage
                 return LastOutcome;
             }
 
-            TurnOutcome outcome = _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
+            // 턴 실행 전 스냅샷 저장 (Undo용)
+            CaptureSnapshot();
 
-            if (outcome.Executed)
-            {
-                StageSnapshot snapshot = new StageSnapshot(CurrentState);
-                snapshotStack.Push(snapshot);
-
-                Debug.Log($"Push Snapshot into Stack, Stack Size : {snapshotStack.Count}");
-            }
-
-            return outcome;
+            return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
         }
 
+        // 되돌리기 (Undo)
+
+        // 턴 실행 직전에 호출하여 현재 상태를 스냅샷으로 저장.
+        private void CaptureSnapshot()
+        {
+            if (CurrentState == null) return;
+            StageSnapshot snapshot = StageSnapshot.Capture(CurrentState);
+            if (snapshot != null)
+                _undoStack.Push(snapshot);
+        }
+
+        // 되돌리기 모드 진입 (Space 누름). 연속 되감기 코루틴 시작.
         public bool TryEnterUndo()
         {
-            if (snapshotStack.Count == 0)
-            {
+            if (CurrentState == null || CurrentState.IsGameOver || CurrentState.IsStageClear)
                 return false;
-            }
+            if (CurrentState.IsUndoProcessing)
+                return false;
+            if (_undoStack.Count == 0)
+                return false;
 
-            CurrentState.UndoEnter();
-            _nextUndoTime = 0.0f;
+            CurrentState.IsUndoProcessing = true;
 
+            // 즉시 1턴 되돌리기 + 이후 홀딩 중 연속 되감기
+            _undoCoroutine = StartCoroutine(UndoRewindLoop());
             return true;
         }
 
+        // 되돌리기 모드 해제 (Space 뗌).
         public void LeaveUndo()
         {
-            CurrentState.UndoLeave();
+            if (_undoCoroutine != null)
+            {
+                StopCoroutine(_undoCoroutine);
+                _undoCoroutine = null;
+            }
 
-            // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
+            if (CurrentState == null) return;
+            CurrentState.IsUndoProcessing = false;
+
+            // 되돌려진 상태를 View에 반영
+            SyncViews();
+            SyncSelection();
+
+            // Undo 완료 이벤트 발행 (InteractableTileVisual 등이 구독)
+            _events.RaiseUndoExecuted();
+        }
+
+        // Space 홀딩 중 연속으로 턴을 되감는 코루틴.
+        private IEnumerator UndoRewindLoop()
+        {
+            while (_undoStack.Count > 0 && CurrentState.IsUndoProcessing)
+            {
+                StageSnapshot snapshot = _undoStack.Pop();
+                CurrentState.Restore(snapshot);
+
+                // 동적 스폰된 엔티티의 View 정리
+                CleanupOrphanViews();
+                SyncViews();
+                SyncSelection();
+                _events.RaiseTurnExecuted(TurnOutcome.None());
+
+                yield return new WaitForSecondsRealtime(undoStepInterval);
+            }
+
+            // 스냅샷 소진 시 자동 해제
+            if (CurrentState.IsUndoProcessing)
+            {
+                CurrentState.IsUndoProcessing = false;
+                _events.RaiseUndoExecuted();
+            }
+            _undoCoroutine = null;
+        }
+
+        // Undo 후 상태에 없는 View를 제거.
+        private void CleanupOrphanViews()
+        {
+            List<int> orphans = null;
             foreach (var pair in _views)
             {
-                if (pair.Value == null) continue;
-                if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
-                    pair.Value.ForceSnap(e, cellSize);
+                if (!CurrentState.TryGetEntity(pair.Key, out _))
+                {
+                    if (orphans == null) orphans = new List<int>(4);
+                    orphans.Add(pair.Key);
+                }
+            }
+            if (orphans != null)
+            {
+                for (int i = 0; i < orphans.Count; i++)
+                {
+                    if (_views.TryGetValue(orphans[i], out GridEntityView view) && view != null)
+                        Destroy(view.gameObject);
+                    _views.Remove(orphans[i]);
+                }
             }
         }
+
+        // 페어 그룹 자동 연결
+
+        // PairGroupData를 가진 엔티티들을 그룹별로 묶어서
+        // 버튼/레버 위치 <-> 문 위치를 SetCellPair로 연결한다.
+        private void ResolvePairGroups()
+        {
+            if (CurrentState == null) return;
+
+            // 그룹별 엔티티 수집
+            var groups = new Dictionary<int, List<EntityState>>();
+
+            foreach (EntityState e in CurrentState.Entities)
+            {
+                if (!e.Has<PairGroupData>()) continue;
+                int group = e.Get<PairGroupData>().PairGroup;
+                if (group <= 0) continue;
+
+                if (!groups.ContainsKey(group))
+                    groups[group] = new List<EntityState>(4);
+                groups[group].Add(e);
+            }
+
+            foreach (var kvp in groups)
+            {
+                List<EntityState> members = kvp.Value;
+
+                // 트리거(버튼/레버)와 대상(문) 분리
+                List<EntityState> triggers = new List<EntityState>();
+                List<EntityState> doors = new List<EntityState>();
+                List<EntityState> others = new List<EntityState>();
+
+                for (int i = 0; i < members.Count; i++)
+                {
+                    EntityState e = members[i];
+                    if (e.Kind == EntityKind.ButtonEntity || e.Kind == EntityKind.LeverEntity)
+                        triggers.Add(e);
+                    else if (e.Kind == EntityKind.DoorEntity)
+                        doors.Add(e);
+                    else
+                        others.Add(e);
+                }
+
+                // 케이스 1: 트리거 <-> 문 연결
+                if (triggers.Count > 0 && doors.Count > 0)
+                {
+                    // 트리거 1개 : 문 N개
+                    if (triggers.Count == 1)
+                    {
+                        for (int i = 0; i < doors.Count; i++)
+                            CurrentState.SetCellPair(triggers[0].Position, doors[i].Position);
+                    }
+                    else
+                    {
+                        // N:N -> 순서대로 1:1
+                        int pairCount = Mathf.Min(triggers.Count, doors.Count);
+                        for (int i = 0; i < pairCount; i++)
+                            CurrentState.SetCellPair(triggers[i].Position, doors[i].Position);
+                    }
+                }
+                // 케이스 2: 트리거/문이 아닌 범용 페어 (텔레포트 등)
+                else if (triggers.Count == 0 && doors.Count == 0 && others.Count >= 2)
+                {
+                    // 2개씩 순서대로 연결
+                    for (int i = 0; i + 1 < others.Count; i += 2)
+                    {
+                        CurrentState.SetCellPair(others[i].Position, others[i + 1].Position);
+                    }
+                }
+                // 케이스 3: 혼합 (기타 + 문 등) -> 전체를 순서대로 페어
+                else if (members.Count >= 2)
+                {
+                    for (int i = 0; i + 1 < members.Count; i += 2)
+                    {
+                        CurrentState.SetCellPair(members[i].Position, members[i + 1].Position);
+                    }
+                }
+
+                if (members.Count < 2)
+                {
+                    Debug.LogWarning($"[StageManager] PairGroup {kvp.Key}: " +
+                                     $"멤버 {members.Count}개 — 페어 연결 불가.");
+                }
+            }
+        }
+
+        // 내부 유틸리티
 
         private bool CanAcceptInput()
         {
             return CurrentState != null && !CurrentState.IsGameOver && !CurrentState.IsStageClear;
         }
 
-        // 스테이지 로드 시 최초 View 생성
         private void SpawnViews()
         {
             if (prefabRegistry == null) return;
             foreach (EntityState e in CurrentState.Entities)
             {
-                SpawnViewForEntity(e);
+                GridEntityView prefab = e.Prefab;
+                if (prefab == null) continue;
+                GridEntityView view = Instantiate(prefab, entityRoot);
+                view.name = $"{e.Kind}_{e.Id}";
+                view.Bind(e, cellSize);
+                _views[e.Id] = view;
+
+                // ViewRequest 등록: CameraManager 등이 ID로 View를 찾을 수 있도록
+                RegisterViewRequest(e.Id, view);
+
+                // InteractableTileVisual 초기화 (문/레버/버튼 애니메이션)
+                InitTileVisual(view, e.Id);
             }
         }
 
-        // 단일 엔티티의 View 생성 (동적 스폰 지원)
-        private void SpawnViewForEntity(EntityState e)
+        // ViewRequest 콜백 등록 헬퍼
+        private void RegisterViewRequest(int entityId, GridEntityView view)
         {
-            if (_views.ContainsKey(e.Id)) return;
-
-            GridEntityView prefab = e.Prefab;
-            if (prefab == null) return;
-
-            GridEntityView view = Instantiate(prefab, entityRoot);
-            view.name = $"{e.Kind}_{e.Id}";
-            view.Bind(e, cellSize);
-
-            // 톱날 함정: 멀티셀 비주얼 자동 생성
-            SawTrapVisual sawVisual = view.GetComponent<SawTrapVisual>();
-            if (sawVisual != null && e.Has<SawTrapData>())
+            _events.ViewRequestSubscribe(entityId, request =>
             {
-                sawVisual.BuildVisual(e.Get<SawTrapData>().Size, e.Facing);
-            }
-
-            // 문/레버/버튼: 셀 상태 감시 초기화
-            InteractableTileVisual interactable = view.GetComponent<InteractableTileVisual>();
-            if (interactable != null)
-            {
-                interactable.Initialize(e.Id);
-            }
-
-            // 상자 아래에 그려져야 하는 엔티티: 모든 SpriteRenderer를 -1로 강제
-            if (e.Kind == EntityKind.DoorEntity || e.Kind == EntityKind.LeverEntity
-                || e.Kind == EntityKind.ButtonEntity || e.Kind == EntityKind.SawTrapEnemy)
-            {
-                foreach (SpriteRenderer sr in view.GetComponentsInChildren<SpriteRenderer>())
-                    sr.sortingOrder = -1;
-            }
-
-            Events.ViewRequestSubscribe(e.Id, view.OnRequestView);
-            _views[e.Id] = view;
+                request.Callback?.Invoke(view);
+            });
         }
 
-        // View 동기화 (동적 스폰/제거 처리)
+        // InteractableTileVisual 초기화 헬퍼 (문/레버/버튼 프리팹용)
+        private void InitTileVisual(GridEntityView view, int entityId)
+        {
+            var tileVisual = view.GetComponent<InteractableTileVisual>();
+            if (tileVisual != null)
+            {
+                tileVisual.Initialize(entityId);
+            }
+        }
+
         private void SyncViews()
         {
-            if (CurrentState == null) return;
-
+            // 동적 생성된 엔티티의 View가 없으면 자동 생성
             foreach (EntityState e in CurrentState.Entities)
             {
                 if (!_views.ContainsKey(e.Id))
-                    SpawnViewForEntity(e);
+                {
+                    GridEntityView prefab = e.Prefab;
+                    if (prefab == null) continue;
+                    GridEntityView view = Instantiate(prefab, entityRoot);
+                    view.name = $"{e.Kind}_{e.Id}";
+                    view.Bind(e, cellSize);
+                    _views[e.Id] = view;
+
+                    // 동적 생성된 View도 ViewRequest 등록
+                    RegisterViewRequest(e.Id, view);
+
+                    // InteractableTileVisual 초기화
+                    InitTileVisual(view, e.Id);
+                }
             }
 
-            List<int> toRemove = null;
             foreach (var pair in _views)
             {
                 if (pair.Value == null) continue;
-
                 if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
-                {
                     pair.Value.Sync(e, cellSize);
-                }
-                else
-                {
-                    Destroy(pair.Value.gameObject);
-                    if (toRemove == null) toRemove = new List<int>(4);
-                    toRemove.Add(pair.Key);
-                }
-            }
-
-            if (toRemove != null)
-            {
-                for (int i = 0; i < toRemove.Count; i++)
-                    _views.Remove(toRemove[i]);
-            }
-        }
-
-        // Undo 전용: Lerp 없이 즉시 위치 복원 (틈새 상자 Y 포지션 문제 방지)
-        private void ForceSnapViews()
-        {
-            if (CurrentState == null) return;
-
-            // 새로 생긴 엔티티 View 생성
-            foreach (EntityState e in CurrentState.Entities)
-            {
-                if (!_views.ContainsKey(e.Id))
-                    SpawnViewForEntity(e);
-            }
-
-            // 기존 View: ForceSnap 또는 제거
-            List<int> toRemove = null;
-            foreach (var pair in _views)
-            {
-                if (pair.Value == null) continue;
-
-                if (CurrentState.TryGetEntity(pair.Key, out EntityState e))
-                {
-                    pair.Value.ForceSnap(e, cellSize);
-                }
-                else
-                {
-                    Destroy(pair.Value.gameObject);
-                    if (toRemove == null) toRemove = new List<int>(4);
-                    toRemove.Add(pair.Key);
-                }
-            }
-
-            if (toRemove != null)
-            {
-                for (int i = 0; i < toRemove.Count; i++)
-                    _views.Remove(toRemove[i]);
             }
         }
 
@@ -360,59 +441,6 @@ namespace MyGame2.Stage
             foreach (var pair in _views)
                 if (pair.Value != null) Destroy(pair.Value.gameObject);
             _views.Clear();
-        }
-
-        // 자동 페어링
-        private void ApplyPairGroups(TextAsset file, StageState state)
-        {
-            if (symbolRegistry == null || file == null) return;
-
-            string rawText = file.text;
-            if (rawText.Length > 0 && rawText[0] == '\uFEFF')
-                rawText = rawText.Substring(1);
-
-            string normalized = rawText.Replace("\r\n", "\n").Replace('\r', '\n');
-            string[] split = normalized.Split('\n');
-            List<string> validLines = new List<string>(split.Length);
-
-            for (int i = 0; i < split.Length; i++)
-            {
-                string line = split[i].TrimEnd();
-                if (string.IsNullOrWhiteSpace(line)) continue;
-                if (line.TrimStart().StartsWith("//")) continue;
-                validLines.Add(line);
-            }
-
-            Dictionary<int, List<GridPos>> groups = new Dictionary<int, List<GridPos>>();
-
-            for (int y = 0; y < validLines.Count; y++)
-            {
-                string row = validLines[y];
-                for (int x = 0; x < row.Length; x++)
-                {
-                    char ch = row[x];
-                    if (!symbolRegistry.TryGetEntry(ch, out MapSymbolEntry entry)) continue;
-                    if (entry.pairGroup <= 0) continue;
-
-                    if (!groups.ContainsKey(entry.pairGroup))
-                        groups[entry.pairGroup] = new List<GridPos>(2);
-                    groups[entry.pairGroup].Add(new GridPos(x, y));
-                }
-            }
-
-            foreach (var kvp in groups)
-            {
-                if (kvp.Value.Count == 2)
-                {
-                    state.SetCellPair(kvp.Value[0], kvp.Value[1]);
-                }
-                else
-                {
-                    Debug.LogWarning(
-                        $"[StageManager] PairGroup {kvp.Key}: " +
-                        $"{kvp.Value.Count}개 셀 발견 (2개여야 페어 성립). 무시됨.");
-                }
-            }
         }
     }
 }

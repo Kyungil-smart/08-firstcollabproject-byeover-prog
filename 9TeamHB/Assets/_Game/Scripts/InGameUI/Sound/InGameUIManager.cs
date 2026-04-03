@@ -19,18 +19,12 @@ public class InGameUIManager : MonoBehaviour
     private GameObject activeGameClear;
     private GameObject activeGameQuit;
 
-    [Header("되돌리기 설정")]
-    public int maxUndoCount = 3;        // 최대 되돌리기 횟수 (나중에 스테이지 불러올때 InGameUIManager생성 후 InGameUIManager.maxUndoCount에 전달.)
-    private int currentUndoCount;       // 현재 남은 되돌리기 횟수
-    private HUDUndoUI hudUndoUI; // HUD 스크립트 접근용
-    
-    [Header("태그 설정")]  
-    public int maxTagCount = 3;
-    private int currentTagCount;
-    private HUDTagUI hudTagUI;
-    
     //흐른 시간 체크 변수  
-    public float timeElapsed = 0f; 
+    public float timeElapsed = 0f;
+
+    // 추가: 일시정지 팝업 활성 여부 (HUDController ESC 토글용)
+    public bool IsPausePopupActive => activePausePopup != null && activePausePopup.activeSelf;
+
     private void Awake()
     {
         if (Instance == null)
@@ -39,39 +33,30 @@ public class InGameUIManager : MonoBehaviour
         }
         else
         {
-            Destroy(gameObject); //싱글톤인데 씬 바뀔시 데이터초기화, 인게임 시작될때 초기화되는 
+            Destroy(gameObject);
         }
     }
 
     private void Start()
     {
         timeElapsed = 0f; 
-        Time.timeScale = 1f; //시간 흐르게
-        currentUndoCount = maxUndoCount;
-        currentTagCount = maxTagCount;
+        Time.timeScale = 1f;
         ShowHUD();
     }
 
     public void Update()
     {
         timeElapsed += Time.deltaTime; 
-        
-         
     }
     
     // 만약 HUD 외에 다른 UI가 켜진 경우 TimeScale 0로 설정해서 시간 안흐르게함. 
     private void UpdateTimeScale()
     {
-        // 팝업들이 instantiate로 생성되어 있고, activeSelf로 켜져 있는지 확인
         bool isPauseOn = activePausePopup != null && activePausePopup.activeSelf;
         bool isSettingOn = activeSetting != null && activeSetting.activeSelf;
         bool isClearOn = activeGameClear != null && activeGameClear.activeSelf;
         bool isQuitOn = activeGameQuit != null && activeGameQuit.activeSelf;
         
-        // 나중에 메인 스테이지, 다음 스테이지 이런거 뜰때 초기화(Start에서 해서 안해도됨)
-        // 
-        
-        // HUD외 다른 UI 하나라도 켜져 있다면 시간을 멈추기. 
         if (isPauseOn || isSettingOn)
         {
             Time.timeScale = 0f; 
@@ -86,33 +71,22 @@ public class InGameUIManager : MonoBehaviour
         }
     }
     
-    // HUD 프리펩에서 오브젝트 생성
+    // HUD
+
     public void ShowHUD()
     {
         if (activeHUD == null)
         {
-            
             activeHUD = Instantiate(hudPrefab);
-            hudUndoUI = activeHUD.GetComponentInChildren<HUDUndoUI>(true);
-            hudTagUI = activeHUD.GetComponentInChildren<HUDTagUI>(true);
         }
         else
         {
             activeHUD.SetActive(true);
         }
-        
-        if (hudUndoUI != null)
-        {
-            hudUndoUI.UpdateUndoUI(currentUndoCount, maxUndoCount);
-        }
-
-        if (hudTagUI != null)
-        {
-            hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
-        }
     }
 
-    
+    // Pause
+
     public void ShowPausePopup()
     {
         if (activePausePopup == null)
@@ -137,6 +111,8 @@ public class InGameUIManager : MonoBehaviour
         UpdateTimeScale();
     }
     
+    // Setting
+
     public void ShowSettingPopup()
     {
         if (activeSetting == null)
@@ -160,6 +136,8 @@ public class InGameUIManager : MonoBehaviour
         
         UpdateTimeScale();
     }
+
+    // Game Clear
 
     public void ShowGameClear()
     {
@@ -185,6 +163,8 @@ public class InGameUIManager : MonoBehaviour
         UpdateTimeScale();
     }
 
+    // Game Quit
+
     public void ShowGameQuit()
     {
         if (activeGameQuit == null)
@@ -208,49 +188,31 @@ public class InGameUIManager : MonoBehaviour
         
         UpdateTimeScale();
     }
-    
-    // Undo 버튼 눌릴시 실행되는 Undo로직(UI포함)
+
+    // HUD 버튼 브릿지 (Undo / Tag)
+
+    // 복원: HUDUndoUI.OnClickUndoButton()에서 호출
+    // 버튼 클릭으로 되돌리기 1회 실행
     public void ExecuteUndo()
     {
-        if (currentUndoCount > 0)
-        {
-            currentUndoCount--;
+        var stageManager = FindAnyObjectByType<MyGame2.Stage.StageManager>();
+        if (stageManager == null) return;
 
-            // TODO: 팀원분이 만든 되돌리기 로직 실행
-            
-
-            // 
-            if (hudUndoUI != null)
-            {
-                hudUndoUI.UpdateUndoUI(currentUndoCount, maxUndoCount);
-            }
-        }
-        else
+        // 되돌리기 진입 -> 즉시 해제 (버튼 1회 클릭 = 1턴 되돌리기)
+        bool entered = stageManager.TryEnterUndo();
+        if (entered)
         {
-            Debug.Log("되돌리기 횟수가 다닳은 상태입니다 ");
+            stageManager.LeaveUndo();
         }
     }
 
-    
-    /// <summary>
-    /// 
-    /// </summary>
+    // 복원: HUDTagUI.OnClickTagButton()에서 호출
+    // 버튼 클릭으로 태그(플레이어 전환) 실행
     public void ExecuteTag()
     {
-        if (currentTagCount > 0)
-        {
-            currentTagCount--;
-            
-            // ToDo: 팀원분이 만든 태그 로직 실행.
+        var stageManager = FindAnyObjectByType<MyGame2.Stage.StageManager>();
+        if (stageManager == null) return;
 
-            if (hudTagUI != null)
-            {
-                hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
-            }
-        }
-        else
-        {
-            Debug.Log("바키제키는 요술사인가??");
-        }
+        stageManager.SwitchActivePlayer();
     }
 }
