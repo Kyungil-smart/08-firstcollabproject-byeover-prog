@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 5093611318336728141}
   - component: {fileID: 1286325292179796693}
-  - component: {fileID: 9090970254550858251}
   m_Layer: 0
   m_Name: Sprite
   m_TagString: Untagged
@@ -27,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 3638000279112530350}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: -0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -80,7 +79,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: -1
   m_MaskInteraction: 0
   m_Sprite: {fileID: 2530564911472380330, guid: 5ca3102977ed4c34b930825ca0736439,
     type: 3}
@@ -93,28 +92,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!95 &9090970254550858251
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3638000279112530350}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 5f2169c8361044948af4ceaad4a4e930, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &4581840718123417260
 GameObject:
   m_ObjectHideFlags: 0
@@ -182,9 +159,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.InteractableTileVisual
   stageManager: {fileID: 0}
-  targetAnimator: {fileID: 0}
-  inactiveSprite: {fileID: 2530564911472380330, guid: 5ca3102977ed4c34b930825ca0736439,
-    type: 3}
-  activeSprite: {fileID: 1763989116612304091, guid: 5ca3102977ed4c34b930825ca0736439,
-    type: 3}
+  frames:
+  - {fileID: 2530564911472380330, guid: 5ca3102977ed4c34b930825ca0736439, type: 3}
+  - {fileID: 1763989116612304091, guid: 5ca3102977ed4c34b930825ca0736439, type: 3}
+  transitionDuration: 0.3
+  sortingOrder: 1
   targetSpriteRenderer: {fileID: 0}

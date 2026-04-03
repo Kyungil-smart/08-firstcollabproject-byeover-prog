@@ -14,40 +14,35 @@ public class HUDController : MonoBehaviour
     
     [Header("UI 연결")]
     public HUDRestartUI hudRestartUI;
+
     public void Start()
     {
         // 인게임 시작할 때 브금 재생 시작. 
-        // 브금 재생
         // if (InGameSoundManager.Instance.mainBGM != null)
         // {
         //     InGameSoundManager.Instance.PlayBGM(InGameSoundManager.Instance.mainBGM);
         // }
-        // 시작 시 타이머 재생
-        
     }
 
     public void Update()
     {
         GetTimeElapsed();
         
-        if(Keyboard.current != null)
+        if (Keyboard.current != null)
         {
-            // 키보드 인풋
-            if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            // ESC: 일시정지 토글 
+            if (Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                OnClickPauseButton();
+                HandleEscapeKey();
             }
-            // if (Keyboard.current.spaceKey.wasPressedThisFrame)
-            // {
-            //     InGameUIManager.Instance.OnClickUndoButton();
-            // }
 
+            // Tab: 태그 버튼 
             if (Keyboard.current.tabKey.wasPressedThisFrame)
             {
                 InGameUIManager.Instance.OnClickTagButton();
             }
             
-            // 재시작 꾹누를때
+            // R: 재시작 꾹 누르기 
             if (hudRestartUI != null)
             {
                 if (Keyboard.current.rKey.wasPressedThisFrame)
@@ -59,10 +54,17 @@ public class HUDController : MonoBehaviour
                     hudRestartUI.SetHoldingByKey(false);
                 }
             }
+
+        
+            if (Keyboard.current.homeKey.wasPressedThisFrame)
+            {
+                StageProgressManager.ResetAll(15); // 튜토리얼 7 + 메인 8 = 15
+                Debug.Log("[HUD] Home키 → 전체 클리어 기록 초기화 완료");
+            }
         }
     }
     
-    // 텍스트를 업데이트 
+    
     public void UpdateStageText(int stageNum)
     {
         if (stageText != null)
@@ -78,12 +80,36 @@ public class HUDController : MonoBehaviour
             moveCountLocText.SetVariables(currentCount, maxCount);
         }
     }
-    
-    //프리펩화했을때 InGameUIManger 참조 못하는 문제 해결을 위해 프리펩 안에 스크립트로 참조
+
+
+    private void HandleEscapeKey()
+    {
+        if (InGameUIManager.Instance == null) return;
+
+        // 이미 일시정지 팝업이 열려있으면 -> 닫기
+        if (InGameUIManager.Instance.IsPausePopupActive)
+        {
+            InGameUIManager.Instance.ClosePausePopup();
+            return;
+        }
+
+        // StageClear/GameOver 상태에서는 ESC 차단
+        var gameManager = FindAnyObjectByType<MyGame2.Stage.GameManager>();
+        if (gameManager != null)
+        {
+            if (gameManager.CurrentState != MyGame2.Stage.GameFlowState.Playing)
+            {
+                return;
+            }
+        }
+
+        // Playing 상태 -> 일시정지 열기
+        OnClickPauseButton();
+    }
+
     public void OnClickPauseButton()
     {
-            // 버튼 누르면 InGameUIManger 싱글톤에 정의된 ShowPausePopup으로 일시정지화면 생성
-            InGameUIManager.Instance.ShowPausePopup();   
+        InGameUIManager.Instance.ShowPausePopup();   
     }
 
     public void OnClickSettingButton()
@@ -101,7 +127,6 @@ public class HUDController : MonoBehaviour
             int seconds = Mathf.FloorToInt(time % 60f);
 
             playTimeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-            //Debug.Log(minutes + ":" + seconds);
         } 
     }
 }

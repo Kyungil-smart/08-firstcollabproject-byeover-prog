@@ -38,6 +38,11 @@ namespace MyGame2.Stage
         private bool _hasIsMoving;
         private bool _hasIsDead;
 
+        // Fallable 낙하 애니메이션 실행 여부 (Undo 시 복원용)
+        private bool _hasFallen;
+        private Vector3 _originalChildLocalPos;
+        private int _originalChildSortingOrder;
+
         public int EntityId { get; private set; }
         public EntityKind Kind { get; private set; }
         public bool IsSliding { get { return _isSliding; } }
@@ -92,6 +97,15 @@ namespace MyGame2.Stage
 
             gameObject.SetActive(entity.IsAlive);
             _isSliding = false;
+
+            // 자식의 원래 localPosition 저장 (Fallable 복원용)
+            if (transform.childCount > 0)
+            {
+                Transform child = transform.GetChild(0);
+                _originalChildLocalPos = child.localPosition;
+                SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+                if (sr != null) _originalChildSortingOrder = sr.sortingOrder;
+            }
         }
 
         public void Sync(EntityState entity, float cellSize)
@@ -126,6 +140,17 @@ namespace MyGame2.Stage
                 _targetPosition = newTarget;
                 _isSliding = true;
                 UpdateMovingAnim(true);
+
+                // 틈새 낙하 복원: FallAnimation을 실행한 View만 리셋
+                if (_hasFallen && transform.childCount > 0)
+                {
+                    Transform child = transform.GetChild(0);
+                    child.localPosition = _originalChildLocalPos;
+                    SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+                    if (sr != null)
+                        sr.sortingOrder = _originalChildSortingOrder;
+                    _hasFallen = false;
+                }
             }
 
             if (rotateWithFacing)
@@ -234,6 +259,80 @@ namespace MyGame2.Stage
         public void OnRequestView(ViewRequest request)
         {
             request.Callback(this);
+        }
+        
+        // Fallable.FallAnimation에서 호출.
+        // 이 View가 틈새에 빠졌음을 표시하여 Undo 시 자식 위치를 복원할 수 있게 한다.
+        
+        public void MarkAsFallen()
+        {
+            _hasFallen = true;
+        }
+        
+        // Undo 시 Fallable이 변경한 자식 위치/sortingOrder를 복원.
+        // 실제로 낙하한 엔티티(localPosition.y가 음수)만 선별하여 부드럽게 올라옴.
+
+        public void ResetFallVisual()
+        {
+            if (transform.childCount == 0) return;
+
+            Transform firstChild = transform.GetChild(0);
+
+            // 낙하하지 않은 엔티티는 무시
+            if (firstChild.localPosition.y >= -0.01f) return;
+
+            StartCoroutine(RiseFromGap(firstChild));
+        }
+
+        private System.Collections.IEnumerator RiseFromGap(Transform child)
+        {
+            Vector3 start = child.localPosition;
+            Vector3 end = _originalChildLocalPos;
+            float duration = 0.25f;
+            float elapsed = 0f;
+
+            SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.sortingOrder = _originalChildSortingOrder;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                child.localPosition = Vector3.Lerp(start, end, t);
+                yield return null;
+            }
+
+            child.localPosition = end;
+        }
+        
+        // Undo 시 Lerp 없이 즉시 위치/회전을 엔티티 상태로 스냅.
+
+        public void ForceSnap(EntityState entity, float cellSize)
+        {
+            if (!entity.IsAlive)
+            {
+                gameObject.SetActive(false);
+                _isSliding = false;
+                return;
+            }
+
+            gameObject.SetActive(true);
+
+            Vector3 worldPos = entity.Position.ToWorld(cellSize);
+            transform.position = worldPos;
+            _targetPosition = worldPos;
+            _isSliding = false;
+
+            if (rotateWithFacing)
+            {
+                Quaternion rot = Quaternion.Euler(0f, 0f, entity.Facing.ToZRotation());
+                transform.rotation = rot;
+                _targetRotation = rot;
+            }
+
+            _lastFacing = entity.Facing;
+            UpdateDirectionAnim(entity.Facing);
+            UpdateMovingAnim(false);
         }
     }
 }

@@ -15,6 +15,9 @@ namespace MyGame2.Stage
         public bool IsBlocking;
         public bool BlocksCameraSight;
 
+        private List<KeyFollower> _keys = null;
+        public List<KeyFollower> Keys { get { return _keys; } }
+
         private readonly Dictionary<Type, IComponentData> _components
             = new Dictionary<Type, IComponentData>(4);
 
@@ -28,6 +31,13 @@ namespace MyGame2.Stage
             IsAlive = state.IsAlive;
             IsBlocking = state.IsBlocking;
             BlocksCameraSight = state.BlocksCameraSight;
+
+            if (state.Has<PocketData>() == true)
+            {
+                PocketData pocketData = state.Get<PocketData>();
+                _keys = new List<KeyFollower>();
+                _keys.AddRange(pocketData.Keys);
+            }
 
             _components = new Dictionary<Type, IComponentData>(state.Components.Count());
 

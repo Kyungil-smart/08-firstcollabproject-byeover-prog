@@ -215,12 +215,12 @@ MonoBehaviour:
     spawnsEntity: 0
     entityConfig: {fileID: 0}
     facing: 0
-    pairGroup: 0
+    pairGroup: 9
   - symbol: 68
     description: "\uBB38"
     cellFlags: 128
-    spawnsEntity: 0
-    entityConfig: {fileID: 0}
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 0
   - symbol: 91
@@ -296,112 +296,231 @@ MonoBehaviour:
   - symbol: 51
     description: "\uC7A0\uAE34\uBB381"
     cellFlags: 128
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 1
   - symbol: 52
     description: "\uC7A0\uAE34\uBB382"
     cellFlags: 128
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 2
   - symbol: 53
     description: "\uC7A0\uAE34\uBB383"
     cellFlags: 128
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 3
   - symbol: 54
     description: "\uC7A0\uAE34\uBB384"
     cellFlags: 128
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 4
   - symbol: 55
     description: "\uC7A0\uAE34\uBB385"
     cellFlags: 128
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 5
   - symbol: 56
     description: "\uC7A0\uAE34\uBB386"
     cellFlags: 128
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 6
   - symbol: 57
     description: "\uC7A0\uAE34\uBB387"
     cellFlags: 128
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 7
   - symbol: 48
     description: "\uC7A0\uAE34\uBB388"
     cellFlags: 128
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 113aad49b4a074844b8a4cec32bb68ff, type: 2}
     facing: 0
     pairGroup: 8
   - symbol: 33
     description: "\uB808\uBC841"
     cellFlags: 768
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: b24182348c800cb439e5244cf9de8b56, type: 2}
     facing: 0
     pairGroup: 1
   - symbol: 64
     description: "\uB808\uBC842"
     cellFlags: 768
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: b24182348c800cb439e5244cf9de8b56, type: 2}
     facing: 0
     pairGroup: 2
   - symbol: 36
     description: "\uB808\uBC843"
     cellFlags: 768
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: b24182348c800cb439e5244cf9de8b56, type: 2}
     facing: 0
     pairGroup: 3
   - symbol: 37
     description: "\uB808\uBC844"
     cellFlags: 768
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: b24182348c800cb439e5244cf9de8b56, type: 2}
     facing: 0
     pairGroup: 4
   - symbol: 94
     description: "\uC2A4\uC704\uCE581"
     cellFlags: 256
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 1bfe51277bdf6534e833d56f64e7b3ed, type: 2}
     facing: 0
     pairGroup: 5
   - symbol: 38
     description: "\uC2A4\uC704\uCE582"
     cellFlags: 256
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 1bfe51277bdf6534e833d56f64e7b3ed, type: 2}
     facing: 0
     pairGroup: 6
   - symbol: 42
     description: "\uC2A4\uC704\uCE583"
     cellFlags: 256
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 1bfe51277bdf6534e833d56f64e7b3ed, type: 2}
     facing: 0
     pairGroup: 7
   - symbol: 40
     description: "\uC2A4\uC704\uCE584"
     cellFlags: 256
-    spawnsEntity: 0
+    spawnsEntity: 1
     entityConfig: {fileID: 11400000, guid: 1bfe51277bdf6534e833d56f64e7b3ed, type: 2}
     facing: 0
     pairGroup: 8
+  - symbol: 95
+    description: "\uAE30\uBCF8 \uBC14\uB2E5 \uB2E4\uB978 \uD615\uD0DC"
+    cellFlags: 16384
+    spawnsEntity: 0
+    entityConfig: {fileID: 0}
+    facing: 0
+    pairGroup: 0
+  - symbol: 45
+    description: "\uCE21\uBA74 \uBCBD"
+    cellFlags: 16385
+    spawnsEntity: 0
+    entityConfig: {fileID: 0}
+    facing: 0
+    pairGroup: 0
+  - symbol: 112
+    description: "\uBD88\uD568\uC815UP"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: dde3fdea00fa49842a098b10bb6951e6, type: 2}
+    facing: 1
+    pairGroup: 0
+  - symbol: 113
+    description: "\uBD88\uD568\uC815Down"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: dde3fdea00fa49842a098b10bb6951e6, type: 2}
+    facing: 3
+    pairGroup: 0
+  - symbol: 114
+    description: "\uBD88\uD568\uC815L"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: be5107c8bc94ff14b8f0bd8d9740f1a1, type: 2}
+    facing: 2
+    pairGroup: 0
+  - symbol: 116
+    description: "\uBD88\uD568\uC815R"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: be5107c8bc94ff14b8f0bd8d9740f1a1, type: 2}
+    facing: 4
+    pairGroup: 0
+  - symbol: 70
+    description: "\uBD80\uC11C\uC9C0\uB294\uC0C1\uC790"
+    cellFlags: 0
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: cd42e0f781c704f44b8637b8bfd14f9f, type: 2}
+    facing: 0
+    pairGroup: 0
+  - symbol: 105
+    description: "\uD788\uB4E0\uD568\uC8151"
+    cellFlags: 2048
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2659d1d1eade0064198f4757ded5d122, type: 2}
+    facing: 0
+    pairGroup: 9
+  - symbol: 106
+    description: "\uD788\uB4E0\uD568\uC8152"
+    cellFlags: 2048
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2659d1d1eade0064198f4757ded5d122, type: 2}
+    facing: 0
+    pairGroup: 10
+  - symbol: 107
+    description: "\uD788\uB4E0\uD568\uC8153"
+    cellFlags: 2048
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2659d1d1eade0064198f4757ded5d122, type: 2}
+    facing: 0
+    pairGroup: 11
+  - symbol: 108
+    description: "\uD788\uB4E0\uD568\uC8154"
+    cellFlags: 2048
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 2659d1d1eade0064198f4757ded5d122, type: 2}
+    facing: 0
+    pairGroup: 12
+  - symbol: 41
+    description: "\uB808\uBC845"
+    cellFlags: 768
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: b24182348c800cb439e5244cf9de8b56, type: 2}
+    facing: 0
+    pairGroup: 9
+  - symbol: 47
+    description: "\uB808\uBC846"
+    cellFlags: 768
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: b24182348c800cb439e5244cf9de8b56, type: 2}
+    facing: 0
+    pairGroup: 10
+  - symbol: 61
+    description: "\uBC84\uD2BC5"
+    cellFlags: 256
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 1bfe51277bdf6534e833d56f64e7b3ed, type: 2}
+    facing: 0
+    pairGroup: 11
+  - symbol: 43
+    description: "\uBC84\uD2BC6"
+    cellFlags: 256
+    spawnsEntity: 1
+    entityConfig: {fileID: 11400000, guid: 1bfe51277bdf6534e833d56f64e7b3ed, type: 2}
+    facing: 0
+    pairGroup: 12
+  - symbol: 119
+    description: "\uCE21\uBA74\uBCBD"
+    cellFlags: 16385
+    spawnsEntity: 1
+    entityConfig: {fileID: 0}
+    facing: 0
+    pairGroup: 0
+  - symbol: 59
+    description: "\uBC14\uB2E5Aa"
+    cellFlags: 16384
+    spawnsEntity: 1
+    entityConfig: {fileID: 0}
+    facing: 0
+    pairGroup: 0

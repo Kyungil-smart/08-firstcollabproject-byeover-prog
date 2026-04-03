@@ -9,14 +9,16 @@ namespace MyGame2.Stage
         public readonly EntitySO Def;
         public readonly GridPos Position;
         public readonly Direction Facing;
-        // true면 카메라가 반시계방향 회전
+        public readonly int PairGroup;
 
         public SpawnData(
-            EntitySO def, GridPos position, Direction facing)
+            EntitySO def, GridPos position, Direction facing,
+            int pairGroup = 0)
         {
             Def = def;
             Position = position;
             Facing = facing;
+            PairGroup = pairGroup;
         }
     }
 }

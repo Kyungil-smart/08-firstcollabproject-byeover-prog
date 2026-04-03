@@ -21,9 +21,9 @@ public class InGameUIManager : MonoBehaviour
     private GameObject activeGameQuit;
 
     [Header("되돌리기 설정")]
-    public int maxUndoCount = 3;        // 최대 되돌리기 횟수 (나중에 스테이지 불러올때 InGameUIManager생성 후 InGameUIManager.maxUndoCount에 전달.)
+    public int maxUndoCount = 3;        // 최대 되돌리기 횟수
     private int currentUndoCount;       // 현재 남은 되돌리기 횟수
-    private HUDUndoUI hudUndoUI; // HUD 스크립트 접근용
+    private HUDUndoUI hudUndoUI;        // HUD 스크립트 접근용
     
     [Header("태그 설정")]  
     public int maxTagCount = 3;
@@ -36,9 +36,12 @@ public class InGameUIManager : MonoBehaviour
     
     [Header("그 외 HUD 관련 설정")] 
     public int stageCount;
-    public float timeElapsed = 0f; //흐른 시간 체크 변수 
+    public float timeElapsed = 0f;      // 흐른 시간 체크 변수 
     private HUDController hudController;
-    
+
+    public bool IsPausePopupActive => activePausePopup != null && activePausePopup.activeSelf;
+
+
     private void Awake()
     {
         if (Instance == null)
@@ -47,7 +50,7 @@ public class InGameUIManager : MonoBehaviour
         }
         else
         {
-            Destroy(gameObject); //싱글톤인데 씬 바뀔시 데이터초기화, 인게임 시작될때 초기화되는 
+            Destroy(gameObject);
         }
         //테스트 용 moveCount 값 세팅
         currentMoveCount = 0; 
@@ -58,40 +61,30 @@ public class InGameUIManager : MonoBehaviour
     {
         timeElapsed = 0f; 
         Time.timeScale = 1f; //시간 흐르게
+        
+        
         currentUndoCount = maxUndoCount;
         currentTagCount = maxTagCount;
         
-        // SetStageCount(1); // 스테이지 텍스트 변화 테스트용 디버깅
         ShowHUD();
     }
 
     public void Update()
     {
         timeElapsed += Time.deltaTime; 
-        
-         
     }
     
     // 만약 HUD 외에 다른 UI가 켜진 경우 TimeScale 0로 설정해서 시간 안흐르게함. 
     private void UpdateTimeScale()
     {
-        // 팝업들이 instantiate로 생성되어 있고, activeSelf로 켜져 있는지 확인
         bool isPauseOn = activePausePopup != null && activePausePopup.activeSelf;
         bool isSettingOn = activeSetting != null && activeSetting.activeSelf;
         bool isClearOn = activeGameClear != null && activeGameClear.activeSelf;
         bool isQuitOn = activeGameQuit != null && activeGameQuit.activeSelf;
         
-        // 나중에 메인 스테이지, 다음 스테이지 이런거 뜰때 초기화(Start에서 해서 안해도됨)
-        // 
-        
-        // HUD외 다른 UI 하나라도 켜져 있다면 시간을 멈추기. 
-        if (isPauseOn || isSettingOn)
+        if (isPauseOn || isSettingOn || isClearOn || isQuitOn)
         {
             Time.timeScale = 0f; 
-        }
-        else if (isClearOn || isQuitOn)
-        {
-            Time.timeScale = 0f;
         }
         else
         {
@@ -99,13 +92,15 @@ public class InGameUIManager : MonoBehaviour
         }
     }
     
-    // HUD 프리펩에서 오브젝트 생성
+    // HUD
+
     public void ShowHUD()
     {
         // 오브젝트 없으면 생성, 있으면 활성화
         if (activeHUD == null)
         {
             activeHUD = Instantiate(hudPrefab);
+            
             hudUndoUI = activeHUD.GetComponentInChildren<HUDUndoUI>(true);
             hudTagUI = activeHUD.GetComponentInChildren<HUDTagUI>(true);
             hudController =  activeHUD.GetComponent<HUDController>();
@@ -116,14 +111,10 @@ public class InGameUIManager : MonoBehaviour
         }
         
         if (hudUndoUI != null)
-        {
             hudUndoUI.UpdateUndoUI(currentUndoCount, maxUndoCount);
-        }
 
         if (hudTagUI != null)
-        {
             hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
-        }
 
         if (hudController != null)
         {
@@ -132,7 +123,8 @@ public class InGameUIManager : MonoBehaviour
         }
     }
 
-    
+    // Pause
+
     public void ShowPausePopup()
     {
         if (activePausePopup == null)
@@ -157,6 +149,8 @@ public class InGameUIManager : MonoBehaviour
         UpdateTimeScale();
     }
     
+    // Setting
+
     public void ShowSettingPopup()
     {
         if (activeSetting == null)
@@ -181,6 +175,8 @@ public class InGameUIManager : MonoBehaviour
         UpdateTimeScale();
     }
 
+    // Game Clear
+
     public void ShowGameClear()
     {
         if (activeGameClear == null)
@@ -204,6 +200,8 @@ public class InGameUIManager : MonoBehaviour
         
         UpdateTimeScale();
     }
+
+    // Game Quit
 
     public void ShowGameQuit()
     {
@@ -230,39 +228,44 @@ public class InGameUIManager : MonoBehaviour
     }
     
     // Undo 버튼 눌릴시 실행되는 Undo로직(UI포함)
-    public void OnClickUndoButton()
+    public void OnClickUndoButton() 
     {
         if (currentUndoCount > 0)
         {
-            currentUndoCount--;
+            var stageManager = FindAnyObjectByType<MyGame2.Stage.StageManager>();
+            if (stageManager == null) return;
 
-            // 팀원분이 만든 되돌리기 로직 실행
             
-
-            // 
-            if (hudUndoUI != null)
+            bool entered = stageManager.TryEnterUndo();
+            if (entered)
             {
-                hudUndoUI.UpdateUndoUI(currentUndoCount, maxUndoCount);
+                stageManager.LeaveUndo();
+                
+                currentUndoCount--;
+                if (hudUndoUI != null)
+                {
+                    hudUndoUI.UpdateUndoUI(currentUndoCount, maxUndoCount);
+                }
             }
         }
         else
         {
-            Debug.Log("되돌리기 횟수가 다닳은 상태입니다 ");
+            Debug.Log("되돌리기 횟수를 모두 소모했습니다.");
         }
     }
 
-    
-    /// <summary>
-    /// 
-    /// </summary>
-    public void OnClickTagButton()
+    // 태그 버튼 눌릴시 실행되는 로직
+    public void OnClickTagButton() 
     {
         if (currentTagCount > 0)
         {
-            currentTagCount--;
-            
-            // 팀원분이 만든 태그 로직 실행.
+            var stageManager = FindAnyObjectByType<MyGame2.Stage.StageManager>();
+            if (stageManager == null) return;
 
+            
+            stageManager.SwitchActivePlayer();
+
+            currentTagCount--;
             if (hudTagUI != null)
             {
                 hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
@@ -270,11 +273,11 @@ public class InGameUIManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("태그 횟수가 다 닳은 상태입니다. ");
+            Debug.Log("태그 횟수가 다 닳은 상태입니다.");
         }
     }
 
-    // 스테이지 진입시 몇 Stage인지 지정. (HUD 보일때 반영) InGameUiManager.SetStageCount(int stgCount); 
+    // 스테이지 진입시 몇 Stage인지 지정. (HUD 보일때 반영)
     public void SetStageCount(int stgCount)
     {
         stageCount = stgCount;
@@ -285,7 +288,7 @@ public class InGameUIManager : MonoBehaviour
         }
     }
 
-    // 이 함수를 사용하여 이동횟수 없데이트
+    // 이 함수를 사용하여 이동횟수 업데이트
     public void SetMoveCount(int crtMoveCount, int mxMoveCount)
     {
         maxMoveCount = mxMoveCount;
