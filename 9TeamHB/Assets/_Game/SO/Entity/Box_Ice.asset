@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
   _kind: 2
   isBlocking: 1
-  blocksCameraSight: 0
+  blocksCameraSight: 1
   isLethal: 0
   _viewPrefab: {fileID: 6531087665428241085, guid: 152b7bee7ec55014580799221d79d59d,
     type: 3}
