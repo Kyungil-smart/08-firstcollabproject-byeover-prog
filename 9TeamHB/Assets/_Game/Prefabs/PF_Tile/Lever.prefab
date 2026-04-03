@@ -166,5 +166,5 @@ MonoBehaviour:
   - {fileID: -5628708141901103232, guid: 266b583748e29b243bbdd39ac976f93e, type: 3}
   - {fileID: -359336370570260725, guid: 266b583748e29b243bbdd39ac976f93e, type: 3}
   transitionDuration: 0.3
-  sortingOrder: 1
+  sortingOrder: -1
   targetSpriteRenderer: {fileID: 0}

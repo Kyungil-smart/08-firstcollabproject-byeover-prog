@@ -1,23 +1,43 @@
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
 public class GameClearUIController : MonoBehaviour
 {
     [Header("Scene Settings")]
-    [SerializeField] private string titleSceneName = "Title_Scene"; // 타이틀 씬 이름
-    [SerializeField] private string nextStageSceneName = "Stage_Scene"; // 다음 스테이지 씬 이름(나중에 현재 스테이지 + 1으로 수정)
+    [SerializeField] private string titleSceneName = "Title_Scene";
 
     public void OnClickMainButton()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene(titleSceneName);
+        LoadingManager.LoadScene(titleSceneName);
     }
     
+    // 다음 스테이지: StageManager.LoadNextStage()로 같은 씬 내에서 로드
     public void OnClickNextStageButton()
     {
         Time.timeScale = 1f;
-        
-        // 나중에 현재 스테이지 정보 갱신 후 씬 이동.
-        SceneManager.LoadScene(nextStageSceneName);
+
+        // 클리어 UI 닫기
+        if (InGameUIManager.Instance != null)
+        {
+            InGameUIManager.Instance.CloseGameClear();
+        }
+
+        // StageManager를 찾아서 다음 스테이지 로드
+        var stageManager = FindAnyObjectByType<MyGame2.Stage.StageManager>();
+        if (stageManager != null)
+        {
+            bool loaded = stageManager.LoadNextStage();
+            if (!loaded)
+            {
+                // 마지막 스테이지였으면 타이틀로 복귀
+                Debug.Log("[GameClearUI] 마지막 스테이지 — 타이틀로 이동합니다.");
+                LoadingManager.LoadScene(titleSceneName);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("[GameClearUI] StageManager를 찾지 못했습니다.");
+            LoadingManager.LoadScene(titleSceneName);
+        }
     }
 }

@@ -18,15 +18,15 @@ public class TitleUIManager : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool useDebugLog = false;
+    
 
     // 게임시작 버튼 연결용
     public void OnClickGameStart()
     {
-        if (useDebugLog) Debug.Log($"{startSceneName}으로 이동.");
+        if (useDebugLog) Debug.Log("게임 시작. Story_Scene으로 이동합니다.");
         
-        // 변경사항, Loading 씬이 나오기 위해 해당 프롬을 수정함
-        // 변경 전, SceneManager.LoadScene("Stage_Scene");
-        LoadingManager.LoadScene("Stage_Scene");
+        // 스토리씬으로 보내기
+        LoadingManager.LoadScene("Story_Scene");
     }
 
     // 조작키 버튼 연결용 (패널 열기)
