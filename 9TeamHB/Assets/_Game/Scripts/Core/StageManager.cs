@@ -31,7 +31,7 @@ namespace MyGame2.Stage
         [SerializeField] private float undoStepInterval = 0.15f;
 
         private MapLoader _mapLoader;
-        
+
         // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
@@ -130,9 +130,9 @@ namespace MyGame2.Stage
         }
 
         // 현재 스테이지를 다시 로드한다.
-        public void RestartCurrentStage() 
-        { 
-            LoadStage(_currentStageIndex); 
+        public void RestartCurrentStage()
+        {
+            LoadStage(_currentStageIndex);
         }
 
         // 다음 스테이지를 로드한다.
@@ -148,7 +148,14 @@ namespace MyGame2.Stage
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
-            return _tagSystem.Switch(CurrentState);
+
+            bool switchResult = _tagSystem.Switch(CurrentState);
+            if (switchResult)
+            {
+                _undoStack.Clear();
+            }
+
+            return switchResult;
         }
 
         // 플레이어 턴을 실행한다.
