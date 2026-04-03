@@ -12,17 +12,37 @@ namespace MyGame2.Stage
             if (!box.CanBePushedBy(pusher.Get<PlayerData>().Slot)) return false;
 
             GridPos dest = box.Position.Move(direction);
-            if (!state.IsInside(dest)) return false;
+            if (!state.IsInside(dest))
+            {
+                Debug.Log($"[CanPush] BLOCKED: dest ({dest.X},{dest.Y}) 맵 밖");
+                return false;
+            }
 
             CellData cell = state.GetCell(dest);
-            if (cell.HasWall) return false;
-            if (cell.IsClosedDoor) return false;
-            if (cell.IsOccupied) return false;
+            if (cell.HasWall)
+            {
+                Debug.Log($"[CanPush] BLOCKED: dest ({dest.X},{dest.Y}) 벽");
+                return false;
+            }
+            if (cell.IsClosedDoor)
+            {
+                Debug.Log($"[CanPush] BLOCKED: dest ({dest.X},{dest.Y}) 닫힌 문");
+                return false;
+            }
+            if (cell.IsOccupied)
+            {
+                string kind = "?";
+                if (state.TryGetEntity(cell.OccupantId, out EntityState occ))
+                    kind = occ.Kind.ToString();
+                Debug.Log($"[CanPush] BLOCKED: dest ({dest.X},{dest.Y}) 점유중 — occupantId={cell.OccupantId}, kind={kind}");
+                return false;
+            }
 
             // 톱날 범위로는 일반 상자를 밀 수 없음
             // 부서지는 상자와 얼음 상자는 ShouldBreakBySaw에서 별도 처리
             if (state.IsInSawTrapRange(dest))
             {
+                Debug.Log($"[CanPush] BLOCKED: dest ({dest.X},{dest.Y}) 톱날 범위");
                 return false;
             }
 

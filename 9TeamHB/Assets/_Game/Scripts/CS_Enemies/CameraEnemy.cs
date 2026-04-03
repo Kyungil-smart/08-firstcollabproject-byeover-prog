@@ -103,7 +103,7 @@ namespace MyGame2.Stage
             }
         }
 
-        // Fixed3x3: 3개 열(좌/중/우)별 독립 시야 차단
+        // Fixed3x3: 3개 열(좌/중/우)을 각각 독립 라인으로 처리
         // 기획서(1-4-3): "감시범위에 오브젝트가 위치할 경우, 그 뒤쪽 타일은 감시범위에서 제외"
         private void AddFixed3x3Cells(StageState state, EntityState camera, List<GridPos> result)
         {
@@ -113,80 +113,14 @@ namespace MyGame2.Stage
             Direction left = facing.RotateClockwise().RotateClockwise().RotateClockwise();
             Direction right = facing.RotateClockwise();
 
-<<<<<<< HEAD
-            // 본인 줄
-            AddLineCellsbyPosition(state, camera, camera.Position,3, result);
-            // 옆 줄
-            AddLineCellsbyPosition(state, camera, camera.Position.Move(left),3, result);
-            AddLineCellsbyPosition(state, camera, camera.Position.Move(right),3, result);
-            // // 본인 줄 (본인 + 좌우)
-            // AddIfValid(state, camera.Position, result);
-            // AddIfValid(state, camera.Position.Move(left), result);
-            // AddIfValid(state, camera.Position.Move(right), result);
-
-            // // 앞 1줄
-            // GridPos front1 = camera.Position.Move(facing);
-            // AddIfValid(state, front1, result);
-            // AddIfValid(state, front1.Move(left), result);
-            // AddIfValid(state, front1.Move(right), result);
-
-            // // 앞 2줄
-            // GridPos front2 = front1.Move(facing);
-            // AddIfValid(state, front2, result);
-            // AddIfValid(state, front2.Move(left), result);
-            // AddIfValid(state, front2.Move(right), result);
-=======
-            // 열별 차단 상태
-            bool blockedLeft = false;
-            bool blockedCenter = false;
-            bool blockedRight = false;
-
-            for (int row = 0; row < 3; row++)
-            {
-                GridPos center = camera.Position;
-                for (int s = 0; s < row; s++)
-                    center = center.Move(facing);
-
-                // 좌측 열
-                if (!blockedLeft)
-                    blockedLeft = AddCellWithSightCheck(state, center.Move(left), camera.Id, result);
-
-                // 중앙 열
-                if (!blockedCenter)
-                    blockedCenter = AddCellWithSightCheck(state, center, camera.Id, result);
-
-                // 우측 열
-                if (!blockedRight)
-                    blockedRight = AddCellWithSightCheck(state, center.Move(right), camera.Id, result);
-            }
->>>>>>> 79fef92 (투사체 버그/CCTV 감시자 버그 픽스 완료)
+            // 3개 열별 독립 시야 차단 라인
+            AddLineCellsbyPosition(state, camera, camera.Position.Move(left), 3, result);
+            AddLineCellsbyPosition(state, camera, camera.Position, 3, result);
+            AddLineCellsbyPosition(state, camera, camera.Position.Move(right), 3, result);
         }
 
-        // 셀을 result에 추가하고, 이 열이 차단되었는지 반환한다.
-        // true = 이 열의 이후 행은 감시범위에서 제외해야 함.
-        private static bool AddCellWithSightCheck(
-            StageState state, GridPos pos, int cameraId, List<GridPos> result)
-        {
-            if (!state.IsInside(pos)) return false;
-
-            CellData cell = state.GetCell(pos);
-
-            // 벽 → 추가 안 하고 차단
-            if (cell.HasWall) return true;
-
-            result.Add(pos);
-
-            // 시야 차단 오브젝트 체크 (카메라 자신 제외)
-            if (cell.IsOccupied &&
-                cell.OccupantId != cameraId &&
-                state.TryGetEntity(cell.OccupantId, out EntityState occ) &&
-                occ.BlocksCameraSight && occ.IsAlive)
-            {
-                return true;
-            }
-
-            return false;
-        }
+        // 지정 위치에서 facing 방향으로 range칸 라인 감지
+        // BlocksCameraSight 엔티티가 있으면 그 뒤는 감지 안 함
         private void AddLineCellsbyPosition(StageState state, EntityState camera, GridPos pos, int range, List<GridPos> result)
         {
             for (int i = 0; i < range; i++)
