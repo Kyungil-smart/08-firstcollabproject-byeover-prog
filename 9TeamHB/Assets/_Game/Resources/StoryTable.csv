@@ -1,0 +1,6 @@
+﻿규칙,LocalizationTable 규칙 + 마지막 형식 _00 꼴로. 연결된 대사는 _00부터 _01 _02 이런식으로 작성.,,
+Key,English,Korean,주석(필수 X)
+IntroStoryTest_Ch01_00,ah,아,
+IntroStoryTest_Ch01_01,ahhhh,아아아아,
+IntroStoryTest_Ch01_02,ahkkkk,악,
+StoryTest_Ch01_Awakening_00,test test test test test,테스트,

@@ -31,8 +31,8 @@ public class InGameUIManager : MonoBehaviour
     private HUDTagUI hudTagUI;
 
     [Header("이동 횟수 관련")]
-    public int maxMoveCount;
-    public int currentMoveCount;
+    [HideInInspector] public int maxMoveCount;
+    [HideInInspector] public int currentMoveCount;
     
     [Header("그 외 HUD 관련 설정")] 
     public int stageCount;
@@ -49,7 +49,8 @@ public class InGameUIManager : MonoBehaviour
         {
             Destroy(gameObject); //싱글톤인데 씬 바뀔시 데이터초기화, 인게임 시작될때 초기화되는 
         }
-        currentMoveCount = 0;
+        //테스트 용 moveCount 값 세팅
+        currentMoveCount = 0; 
         maxMoveCount = 3;
     }
 
@@ -104,7 +105,6 @@ public class InGameUIManager : MonoBehaviour
         // 오브젝트 없으면 생성, 있으면 활성화
         if (activeHUD == null)
         {
-            
             activeHUD = Instantiate(hudPrefab);
             hudUndoUI = activeHUD.GetComponentInChildren<HUDUndoUI>(true);
             hudTagUI = activeHUD.GetComponentInChildren<HUDTagUI>(true);

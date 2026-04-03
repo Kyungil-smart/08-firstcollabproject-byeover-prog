@@ -9,6 +9,8 @@ public class HUDUndoUI : MonoBehaviour
     public Image undoFillImage; // Image Type Filled로 한 남은횟수/총횟수 만큼 아래에서 위로 채워지는 이미지
     public Image undoIconImage; //가운데 되돌리기 아이콘.
     public TextMeshProUGUI undoCountText;
+    public Image prohibitionImage; // 금지 이미지
+    public Image prohibitionBackgroundImage;
 
     [Header("러프 이동 설정")]
     public float fillSpeed = 5f; // 게이지 줄어드는 속도
@@ -24,7 +26,7 @@ public class HUDUndoUI : MonoBehaviour
             fillDefaultColor = undoFillImage.color;
             undoFillImage.fillAmount = 1f; // 시작할때 게이지 꽉 차있게 초기화
         }
-        if (undoIconImage != null) iconDefaultColor = undoIconImage.color;
+        //if (undoIconImage != null) iconDefaultColor = undoIconImage.color;
     }
 
     private void Update()
@@ -47,14 +49,22 @@ public class HUDUndoUI : MonoBehaviour
         if (currentCount <= 0)
         {
             if (undoButton != null) undoButton.interactable = false; 
-            if (undoFillImage != null) undoFillImage.color = new Color(0.1f, 0.5f, 0.1f, 1f);
-            if (undoIconImage != null) undoIconImage.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+            //if (undoFillImage != null) undoFillImage.color = new Color(0.1f, 0.5f, 0.1f, 1f);
+            //if (undoIconImage != null) undoIconImage.color = new Color(0.5f, 0.5f, 0.5f, 1f);
+            
+            // 금지 이미지 On
+            if (prohibitionImage != null) prohibitionImage.gameObject.SetActive(true);
+            if (prohibitionBackgroundImage != null) prohibitionBackgroundImage.gameObject.SetActive(true);
         }
         else
         {
             if (undoButton != null) undoButton.interactable = true;
-            if (undoFillImage != null) undoFillImage.color = fillDefaultColor;
-            if (undoIconImage != null) undoIconImage.color = iconDefaultColor;
+            //if (undoFillImage != null) undoFillImage.color = fillDefaultColor;
+            //if (undoIconImage != null) undoIconImage.color = iconDefaultColor;
+            
+            // 금지 이미지 off
+            if (prohibitionImage != null) prohibitionImage.gameObject.SetActive(false);
+            if (prohibitionBackgroundImage != null) prohibitionBackgroundImage.gameObject.SetActive(false);
         }
         
         if (undoCountText != null)

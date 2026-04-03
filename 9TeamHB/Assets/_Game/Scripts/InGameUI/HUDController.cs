@@ -37,10 +37,10 @@ public class HUDController : MonoBehaviour
             {
                 OnClickPauseButton();
             }
-            if (Keyboard.current.spaceKey.wasPressedThisFrame)
-            {
-                InGameUIManager.Instance.OnClickUndoButton();
-            }
+            // if (Keyboard.current.spaceKey.wasPressedThisFrame)
+            // {
+            //     InGameUIManager.Instance.OnClickUndoButton();
+            // }
 
             if (Keyboard.current.tabKey.wasPressedThisFrame)
             {

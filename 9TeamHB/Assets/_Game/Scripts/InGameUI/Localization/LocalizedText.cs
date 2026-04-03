@@ -32,6 +32,12 @@ public class LocalizedText : MonoBehaviour
     {
         if (LocalizationManager.Instance != null && textComponent != null)
         {
+            // 폰트 적용
+            if (LocalizationManager.Instance.mainFont != null)
+            {
+                textComponent.font = LocalizationManager.Instance.mainFont;
+            }
+            
             // 번역된 원본 문장 받기.
             string localizedString = LocalizationManager.Instance.GetText(key);
 

@@ -11,6 +11,7 @@ public class HUDTagUI : MonoBehaviour
     public Image tagImage;
     public TextMeshProUGUI countText;
     public Image prohibitionImage; // 금지 이미지
+    public Image prohibitionBackgroundImage;
     
     public Color disabledColor = new Color(0.3f, 0.3f, 0.3f, 1f); // 다 썼을 때 변할 어두운 회색
 
@@ -35,7 +36,7 @@ public class HUDTagUI : MonoBehaviour
     // 태그 값 변경시 UI 수정
     public void UpdateTagUI(int currentCount, int maxCount)
     {
-        if (countText != null) countText.text = currentCount.ToString(); //텍스트 변경.
+        if (countText != null) countText.text = $"{currentCount} / {maxCount}"; //텍스트 변경.
         
         // 카운트 0될때
         if (currentCount <= 0)
@@ -46,6 +47,8 @@ public class HUDTagUI : MonoBehaviour
             
             // 금지 이미지 On
             if (prohibitionImage != null) prohibitionImage.gameObject.SetActive(true);
+            if (prohibitionBackgroundImage != null) prohibitionBackgroundImage.gameObject.SetActive(true);
+            
             
             // 값이 1 -> 0 일때만 흔들기 발생 (0 -> 0 발생X)
             if (previousCount == 1)
@@ -60,6 +63,7 @@ public class HUDTagUI : MonoBehaviour
             
             if (countText != null) countText.gameObject.SetActive(true);
             if (prohibitionImage != null) prohibitionImage.gameObject.SetActive(false);
+            if (prohibitionBackgroundImage != null) prohibitionBackgroundImage.gameObject.SetActive(false);
         }
 
         // 1 -> 0 인지 체크를 위한 변수
