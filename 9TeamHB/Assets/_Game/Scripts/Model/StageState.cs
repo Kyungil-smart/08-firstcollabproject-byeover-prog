@@ -745,6 +745,7 @@ namespace MyGame2.Stage
                 case EntityKind.DoorEntity:
                 case EntityKind.LeverEntity:
                 case EntityKind.ButtonEntity:
+                case EntityKind.FireTrap:
                     break;
             }
             return entity.Id;
