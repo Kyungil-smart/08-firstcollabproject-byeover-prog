@@ -443,6 +443,9 @@ namespace MyGame2.Stage
 
         private void SyncViews()
         {
+            // 제거된 엔티티의 View 파괴 (투사체 소멸 등)
+            CleanupOrphanViews();
+
             // 동적 생성된 엔티티의 View가 없으면 자동 생성
             foreach (EntityState e in CurrentState.Entities)
             {
