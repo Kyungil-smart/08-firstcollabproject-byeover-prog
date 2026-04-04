@@ -281,7 +281,7 @@ namespace MyGame2.Stage
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
         public bool HasCrackNotCovered(GridPos pos) { return GetCell(pos).HasCrack && !GetCell(pos).HasActive; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
-        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap; }
+        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap&& !GetCell(pos).HasActive; }
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
 
