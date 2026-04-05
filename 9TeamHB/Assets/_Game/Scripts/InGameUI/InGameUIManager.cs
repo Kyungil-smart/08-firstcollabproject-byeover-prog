@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using MyGame2.Stage;
 
@@ -21,10 +20,6 @@ public class InGameUIManager : MonoBehaviour
     [Header("되돌리기 설정 (시간제)")]
     [Tooltip("한 스테이지 최대 되돌리기 시간 (초)")]
     public float maxUndoSeconds = 20f;
-
-    [Tooltip("되감기 한 스텝 간격 (초)")]
-    [SerializeField] private float undoReplayInterval = 0.12f;
-
     private float remainingUndoSeconds;
     private bool isUndoActive;
 
@@ -64,12 +59,7 @@ public class InGameUIManager : MonoBehaviour
     // 동일 프레임 중복 호출 방지
     private int _lastTagFrame  = -1;
     private int _lastUndoFrame = -1;
-
-    // Undo 스냅샷 스택
-    private readonly Stack<StageSnapshot> _undoStack = new Stack<StageSnapshot>(64);
-    private float _undoReplayTimer;
-    private bool  _isRestoring; // Restore 중 TurnExecuted 재진입 방지
-
+    
     // 생명주기
 
     private void Awake()
@@ -118,24 +108,14 @@ public class InGameUIManager : MonoBehaviour
     {
         timeElapsed += Time.deltaTime;
 
-        // Undo 시간 차감 + 되감기 실행
+        // Undo 시간 차감 (누르고 있는 동안)
         if (isUndoActive)
         {
             remainingUndoSeconds -= Time.unscaledDeltaTime;
             if (remainingUndoSeconds <= 0f)
             {
                 remainingUndoSeconds = 0f;
-                OnReleaseUndoButton();
-            }
-            else
-            {
-                // 되감기 스텝 실행
-                _undoReplayTimer += Time.unscaledDeltaTime;
-                if (_undoReplayTimer >= undoReplayInterval)
-                {
-                    _undoReplayTimer -= undoReplayInterval;
-                    ExecuteUndoStep();
-                }
+                OnReleaseUndoButton(); // 시간 다 쓰면 자동 종료
             }
         }
 
@@ -145,6 +125,7 @@ public class InGameUIManager : MonoBehaviour
     }
     
     // 스테이지 이벤트 핸들러
+
     // 스테이지 로드 시 모든 것 초기화
     private void OnStageLoaded(int stageIndex)
     {
@@ -159,26 +140,14 @@ public class InGameUIManager : MonoBehaviour
             _undoStack.Push(StageSnapshot.Capture(state));
     }
 
-    // 턴 실행 완료 -> 스냅샷 기록
+    // 이동 성공 턴만 카운트
     private void OnTurnExecuted(TurnOutcome outcome)
     {
-        // Restore 중 발생하는 TurnExecuted는 무시
-        if (_isRestoring) return;
-
-        // 실제 턴이 실행된 경우만 기록
-        if (!outcome.Executed) return;
-
-        // 이동 카운트
-        if (outcome.PlayerMove.CanMove)
+        if (outcome.Executed && outcome.PlayerMove.CanMove)
             MoveCount++;
-
-        // 스냅샷 Push
-        StageState state = stageManager.CurrentState;
-        if (state != null)
-            _undoStack.Push(StageSnapshot.Capture(state));
     }
 
-    // 클리어 판정 -> 스냅샷만 찍고 팝업은 아직 안 띄움 (워프 연출 대기)
+    // 클리어 판정 -> 스냅샷만 찍고 팝업은 워프 연출 대기
     private void OnStageClear()
     {
         _savedMoveCount = MoveCount;
@@ -192,7 +161,7 @@ public class InGameUIManager : MonoBehaviour
         ShowGameClear();
     }
 
-    // 타이머·예산·통계·스냅샷 전부 초기값으로
+    // 타이머·예산·통계 전부 초기값으로
     private void ResetAll()
     {
         // 이전 스테이지에서 Undo 활성 상태였으면 정리
@@ -205,11 +174,6 @@ public class InGameUIManager : MonoBehaviour
         currentTagCount      = maxTagCount;
         remainingUndoSeconds = maxUndoSeconds;
         isUndoActive         = false;
-
-        // 스냅샷 스택 초기화
-        _undoStack.Clear();
-        _undoReplayTimer = 0f;
-        _isRestoring     = false;
 
         RefreshTagUI();
         RefreshUndoUI();
@@ -246,7 +210,8 @@ public class InGameUIManager : MonoBehaviour
             hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
     }
     
-    // Undo (Space)
+    // Undo (Space) — 시간 예산 + 플래그만 관리
+    // 실제 스냅샷 녹화/복원은 기존 Undorecorder가 담당
 
     public void OnClickUndoButton()
     {
@@ -255,14 +220,9 @@ public class InGameUIManager : MonoBehaviour
 
         if (stageManager == null || stageManager.CurrentState == null) return;
         if (remainingUndoSeconds <= 0f) return;
-        if (_undoStack.Count <= 1) return; // 초기 상태뿐이면 되감을 게 없음
 
-        isUndoActive     = true;
-        _undoReplayTimer = 0f;
+        isUndoActive = true;
         stageManager.CurrentState.UndoEnter();
-
-        // 즉시 첫 스텝 실행
-        ExecuteUndoStep();
     }
 
     public void OnReleaseUndoButton()
@@ -275,35 +235,12 @@ public class InGameUIManager : MonoBehaviour
             stageManager.CurrentState.UndoLeave();
     }
 
-    private void ExecuteUndoStep()
-    {
-        if (_undoStack.Count <= 1) return; // 초기 스냅샷은 유지
-
-        StageState state = stageManager.CurrentState;
-        if (state == null) return;
-
-        // 현재 상태 스냅샷 버리기
-        _undoStack.Pop();
-
-        // 이전 상태로 복원
-        StageSnapshot prev = _undoStack.Peek();
-
-        _isRestoring = true;
-        state.Restore(prev);
-        stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
-        _isRestoring = false;
-
-        // 더 되감을 게 없으면 자동 종료
-        if (_undoStack.Count <= 1)
-            OnReleaseUndoButton();
-    }
-
     private void RefreshUndoUI()
     {
         if (hudUndoUI != null)
             hudUndoUI.UpdateUndoUI(remainingUndoSeconds, maxUndoSeconds);
     }
-
+    
     // 재시작
 
     public void ExecuteGameQuitRetry()
