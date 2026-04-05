@@ -15,6 +15,13 @@ public class GameClearUIController : MonoBehaviour
     [Tooltip("클리어 타임 표시용 TMP (프리팹의 PlayTime 텍스트 드래그)")]
     [SerializeField] private TextMeshProUGUI clearTimeText;
 
+    public TextMeshProUGUI stageTitleText;
+
+    private void OnEnable()
+    {
+        stageTitleText.text = InGameUIManager.Instance.stageTitleText;
+    }
+    
     // InGameUIManager.ShowGameClear()에서 호출
     public void SetClearStats(int moves, int tags, float time)
     {
