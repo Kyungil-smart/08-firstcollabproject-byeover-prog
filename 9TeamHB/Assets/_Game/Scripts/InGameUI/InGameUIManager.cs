@@ -28,6 +28,12 @@ public class InGameUIManager : MonoBehaviour
     private float remainingUndoSeconds;
     private bool isUndoActive;
 
+    [Header("스테이지 정보 관련")]
+    public int stageCount; // 몇스테이지인지.
+    public bool isTutorialStage; //  현재 스테이지가 튜토리얼인지 일반 스테이지인지 여부
+    public string stageTitleText; // 스테이지 타이틀.
+    private HUDController hudController; // HUD 스크립트 접근용
+    
     [Header("태그 설정")]
     public int maxTagCount = 3;
     private int currentTagCount;
@@ -86,6 +92,7 @@ public class InGameUIManager : MonoBehaviour
             stageManager.Events.StageClearTriggered += OnStageClear;
             stageManager.Events.WarpComplete        += OnWarpComplete;
         }
+        LocalizationManager.LanguageChangedEvent += OnLanguageChanged;
     }
 
     private void OnDisable()
@@ -97,6 +104,7 @@ public class InGameUIManager : MonoBehaviour
             stageManager.Events.StageClearTriggered -= OnStageClear;
             stageManager.Events.WarpComplete        -= OnWarpComplete;
         }
+        LocalizationManager.LanguageChangedEvent -= OnLanguageChanged;
     }
 
     private void Start()
@@ -143,6 +151,8 @@ public class InGameUIManager : MonoBehaviour
         ResetAll();
         CloseGameClear();
 
+        SetStageCount(stageIndex, isTutorialStage);
+        
         // 새 스테이지 초기 스냅샷 기록
         StageState state = stageManager.CurrentState;
         if (state != null)
@@ -338,11 +348,38 @@ public class InGameUIManager : MonoBehaviour
             hudTagUI = activeHUD.GetComponentInChildren<HUDTagUI>();
         if (hudUndoUI == null)
             hudUndoUI = activeHUD.GetComponentInChildren<HUDUndoUI>();
-
+        
+        if (hudController == null)
+            hudController = activeHUD.GetComponent<HUDController>();
+        
         RefreshTagUI();
         RefreshUndoUI();
+        
+        if (hudController != null)
+        {
+            stageTitleText = hudController.UpdateStageText(stageCount, isTutorialStage);
+        }
     }
 
+    public void SetStageCount(int stgCount, bool isTutorial = false)
+    {
+        stageCount = stgCount;
+        isTutorialStage = isTutorial; 
+        
+        if (hudController != null)
+        {
+            stageTitleText = hudController.UpdateStageText(stageCount, isTutorial);
+        }
+    }
+    
+    private void OnLanguageChanged()
+    {
+        if (hudController != null)
+        {
+            stageTitleText = hudController.UpdateStageText(stageCount, isTutorialStage);
+        }
+    }
+    
     public void ShowPausePopup()
     {
         if (activePausePopup == null)
