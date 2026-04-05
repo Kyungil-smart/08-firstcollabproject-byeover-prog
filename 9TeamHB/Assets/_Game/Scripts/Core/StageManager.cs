@@ -30,6 +30,10 @@ namespace MyGame2.Stage
         [Tooltip("되감기 시 한 턴당 소요 시간 (초)")]
         [SerializeField] private float undoStepInterval = 0.15f;
 
+        [Tooltip("되감기 시 종료 후 일시정지 시간 (초)")]
+        [SerializeField] private float undoPostPauseInterval = 0.2f;
+
+
         private MapLoader _mapLoader;
         
         // 이벤트 허브
@@ -56,6 +60,9 @@ namespace MyGame2.Stage
 
         // 마지막 턴의 결과.
         public TurnOutcome LastOutcome { get; private set; }
+
+        private int _undoNum = 0;
+        private const int _undoNumLimit = 50;
 
         private void Awake()
         {
@@ -125,6 +132,7 @@ namespace MyGame2.Stage
             ProjectileSpeedRegistry.Clear();
 
             _undoStack.Clear(); // Undo 스택 초기화
+            _undoNum = 0;
 
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
@@ -213,6 +221,11 @@ namespace MyGame2.Stage
                 Debug.Log("[Undo] 이미 되돌리기 중");
                 return false;
             }
+            if (_undoNum >= _undoNumLimit)
+            {
+                Debug.Log($"[Undo] Undo 횟수({_undoNum}/{_undoNumLimit}회) 소진");
+                return false;
+            }
             if (_undoStack.Count == 0)
             {
                 Debug.Log("[Undo] 스냅샷 없음 (첫 턴 전)");
@@ -254,6 +267,9 @@ namespace MyGame2.Stage
             {
                 StageSnapshot snapshot = _undoStack.Pop();
                 CurrentState.Restore(snapshot);
+                _undoNum++;
+
+                Debug.Log($"[Undo] Undo 횟수 : ${_undoNum}/${_undoNumLimit}");
 
                 // 동적 스폰된 엔티티의 View 정리
                 CleanupOrphanViews();
@@ -269,8 +285,9 @@ namespace MyGame2.Stage
             // 스냅샷 소진 시 자동 해제
             if (CurrentState.IsUndoProcessing)
             {
-                CurrentState.IsUndoProcessing = false;
                 _events.RaiseUndoExecuted();
+                yield return new WaitForSecondsRealtime(undoPostPauseInterval);
+                CurrentState.IsUndoProcessing = false;
             }
             _undoCoroutine = null;
         }
@@ -461,9 +478,6 @@ namespace MyGame2.Stage
 
         private void SyncViews()
         {
-            // 제거된 엔티티의 View 파괴 (투사체 소멸 등)
-            CleanupOrphanViews();
-
             // 동적 생성된 엔티티의 View가 없으면 자동 생성
             foreach (EntityState e in CurrentState.Entities)
             {
