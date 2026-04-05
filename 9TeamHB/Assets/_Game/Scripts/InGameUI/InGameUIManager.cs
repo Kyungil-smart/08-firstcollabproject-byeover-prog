@@ -36,6 +36,7 @@ public class InGameUIManager : MonoBehaviour
     
     [Header("그 외 HUD 관련 설정")] 
     public int stageCount;
+    public string stageTitleText;
     public float timeElapsed = 0f;      // 흐른 시간 체크 변수 
     private HUDController hudController;
     public bool isTutorialStage; // 튜토리얼인지 스테이지인지 확인함. 
@@ -66,8 +67,8 @@ public class InGameUIManager : MonoBehaviour
         
         currentUndoCount = maxUndoCount;
         currentTagCount = maxTagCount;
-        SetStageCount(1, true); // Todo: Stage Title Text변환확인용 
         ShowHUD();
+        SetStageCount(1, true); // Todo: Stage Title Text 변환확인용
     }
 
     private void OnEnable()
@@ -309,11 +310,13 @@ public class InGameUIManager : MonoBehaviour
         isTutorialStage = isTutorial; 
         if (hudController != null)
         {
-            hudController.UpdateStageText(stageCount, isTutorial);
+            // Todo: 게임 클리어 시 기획에 맞게 해당 스테이지 타이틀 텍스트 + "\n" + "Clear!" 텍스트 표시. 
+            stageTitleText = hudController.UpdateStageText(stageCount, isTutorial);
+            //Debug.Log(stageTitleText);
         }
     }
 
-    // 이 함수를 사용하여 이동횟수 업데이트
+    // 이 함수를 사용하여 이동횟수 업데이트 (이동횟수 표시 폐기되어서 사용X)
     public void SetMoveCount(int crtMoveCount, int mxMoveCount)
     {
         maxMoveCount = mxMoveCount;
@@ -328,7 +331,8 @@ public class InGameUIManager : MonoBehaviour
     {
         if (hudController != null)
         {
-            hudController.UpdateStageText(stageCount, isTutorialStage);
+            stageTitleText = hudController.UpdateStageText(stageCount, isTutorialStage);
+            //Debug.Log(stageTitleText);
         }
     }
 }

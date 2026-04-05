@@ -75,7 +75,7 @@ public class HUDController : MonoBehaviour
     /// </summary>
     /// <param name="stageNum"></param>
     /// <param name="isTutorial"></param>
-    public void UpdateStageText(int stageNum, bool isTutorial)
+    public string UpdateStageText(int stageNum, bool isTutorial)
     {
         // 일반 스테이지의 경우.
         if (stageText != null && !isTutorial)
@@ -84,6 +84,7 @@ public class HUDController : MonoBehaviour
             string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
             
             stageText.text = $"Stage {stageNum}: {localizedTitle}";
+            return stageText.text;
         }
         // 튜토리얼의 경우.
         else if(stageText != null && isTutorial)
@@ -92,9 +93,12 @@ public class HUDController : MonoBehaviour
             string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
             
             stageText.text = $"Tutorial {stageNum}: {localizedTitle}";
+            return stageText.text;
         }
+        return stageText.text;
     }
 
+    // 기획 변경으로 폐기처리
     public void UpdateMoveCountText(int currentCount, int maxCount)
     {
         if (moveCountLocText != null)

@@ -8,7 +8,8 @@ public class LocalizationManager : MonoBehaviour
     public static LocalizationManager Instance;
     private Dictionary<string, string[]> localizationData = new Dictionary<string, string[]>();
     public Language currentLanguage = Language.English;
-    public TMP_FontAsset mainFont; 
+    public TMP_FontAsset mainFont; // 메인으로 모든 글자에 적용되는 폰트
+    public TMP_FontAsset storyFont; // 스토리에 적용되는 폰트. 
 
     public delegate void OnLanguageChanged();
     public static event OnLanguageChanged LanguageChangedEvent;
