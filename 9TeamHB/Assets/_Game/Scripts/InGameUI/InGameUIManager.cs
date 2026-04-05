@@ -133,11 +133,6 @@ public class InGameUIManager : MonoBehaviour
         CloseGameClear();
 
         SetStageCount(stageIndex, isTutorialStage);
-        
-        // 새 스테이지 초기 스냅샷 기록
-        StageState state = stageManager.CurrentState;
-        if (state != null)
-            _undoStack.Push(StageSnapshot.Capture(state));
     }
 
     // 이동 성공 턴만 카운트
@@ -147,18 +142,18 @@ public class InGameUIManager : MonoBehaviour
             MoveCount++;
     }
 
-    // 클리어 판정 -> 스냅샷만 찍고 팝업은 워프 연출 대기
+    // 클리어 판정 → 통계 저장 + 팝업 즉시 표시
     private void OnStageClear()
     {
         _savedMoveCount = MoveCount;
         _savedTagCount  = TagCount;
         _savedClearTime = timeElapsed;
+        ShowGameClear();
     }
 
-    // 워프 연출 완료 -> 클리어 팝업 표시
+    // 워프 연출 완료 (팝업과 무관 — 다음 스테이지 로드는 버튼 클릭으로)
     private void OnWarpComplete()
     {
-        ShowGameClear();
     }
 
     // 타이머·예산·통계 전부 초기값으로
@@ -292,7 +287,7 @@ public class InGameUIManager : MonoBehaviour
         RefreshTagUI();
         RefreshUndoUI();
         
-        if (hudController != null)
+        if (hudController != null && LocalizationManager.Instance != null)
         {
             stageTitleText = hudController.UpdateStageText(stageCount, isTutorialStage);
         }
@@ -303,7 +298,7 @@ public class InGameUIManager : MonoBehaviour
         stageCount = stgCount;
         isTutorialStage = isTutorial; 
         
-        if (hudController != null)
+        if (hudController != null && LocalizationManager.Instance != null)
         {
             stageTitleText = hudController.UpdateStageText(stageCount, isTutorial);
         }
@@ -311,7 +306,7 @@ public class InGameUIManager : MonoBehaviour
     
     private void OnLanguageChanged()
     {
-        if (hudController != null)
+        if (hudController != null && LocalizationManager.Instance != null)
         {
             stageTitleText = hudController.UpdateStageText(stageCount, isTutorialStage);
         }

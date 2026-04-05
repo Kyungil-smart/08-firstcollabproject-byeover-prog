@@ -1,82 +1,56 @@
-using System;
 using System.Collections.Generic;
 
 namespace MyGame2.Stage
 {
-    // 한 턴의 스테이지 상태를 통째로 저장하는 스냅샷.
-    // StageState.Restore(snapshot)가 요구하는 구조 그대로 맞춤.
-
+    // 한 턴의 StageState 스냅샷.
+    // StageState.Restore(snapshot)에 전달하면 해당 시점으로 복원된다.
+ 
     public sealed class StageSnapshot
     {
-        public CellData[] Cells;
-        public Dictionary<int, EntityState> EntityDict;
-        public Dictionary<int, List<KeyFollower>> KeysDict;
-        public int ActivePlayerId;
-        public int TurnIndex;
-        public bool IsGameOver;
-        public bool IsStageClear;
-        public bool IsViewDirty;
+        public CellData[] Cells { get; private set; }
+        public Dictionary<int, EntityState> EntityDict { get; private set; }
+        public Dictionary<int, List<KeyFollower>> KeysDict { get; private set; }
+        public int ActivePlayerId { get; private set; }
+        public int TurnIndex { get; private set; }
+        public bool IsGameOver { get; private set; }
+        public bool IsStageClear { get; private set; }
+        public bool IsViewDirty { get; private set; }
 
-        // 캡처
-
+        // 현재 StageState를 복사하여 스냅샷 생성.
         public static StageSnapshot Capture(StageState state)
         {
-            var snap = new StageSnapshot();
+            if (state == null) return null;
 
-            // 셀 딥카피 (CellData는 struct)
-            snap.Cells = (CellData[])state.Cells.Clone();
+            // 셀 배열 복사 (CellData는 struct이므로 Clone으로 값 복사)
+            CellData[] cellsCopy = (CellData[])state.Cells.Clone();
 
-            // 스칼라 상태
-            snap.ActivePlayerId = state.ActivePlayerId;
-            snap.TurnIndex      = state.TurnIndex;
-            snap.IsGameOver     = state.IsGameOver;
-            snap.IsStageClear   = state.IsStageClear;
-            snap.IsViewDirty    = state.IsViewDirty;
-
-            // 엔티티 딥카피
-            snap.EntityDict = new Dictionary<int, EntityState>(state.EntityDict.Count);
-            snap.KeysDict   = new Dictionary<int, List<KeyFollower>>();
+            // 엔티티: EntityState.CopyFrom()으로 독립 복사
+            var entityCopy = new Dictionary<int, EntityState>(state.EntityDict.Count);
+            var keysCopy = new Dictionary<int, List<KeyFollower>>(4);
 
             foreach (var kvp in state.EntityDict)
             {
-                snap.EntityDict[kvp.Key] = CloneEntity(kvp.Value);
+                entityCopy[kvp.Key] = kvp.Value.CopyFrom();
 
-                // PocketData의 Keys는 별도 저장 (Restore에서 특수 처리)
+                // PocketData 키 목록 별도 보관
                 if (kvp.Value.Has<PocketData>())
                 {
                     PocketData pocket = kvp.Value.Get<PocketData>();
-                    snap.KeysDict[kvp.Key] = new List<KeyFollower>(pocket.Keys);
+                    keysCopy[kvp.Key] = new List<KeyFollower>(pocket.Keys);
                 }
             }
 
-            return snap;
-        }
-
-        // 엔티티 클론
-
-        private static EntityState CloneEntity(EntityState src)
-        {
-            // 빈 엔티티 생성 후 필드 덮어쓰기
-            var e = EntityState.CreateAnimal(src.Position, src.Facing);
-            e.Id                = src.Id;
-            e.Kind              = src.Kind;
-            e.SpawnPosition     = src.SpawnPosition;
-            e.IsAlive           = src.IsAlive;
-            e.IsBlocking        = src.IsBlocking;
-            e.BlocksCameraSight = src.BlocksCameraSight;
-            e.Definition        = src.Definition;
-
-            // 컴포넌트 복사
-            // struct 타입: boxing 시 자동 딥카피
-            // IDisposable(IUpdate 등): 라이브 참조를 들고 있으므로 스킵
-            // ->Restore 시 existing.RestoreFrom()이 기존 라이브 컴포넌트를 유지함
-            foreach (var comp in src.Components)
+            return new StageSnapshot
             {
-                if (comp is IDisposable) continue;
-                e.Set(comp);
-            }
-
-            return e;
+                Cells = cellsCopy,
+                EntityDict = entityCopy,
+                KeysDict = keysCopy,
+                ActivePlayerId = state.ActivePlayerId,
+                TurnIndex = state.TurnIndex,
+                IsGameOver = state.IsGameOver,
+                IsStageClear = state.IsStageClear,
+                IsViewDirty = state.IsViewDirty
+            };
         }
     }
 }
