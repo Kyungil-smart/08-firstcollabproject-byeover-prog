@@ -1,43 +1,52 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameClearUIController : MonoBehaviour
 {
     [Header("Scene Settings")]
-    [SerializeField] private string titleSceneName = "Title_Scene";
+    [SerializeField] private string titleSceneName = "Title_Scene"; // 타이틀 씬 이름
+
+    [Header("통계 텍스트 (프리팹 내 기존 TMP에 연결)")]
+    [Tooltip("이동 횟수 표시용 TMP (프리팹의 MoveCount 텍스트 드래그)")]
+    [SerializeField] private TextMeshProUGUI moveCountText;
+    [Tooltip("태그 횟수 표시용 TMP (프리팹에 새로 추가하거나 기존 텍스트 드래그)")]
+    [SerializeField] private TextMeshProUGUI tagCountText;
+    [Tooltip("클리어 타임 표시용 TMP (프리팹의 PlayTime 텍스트 드래그)")]
+    [SerializeField] private TextMeshProUGUI clearTimeText;
+
+    // InGameUIManager.ShowGameClear()에서 호출
+    public void SetClearStats(int moves, int tags, float time)
+    {
+        int minutes = Mathf.FloorToInt(time / 60f);
+        int seconds = Mathf.FloorToInt(time % 60f);
+
+        if (moveCountText != null)
+            moveCountText.text = moves.ToString();
+
+        if (tagCountText != null)
+            tagCountText.text = tags.ToString();
+
+        if (clearTimeText != null)
+            clearTimeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+    }
 
     public void OnClickMainButton()
     {
         Time.timeScale = 1f;
-        LoadingManager.LoadScene(titleSceneName);
+        SceneManager.LoadScene(titleSceneName);
     }
-    
-    // 다음 스테이지: StageManager.LoadNextStage()로 같은 씬 내에서 로드
+
     public void OnClickNextStageButton()
     {
         Time.timeScale = 1f;
 
-        // 클리어 UI 닫기
-        if (InGameUIManager.Instance != null)
+        // 같은 씬 내에서 다음 스테이지 로드 (씬 리로드 X)
+        var stageMgr = FindAnyObjectByType<MyGame2.Stage.StageManager>();
+        if (stageMgr != null)
         {
-            InGameUIManager.Instance.CloseGameClear();
-        }
-
-        // StageManager를 찾아서 다음 스테이지 로드
-        var stageManager = FindAnyObjectByType<MyGame2.Stage.StageManager>();
-        if (stageManager != null)
-        {
-            bool loaded = stageManager.LoadNextStage();
-            if (!loaded)
-            {
-                // 마지막 스테이지였으면 타이틀로 복귀
-                Debug.Log("[GameClearUI] 마지막 스테이지 — 타이틀로 이동합니다.");
-                LoadingManager.LoadScene(titleSceneName);
-            }
-        }
-        else
-        {
-            Debug.LogWarning("[GameClearUI] StageManager를 찾지 못했습니다.");
-            LoadingManager.LoadScene(titleSceneName);
+            InGameUIManager.Instance?.CloseGameClear();
+            stageMgr.LoadNextStage();
         }
     }
 }

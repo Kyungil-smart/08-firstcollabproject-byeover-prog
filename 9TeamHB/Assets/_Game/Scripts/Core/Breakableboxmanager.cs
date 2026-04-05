@@ -17,6 +17,17 @@ namespace MyGame2.Stage
 
         private readonly HashSet<int> _trackedIds = new HashSet<int>();
         private readonly HashSet<int> _breakingIds = new HashSet<int>();
+        private readonly Dictionary<int, GridPos> _brokenPositions = new Dictionary<int, GridPos>();
+
+        // 실행 중인 파괴 코루틴 추적 (Undo 시 취소용)
+        private readonly Dictionary<int, Coroutine> _activeCoroutines = new Dictionary<int, Coroutine>();
+        // 파괴 애니메이션 임시 오브젝트 추적 (코루틴 취소 시 정리용)
+        private readonly Dictionary<int, GameObject> _activeBreakFX = new Dictionary<int, GameObject>();
+
+        // 역재생 임시 오브젝트 추적 (다음 Undo 스텝에서 정리용)
+        private readonly List<GameObject> _reverseEffects = new List<GameObject>();
+        private readonly List<Coroutine> _reverseCoroutines = new List<Coroutine>();
+        private readonly List<GridEntityView> _hiddenViews = new List<GridEntityView>();
 
         private void OnEnable()
         {
@@ -45,8 +56,20 @@ namespace MyGame2.Stage
 
         private void OnStageLoaded(int idx)
         {
+            foreach (var kvp in _activeCoroutines)
+            {
+                if (kvp.Value != null) StopCoroutine(kvp.Value);
+            }
+            _activeCoroutines.Clear();
+            foreach (var kvp in _activeBreakFX)
+            {
+                if (kvp.Value != null) Destroy(kvp.Value);
+            }
+            _activeBreakFX.Clear();
+            CleanupReverseEffects();
             _trackedIds.Clear();
             _breakingIds.Clear();
+            _brokenPositions.Clear();
             CollectBreakableBoxes();
         }
 
@@ -65,6 +88,14 @@ namespace MyGame2.Stage
 
         private void OnTurnExecuted(TurnOutcome outcome)
         {
+            if (stageManager.CurrentState == null) return;
+
+            if (stageManager.CurrentState.IsUndoProcessing)
+            {
+                CheckRestore();
+                return;
+            }
+
             CheckAll();
         }
 
@@ -85,7 +116,6 @@ namespace MyGame2.Stage
                 BreakableData data = entity.Get<BreakableData>();
                 if (data.IsBreaking)
                 {
-                    Debug.Log($"[BBM] ID={id} IsBreaking 감지!");
                     if (toBreak == null) toBreak = new List<int>(2);
                     toBreak.Add(id);
                 }
@@ -100,10 +130,10 @@ namespace MyGame2.Stage
 
                 if (state.TryGetEntity(id, out EntityState box))
                 {
-                    float cs = 1f;
-                    Vector3 pos = box.Position.ToWorld(cs);
-                    Debug.Log($"[BBM] 애니메이션 시작 ID={id} pos={pos} frames={frames?.Length}");
-                    StartCoroutine(AnimateBreak(pos, id));
+                    Vector3 pos = box.Position.ToWorld(1f);
+                    _brokenPositions[id] = box.Position;
+                    Coroutine co = StartCoroutine(AnimateBreak(pos, id));
+                    _activeCoroutines[id] = co;
                 }
             }
         }
@@ -122,6 +152,9 @@ namespace MyGame2.Stage
             sr.sortingOrder = 1;
             sr.sprite = frames[0];
 
+            // 임시 오브젝트 등록 (Undo 취소 시 정리용)
+            _activeBreakFX[entityId] = temp;
+
             float elapsed = 0f;
             int total = frames.Length;
 
@@ -135,6 +168,8 @@ namespace MyGame2.Stage
             }
 
             yield return new WaitForSeconds(0.1f);
+
+            _activeBreakFX.Remove(entityId);
             Destroy(temp);
 
             StageState state = stageManager.CurrentState;
@@ -146,7 +181,148 @@ namespace MyGame2.Stage
 
             _trackedIds.Remove(entityId);
             _breakingIds.Remove(entityId);
-            Debug.Log($"[BBM] 파괴 완료 ID={entityId}");
+            _activeCoroutines.Remove(entityId);
+        }
+
+        // Undo 매 스텝: 파괴됐던 상자가 복원됐으면 역재생
+        private void CheckRestore()
+        {
+            StageState state = stageManager.CurrentState;
+            if (state == null) return;
+
+            // 이전 역재생 잔존물 정리
+            CleanupReverseEffects();
+
+            List<int> restored = null;
+
+            foreach (var kvp in _brokenPositions)
+            {
+                int id = kvp.Key;
+
+                if (state.TryGetEntity(id, out EntityState entity) && entity.IsAlive)
+                {
+                    if (restored == null) restored = new List<int>(2);
+                    restored.Add(id);
+
+                    // 실행 중인 파괴 코루틴 취소 + 임시 오브젝트 파괴
+                    if (_activeCoroutines.TryGetValue(id, out Coroutine co) && co != null)
+                    {
+                        StopCoroutine(co);
+                        _activeCoroutines.Remove(id);
+                    }
+                    if (_activeBreakFX.TryGetValue(id, out GameObject fx) && fx != null)
+                    {
+                        Destroy(fx);
+                        _activeBreakFX.Remove(id);
+                    }
+
+                    _trackedIds.Add(id);
+                    _breakingIds.Remove(id);
+
+                    // IsBreaking 플래그 초기화
+                    if (entity.Has<BreakableData>())
+                    {
+                        BreakableData bd = entity.Get<BreakableData>();
+                        bd.IsBreaking = false;
+                        entity.Set(bd);
+                    }
+
+                    // View 숨기고 역재생 후 보이기
+                    GridEntityView view = FindViewForEntity(id);
+                    Coroutine revCo = StartCoroutine(AnimateReverse(entity.Position.ToWorld(1f), view));
+                    _reverseCoroutines.Add(revCo);
+                }
+            }
+
+            if (restored != null)
+            {
+                for (int i = 0; i < restored.Count; i++)
+                    _brokenPositions.Remove(restored[i]);
+            }
+        }
+
+        // 프레임 역순 재생 -> 끝나면 View 보이기
+        private IEnumerator AnimateReverse(Vector3 position, GridEntityView view)
+        {
+            if (frames == null || frames.Length < 2) yield break;
+
+            // View 숨기기 (역재생 끝날 때까지)
+            if (view != null)
+            {
+                view.gameObject.SetActive(false);
+                _hiddenViews.Add(view);
+            }
+
+            GameObject temp = new GameObject("BreakReverseFX");
+            temp.transform.position = position;
+            SpriteRenderer sr = temp.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = 1;
+            sr.sprite = frames[frames.Length - 1];
+
+            // 추적 등록
+            _reverseEffects.Add(temp);
+
+            int total = frames.Length;
+            float duration = 0.12f;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                int idx = Mathf.Clamp(Mathf.FloorToInt((1f - t) * (total - 1)), 0, total - 1);
+                sr.sprite = frames[idx];
+                yield return null;
+            }
+
+            // 정상 완료 시 정리
+            _reverseEffects.Remove(temp);
+            Destroy(temp);
+
+            // 역재생 끝 -> View 보이기
+            if (view != null)
+            {
+                view.gameObject.SetActive(true);
+                _hiddenViews.Remove(view);
+            }
+        }
+
+        // 이전 역재생 잔존물 전부 정리
+        private void CleanupReverseEffects()
+        {
+            for (int i = 0; i < _reverseCoroutines.Count; i++)
+            {
+                if (_reverseCoroutines[i] != null)
+                    StopCoroutine(_reverseCoroutines[i]);
+            }
+            _reverseCoroutines.Clear();
+
+            for (int i = 0; i < _reverseEffects.Count; i++)
+            {
+                if (_reverseEffects[i] != null)
+                    Destroy(_reverseEffects[i]);
+            }
+            _reverseEffects.Clear();
+
+            // 역재생 중 숨겨진 View 복원
+            for (int i = 0; i < _hiddenViews.Count; i++)
+            {
+                if (_hiddenViews[i] != null)
+                    _hiddenViews[i].gameObject.SetActive(true);
+            }
+            _hiddenViews.Clear();
+        }
+
+        // EntityId로 GridEntityView 찾기
+        private GridEntityView FindViewForEntity(int entityId)
+        {
+            GridEntityView[] allViews = FindObjectsByType<GridEntityView>(FindObjectsSortMode.None);
+            for (int i = 0; i < allViews.Length; i++)
+            {
+                if (allViews[i].EntityId == entityId)
+                    return allViews[i];
+            }
+            return null;
         }
     }
 }

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
   m_Name: ProjectileLauncer
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 11
+  _kind: 9
   isBlocking: 1
   blocksCameraSight: 0
   isLethal: 0

@@ -35,7 +35,7 @@ namespace MyGame2.Stage
 
 
         private MapLoader _mapLoader;
-
+        
         // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
@@ -113,6 +113,24 @@ namespace MyGame2.Stage
 
             _currentStageIndex = stageIndex;
             ClearViews();
+
+            // 이전 상태의 IUpdate/IDisposable 컴포넌트 이벤트 구독 해제
+            // (투사체 발사기 등이 다음 스테이지에서도 계속 발사하는 버그 방지)
+            if (CurrentState != null)
+            {
+                foreach (EntityState e in CurrentState.Entities)
+                {
+                    foreach (IComponentData comp in e.Components)
+                    {
+                        if (comp is System.IDisposable disposable)
+                            disposable.Dispose();
+                    }
+                }
+            }
+
+            // 투사체 속도 레지스트리 초기화
+            ProjectileSpeedRegistry.Clear();
+
             _undoStack.Clear(); // Undo 스택 초기화
             _undoNum = 0;
 
@@ -138,9 +156,9 @@ namespace MyGame2.Stage
         }
 
         // 현재 스테이지를 다시 로드한다.
-        public void RestartCurrentStage()
-        {
-            LoadStage(_currentStageIndex);
+        public void RestartCurrentStage() 
+        { 
+            LoadStage(_currentStageIndex); 
         }
 
         // 다음 스테이지를 로드한다.
@@ -156,14 +174,7 @@ namespace MyGame2.Stage
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
-
-            bool switchResult = _tagSystem.Switch(CurrentState);
-            if (switchResult)
-            {
-                _undoStack.Clear();
-            }
-
-            return switchResult;
+            return _tagSystem.Switch(CurrentState);
         }
 
         // 플레이어 턴을 실행한다.
@@ -233,12 +244,10 @@ namespace MyGame2.Stage
         public void LeaveUndo()
         {
             if (_undoCoroutine != null)
-                // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
-                foreach (var pair in _views)
-                {
-                    StopCoroutine(_undoCoroutine);
-                }
-
+            {
+                StopCoroutine(_undoCoroutine);
+                _undoCoroutine = null;
+            }
 
             if (CurrentState == null) return;
             CurrentState.IsUndoProcessing = false;
@@ -342,7 +351,7 @@ namespace MyGame2.Stage
                     EntityState e = members[i];
                     if (e.Kind == EntityKind.ButtonEntity || e.Kind == EntityKind.LeverEntity)
                         triggers.Add(e);
-                    else if (e.Kind == EntityKind.DoorEntity)
+                    else if (e.Kind == EntityKind.DoorEntity || e.Has<HiddenTrapData>())
                         doors.Add(e);
                     else
                         others.Add(e);

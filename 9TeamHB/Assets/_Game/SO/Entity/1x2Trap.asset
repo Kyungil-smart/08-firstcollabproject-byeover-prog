@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
   m_Name: 1x2Trap
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 13
+  _kind: 16
   isBlocking: 0
   blocksCameraSight: 0
   isLethal: 0
