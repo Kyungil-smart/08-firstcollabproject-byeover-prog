@@ -4,44 +4,26 @@ using UnityEngine.InputSystem;
 
 namespace MyGame2.Stage
 {
-    // [입력 규칙]
-    // WASD 4방향 이동, 대각선 금지
-    // 선입력 우선: 이미 잠긴 방향이 있으면 해당 키를 떼기 전까지 유지
-    // 최근 입력 우선: 새 키가 눌리면 그 방향이 우선
-    // 동률 시 W > A > S > D 우선순위
-    // 0.2초 간격 반복 실행
-
     public sealed class PlayerController : MonoBehaviour
     {
         [Header("씬 참조")]
-        [Tooltip("턴 실행 및 태그 전환 대상")]
         [SerializeField] private StageManager stageManager;
-
-        [Tooltip("게임 흐름 상태 확인용 (null이면 StageState에서 직접 확인)")]
         [SerializeField] private GameManager gameManager;
-
-        [Tooltip("워프 연출 중 입력 차단용")]
         [SerializeField] private StageWarpEffect warpEffect;
 
         [Header("입력 설정")]
-        [Tooltip("이동 반복 간격 (초)")]
         [SerializeField] private float moveRepeatInterval = 0.2f;
 
-        // InputAction 정의
         private InputAction _moveUpAction;
         private InputAction _moveLeftAction;
         private InputAction _moveDownAction;
         private InputAction _moveRightAction;
         private InputAction _tagSwitchAction;
-
         private InputAction _undoAction;
-
-        // 입력 추적 상태
 
         private readonly Dictionary<Direction, float> _pressedAt = new Dictionary<Direction, float>(4);
         private Direction _lockedDirection = Direction.None;
         private float _nextMoveTime;
-
         private bool _isUndoHeld;
 
         private void Awake()
@@ -68,45 +50,24 @@ namespace MyGame2.Stage
 
         private void Update()
         {
-            if (stageManager == null || stageManager.CurrentState == null)
-            {
-                return;
-            }
+            if (stageManager == null || stageManager.CurrentState == null) return;
+            if (!IsPlayable()) return;
+            if (stageManager.CurrentState.IsUndoProcessing) return;
 
-            if (!IsPlayable())
-            {
-                return;
-            }
-
-            if (stageManager.CurrentState.IsUndoProcessing)
-            {
-                return;
-            }
-
-            // 잠긴 방향의 키가 떼어졌으면 잠금 해제
             if (_lockedDirection != Direction.None && !_pressedAt.ContainsKey(_lockedDirection))
-            {
                 _lockedDirection = Direction.None;
-            }
 
             HandleMoveInput();
         }
 
         private void CreateInputActions()
         {
-            _moveUpAction = new InputAction("MoveUp", InputActionType.Button,
-                "<Keyboard>/w");
-            _moveLeftAction = new InputAction("MoveLeft", InputActionType.Button,
-                "<Keyboard>/a");
-            _moveDownAction = new InputAction("MoveDown", InputActionType.Button,
-                "<Keyboard>/s");
-            _moveRightAction = new InputAction("MoveRight", InputActionType.Button,
-                "<Keyboard>/d");
-            _tagSwitchAction = new InputAction("TagSwitch", InputActionType.Button,
-                "<Keyboard>/tab");
-
-            _undoAction = new InputAction("Undo", InputActionType.Button,
-                "<Keyboard>/space");
+            _moveUpAction = new InputAction("MoveUp", InputActionType.Button, "<Keyboard>/w");
+            _moveLeftAction = new InputAction("MoveLeft", InputActionType.Button, "<Keyboard>/a");
+            _moveDownAction = new InputAction("MoveDown", InputActionType.Button, "<Keyboard>/s");
+            _moveRightAction = new InputAction("MoveRight", InputActionType.Button, "<Keyboard>/d");
+            _tagSwitchAction = new InputAction("TagSwitch", InputActionType.Button, "<Keyboard>/tab");
+            _undoAction = new InputAction("Undo", InputActionType.Button, "<Keyboard>/space");
         }
 
         private void EnableInputActions()
@@ -139,24 +100,17 @@ namespace MyGame2.Stage
             _undoAction?.Dispose();
         }
 
-        // 콜백 구독 / 해제
-
         private void SubscribeInputCallbacks()
         {
             _moveUpAction.started += OnMoveUpStarted;
             _moveUpAction.canceled += OnMoveUpCanceled;
-
             _moveLeftAction.started += OnMoveLeftStarted;
             _moveLeftAction.canceled += OnMoveLeftCanceled;
-
             _moveDownAction.started += OnMoveDownStarted;
             _moveDownAction.canceled += OnMoveDownCanceled;
-
             _moveRightAction.started += OnMoveRightStarted;
             _moveRightAction.canceled += OnMoveRightCanceled;
-
             _tagSwitchAction.started += OnTagSwitchStarted;
-
             _undoAction.started += OnUndoStarted;
             _undoAction.canceled += OnUndoCanceled;
         }
@@ -165,128 +119,74 @@ namespace MyGame2.Stage
         {
             _moveUpAction.started -= OnMoveUpStarted;
             _moveUpAction.canceled -= OnMoveUpCanceled;
-
             _moveLeftAction.started -= OnMoveLeftStarted;
             _moveLeftAction.canceled -= OnMoveLeftCanceled;
-
             _moveDownAction.started -= OnMoveDownStarted;
             _moveDownAction.canceled -= OnMoveDownCanceled;
-
             _moveRightAction.started -= OnMoveRightStarted;
             _moveRightAction.canceled -= OnMoveRightCanceled;
-
             _tagSwitchAction.started -= OnTagSwitchStarted;
-
             _undoAction.started -= OnUndoStarted;
             _undoAction.canceled -= OnUndoCanceled;
         }
 
-        // InputAction 콜백 (키 누름 / 뗌 추적)
+        // 이동 콜백
 
-        private void OnMoveUpStarted(InputAction.CallbackContext ctx)
-        {
-            _pressedAt[Direction.Up] = Time.time;
-        }
+        private void OnMoveUpStarted(InputAction.CallbackContext ctx) { _pressedAt[Direction.Up] = Time.time; }
+        private void OnMoveUpCanceled(InputAction.CallbackContext ctx) { _pressedAt.Remove(Direction.Up); }
+        private void OnMoveLeftStarted(InputAction.CallbackContext ctx) { _pressedAt[Direction.Left] = Time.time; }
+        private void OnMoveLeftCanceled(InputAction.CallbackContext ctx) { _pressedAt.Remove(Direction.Left); }
+        private void OnMoveDownStarted(InputAction.CallbackContext ctx) { _pressedAt[Direction.Down] = Time.time; }
+        private void OnMoveDownCanceled(InputAction.CallbackContext ctx) { _pressedAt.Remove(Direction.Down); }
+        private void OnMoveRightStarted(InputAction.CallbackContext ctx) { _pressedAt[Direction.Right] = Time.time; }
+        private void OnMoveRightCanceled(InputAction.CallbackContext ctx) { _pressedAt.Remove(Direction.Right); }
 
-        private void OnMoveUpCanceled(InputAction.CallbackContext ctx)
-        {
-            _pressedAt.Remove(Direction.Up);
-        }
-
-        private void OnMoveLeftStarted(InputAction.CallbackContext ctx)
-        {
-            _pressedAt[Direction.Left] = Time.time;
-        }
-
-        private void OnMoveLeftCanceled(InputAction.CallbackContext ctx)
-        {
-            _pressedAt.Remove(Direction.Left);
-        }
-
-        private void OnMoveDownStarted(InputAction.CallbackContext ctx)
-        {
-            _pressedAt[Direction.Down] = Time.time;
-        }
-
-        private void OnMoveDownCanceled(InputAction.CallbackContext ctx)
-        {
-            _pressedAt.Remove(Direction.Down);
-        }
-
-        private void OnMoveRightStarted(InputAction.CallbackContext ctx)
-        {
-            _pressedAt[Direction.Right] = Time.time;
-        }
-
-        private void OnMoveRightCanceled(InputAction.CallbackContext ctx)
-        {
-            _pressedAt.Remove(Direction.Right);
-        }
+        // 태그: InGameUIManager를 통해 횟수 차감
 
         private void OnTagSwitchStarted(InputAction.CallbackContext ctx)
         {
-            if (stageManager == null || stageManager.CurrentState == null)
-            {
-                return;
-            }
+            if (stageManager == null || stageManager.CurrentState == null) return;
+            if (warpEffect != null && warpEffect.IsWarping) return;
 
-            // 워프 중에는 태그 전환도 차단
-            if (warpEffect != null && warpEffect.IsWarping)
+            if (InGameUIManager.Instance != null)
             {
-                return;
-            }
-
-            bool switched = stageManager.SwitchActivePlayer();
-            if (switched)
-            {
-                _nextMoveTime = 0f;
+                bool switched = InGameUIManager.Instance.TryTag();
+                if (switched) _nextMoveTime = 0f;
             }
         }
 
+        // Undo: InGameUIManager를 통해 시간 차감
+
         private void OnUndoStarted(InputAction.CallbackContext ctx)
         {
-            if (!IsPlayable())
-            {
-                return;
-            }
+            if (!IsPlayable()) return;
 
-            if (_lockedDirection != Direction.None && !_pressedAt.ContainsKey(_lockedDirection))
-            {
-                return;
-            }
+            if (_isUndoHeld) return;
+            _isUndoHeld = true;
 
-            if (!_isUndoHeld)
-            {
-                _isUndoHeld = true;
-                bool enterUndoResult = stageManager.TryEnterUndo();
-            }
+            if (InGameUIManager.Instance != null)
+                InGameUIManager.Instance.OnClickUndoButton();
         }
 
         private void OnUndoCanceled(InputAction.CallbackContext ctx)
         {
-            if (stageManager.CurrentState.IsUndoProcessing)
-            {
-                stageManager.LeaveUndo();
-            }
-
             if (_isUndoHeld)
             {
                 _isUndoHeld = false;
+
+                if (InGameUIManager.Instance != null)
+                    InGameUIManager.Instance.OnReleaseUndoButton();
             }
         }
 
+        // 내부
+
         private bool IsPlayable()
         {
-            // 워프 연출 중에는 입력 차단
-            if (warpEffect != null && warpEffect.IsWarping)
-            {
-                return false;
-            }
+            if (warpEffect != null && warpEffect.IsWarping) return false;
 
             if (gameManager != null)
-            {
                 return gameManager.CurrentState == GameFlowState.Playing;
-            }
 
             return !stageManager.CurrentState.IsGameOver &&
                    !stageManager.CurrentState.IsStageClear;
@@ -297,19 +197,13 @@ namespace MyGame2.Stage
             if (_lockedDirection == Direction.None)
             {
                 _lockedDirection = PickDirection();
-                if (_lockedDirection == Direction.None)
-                {
-                    return;
-                }
-
+                if (_lockedDirection == Direction.None) return;
                 ExecuteTurn(_lockedDirection);
                 return;
             }
 
             if (Time.time >= _nextMoveTime)
-            {
                 ExecuteTurn(_lockedDirection);
-            }
         }
 
         private void ExecuteTurn(Direction direction)
@@ -317,21 +211,13 @@ namespace MyGame2.Stage
             TurnOutcome outcome = stageManager.TryExecuteTurn(direction);
             _nextMoveTime = Time.time + moveRepeatInterval;
 
-            // 이동 실패 + 해당 키도 안 눌린 상태면 잠금 해제
             if (!outcome.Executed && !_pressedAt.ContainsKey(direction))
-            {
                 _lockedDirection = Direction.None;
-            }
         }
-
-        // 방향 선택 (최근 입력 우선, 동률 시 W>A>S>D)
 
         private Direction PickDirection()
         {
-            if (_pressedAt.Count == 0)
-            {
-                return Direction.None;
-            }
+            if (_pressedAt.Count == 0) return Direction.None;
 
             float bestTime = float.MinValue;
             Direction bestDirection = Direction.None;
@@ -344,18 +230,15 @@ namespace MyGame2.Stage
                     bestDirection = pair.Key;
                     continue;
                 }
-
                 if (Mathf.Approximately(pair.Value, bestTime) &&
                     GetPriority(pair.Key) < GetPriority(bestDirection))
                 {
                     bestDirection = pair.Key;
                 }
             }
-
             return bestDirection;
         }
 
-        // 동률 시 우선순위: W(0) > A(1) > S(2) > D(3)
         private static int GetPriority(Direction direction)
         {
             switch (direction)

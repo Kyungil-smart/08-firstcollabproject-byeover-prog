@@ -21,7 +21,13 @@ namespace MyGame2.Stage
         [SerializeField] private float rewindDelay = 1.0f;
 
         [Header("렌더링")]
-        [SerializeField] private int sortingOrder = -1;
+        [SerializeField] private int sortingOrder = -5;
+
+        [Header("비활성화 표시")]
+        [Tooltip("비활성화 시 스프라이트 색상 (반투명 녹색 등)")]
+        [SerializeField] private Color deactivatedColor = new Color(0.3f, 0.8f, 0.3f, 0.5f);
+        [Tooltip("활성 상태 기본 색상")]
+        [SerializeField] private Color activeColor = Color.white;
 
         private Transform _root;
         private readonly Dictionary<long, TrapTile> _tiles = new Dictionary<long, TrapTile>();
@@ -32,6 +38,7 @@ namespace MyGame2.Stage
             public SpriteRenderer Renderer;
             public GridPos Position;
             public bool Revealed;
+            public bool Deactivated;
         }
 
         private void OnEnable()
@@ -41,6 +48,7 @@ namespace MyGame2.Stage
             stageManager.Events.HiddenTrapRevealed += OnTrapRevealed;
             stageManager.Events.HiddenTrapPlayerKill += OnHiddenTrapPlayerKill;
             stageManager.Events.GameOverTriggered += OnGameOver;
+            stageManager.Events.TurnExecuted += OnTurnExecuted;
         }
 
         private void OnDisable()
@@ -50,6 +58,7 @@ namespace MyGame2.Stage
             stageManager.Events.HiddenTrapRevealed -= OnTrapRevealed;
             stageManager.Events.HiddenTrapPlayerKill -= OnHiddenTrapPlayerKill;
             stageManager.Events.GameOverTriggered -= OnGameOver;
+            stageManager.Events.TurnExecuted -= OnTurnExecuted;
         }
 
         private void Start()
@@ -91,7 +100,7 @@ namespace MyGame2.Stage
                     SpriteRenderer sr = tileObj.AddComponent<SpriteRenderer>();
                     sr.sprite = frames[0];
                     sr.sortingOrder = sortingOrder;
-                    Debug.Log($"설정된 Order: {sr.sortingOrder}");
+                    sr.color = activeColor;
 
                     long key = PosKey(pos);
                     _tiles[key] = new TrapTile
@@ -99,8 +108,42 @@ namespace MyGame2.Stage
                         Obj = tileObj,
                         Renderer = sr,
                         Position = pos,
-                        Revealed = false
+                        Revealed = false,
+                        Deactivated = false
                     };
+                }
+            }
+        }
+
+        // 턴 실행 후: 비활성화/재활성화 상태 체크
+        private void OnTurnExecuted(TurnOutcome outcome)
+        {
+            StageState state = stageManager.CurrentState;
+            if (state == null) return;
+
+            List<long> keys = new List<long>(_tiles.Keys);
+            for (int i = 0; i < keys.Count; i++)
+            {
+                long key = keys[i];
+                TrapTile tile = _tiles[key];
+                if (tile.Renderer == null) continue;
+
+                CellData cell = state.GetCell(tile.Position);
+                bool isNowActive = cell.HasHiddenTrap;
+
+                if (tile.Deactivated && isNowActive)
+                {
+                    // 재활성화됨 — 원래 색상 복원
+                    tile.Deactivated = false;
+                    tile.Renderer.color = activeColor;
+                    _tiles[key] = tile;
+                }
+                else if (!tile.Deactivated && !isNowActive && !tile.Revealed)
+                {
+                    // 비활성화됨 — 비활성화 색상으로 전환
+                    tile.Deactivated = true;
+                    tile.Renderer.color = deactivatedColor;
+                    _tiles[key] = tile;
                 }
             }
         }
@@ -126,15 +169,15 @@ namespace MyGame2.Stage
 
         private IEnumerator DelayedKill(int playerId, GridPos trapPos)
         {
-            // Active 애니메이션이 끝날 때까지 대기
-            yield return new WaitForSeconds(activeDuration);
+            // Active 애니메이션이 끝날 때까지 대기 + 여유 시간
+            yield return new WaitForSeconds(activeDuration + 0.3f);
 
             StageState state = stageManager.CurrentState;
             if (state == null) yield break;
 
-            // 플레이어 Kill + GameOver
+            // 플레이어 Kill + 게임오버 이벤트 발행 (팝업 표시)
             state.KillEntity(playerId);
-            state.MarkGameOver();
+            state.ConfirmGameOver();
             state.SetViewDirty();
         }
 
@@ -143,6 +186,9 @@ namespace MyGame2.Stage
         {
             SpriteRenderer sr = tile.Renderer;
             if (sr == null || frames.Length <= 1) yield break;
+
+            // 발동 시 색상 원래대로 복원 (비활성화 상태에서 발동될 일은 없지만 안전장치)
+            sr.color = activeColor;
 
             int totalFrames = frames.Length;
             float elapsed = 0f;

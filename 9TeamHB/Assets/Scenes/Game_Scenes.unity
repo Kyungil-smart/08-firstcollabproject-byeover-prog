@@ -846,7 +846,7 @@ MonoBehaviour:
   entityRoot: {fileID: 1332624084}
   prefabRegistry: {fileID: 127105790}
   stageFiles:
-  - {fileID: 4900000, guid: c7dffe5b722e33e43ae5c37bcee051bf, type: 3}
+  - {fileID: 4900000, guid: 16b7cb031633a0448986424904aaf6c2, type: 3}
   - {fileID: 4900000, guid: 700cdbf4faec48a4488d2e5383fa76f7, type: 3}
   - {fileID: 4900000, guid: b98f1760da5d2954f9d9a0bac085a4e3, type: 3}
   - {fileID: 4900000, guid: 5e052a0b7117f8c4ab7e6d0a3b167b52, type: 3}
@@ -1281,7 +1281,9 @@ MonoBehaviour:
   activeDuration: 0.4
   rewindDuration: 0.5
   rewindDelay: 1
-  sortingOrder: 0
+  sortingOrder: -1
+  deactivatedColor: {r: 0.6415094, g: 0.6415094, b: 0.6415094, a: 0.5}
+  activeColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &1906414216
 Transform:
   m_ObjectHideFlags: 0
