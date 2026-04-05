@@ -32,7 +32,7 @@ namespace MyGame2.Stage
         {
             switch (stageIndex)
             {
-                case 0: ConfigureStage2(); break;
+                case 0: ConfigureStage7(); break;
                 case 7: ConfigureTutorial7(); break;
                 case 9: ConfigureStage2(); break;
                 case 11: ConfigureStage4(); break;
@@ -72,7 +72,8 @@ namespace MyGame2.Stage
         private void ConfigureStage7()
         {
             // 로봇 경로 주입
-            ConfigureRobotPatrols(stage7);
+            ConfigureRobotPatrols(stage7Robot);
+            ConfigureSummonerPatrols(stage7Summon);
         }
 
         private void ConfigureRobotPatrols(PatrolData[] patrols)
@@ -85,6 +86,24 @@ namespace MyGame2.Stage
             for (int i = 0; i < state.RobotIds.Count; i++)
             {
                 if (!state.TryGetEntity(state.RobotIds[i], out EntityState robot))
+                    continue;
+
+                // ECS-lite: Set으로 컴포넌트 교체
+                robot.Set(patrols[i]);
+
+                state.SetFacing(robot.Id, Direction.Right);
+            }
+        }
+
+        private void ConfigureSummonerPatrols(PatrolData[] patrols)
+        {
+            StageState state = stageManager.CurrentState;
+            if (state == null) return;
+            if (patrols.Length != state.SummonerIds.Count) return;
+            
+            for (int i = 0; i < state.SummonerIds.Count; i++)
+            {
+                if (!state.TryGetEntity(state.SummonerIds[i], out EntityState robot))
                     continue;
 
                 // ECS-lite: Set으로 컴포넌트 교체
@@ -149,7 +168,25 @@ namespace MyGame2.Stage
             })
         };
         
-        private PatrolData[] stage7 = new PatrolData[]
+        private PatrolData[] stage7Robot = new PatrolData[]
+        {
+            
+            new PatrolData(new GridPos[]
+            {
+                new GridPos(10, 10),
+                new GridPos(14, 10),
+                new GridPos(14, 12),
+                new GridPos(10, 12)
+            }),
+            new PatrolData(new GridPos[]
+            {
+                new GridPos(16, 10),
+                new GridPos(20, 10),
+                new GridPos(20, 12),
+                new GridPos(16, 12)
+            })
+        };
+        private PatrolData[] stage7Summon = new PatrolData[]
         {
             new PatrolData(new GridPos[]
             {
@@ -171,20 +208,6 @@ namespace MyGame2.Stage
                 new GridPos(5, 9),
                 new GridPos(2, 10),
                 new GridPos(5, 10)
-            }),
-            new PatrolData(new GridPos[]
-            {
-                new GridPos(10, 10),
-                new GridPos(14, 10),
-                new GridPos(14, 12),
-                new GridPos(10, 12)
-            }),
-            new PatrolData(new GridPos[]
-            {
-                new GridPos(16, 10),
-                new GridPos(20, 10),
-                new GridPos(20, 12),
-                new GridPos(16, 12)
             }),
             new PatrolData(new GridPos[]
             {
