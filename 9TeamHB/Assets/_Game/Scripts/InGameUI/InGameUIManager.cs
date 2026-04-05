@@ -36,8 +36,10 @@ public class InGameUIManager : MonoBehaviour
 
     [Header("그 외 HUD 관련 설정")]
     public int stageCount;
-    public float timeElapsed = 0f;
+    public string stageTitleText;       
+    public float timeElapsed = 0f;      // 흐른 시간 체크 변수
     private HUDController hudController;
+    public bool isTutorialStage;        // 튜토리얼인지 스테이지인지 확인함.
 
     public bool IsPausePopupActive => activePausePopup != null && activePausePopup.activeSelf;
 
@@ -71,6 +73,17 @@ public class InGameUIManager : MonoBehaviour
         isUndoActive = false;
 
         ShowHUD();
+        SetStageCount(1, true); // Todo: Stage Title Text 변환확인용
+    }
+
+    private void OnEnable()
+    {
+        LocalizationManager.LanguageChangedEvent += OnLanguageChanged;
+    }
+    
+    private void OnDisable()
+    {
+        LocalizationManager.LanguageChangedEvent -= OnLanguageChanged;
     }
 
     public void Update()
@@ -131,7 +144,7 @@ public class InGameUIManager : MonoBehaviour
 
         if (hudController != null)
         {
-            hudController.UpdateStageText(stageCount);
+            hudController.UpdateStageText(stageCount, isTutorialStage);
             hudController.UpdateMoveCountText(currentMoveCount, maxMoveCount);
         }
     }
@@ -207,13 +220,25 @@ public class InGameUIManager : MonoBehaviour
             activeGameQuit.SetActive(false);
         UpdateTimeScale();
     }
+    
 
-    // Undo (시간제)
+    public void ExecuteGameQuitRetry()
+    {
+        if (activeGameQuit == null)
+        {
+            activeGameQuit = Instantiate(gameQuitPrefab);
+            activeGameQuit.SetActive(false); 
+        }
+        
+        GameQuitUIController quitUIController = activeGameQuit.GetComponent<GameQuitUIController>();
+        if (quitUIController != null)
+        {
+            quitUIController.OnClickRetryButton();
+        }
+    }
 
-    // Undo 중복 호출 방지
     private int _lastUndoFrame = -1;
 
-    // Undo 시작 (Space 누름 또는 버튼 클릭)
     public void OnClickUndoButton()
     {
         // 같은 프레임 중복 호출 차단
@@ -236,7 +261,6 @@ public class InGameUIManager : MonoBehaviour
         }
     }
 
-    // Undo 종료 (Space 뗌)
     public void OnReleaseUndoButton()
     {
         if (!isUndoActive) return;
@@ -250,7 +274,6 @@ public class InGameUIManager : MonoBehaviour
             hudUndoUI.UpdateUndoUI(remainingUndoSeconds, maxUndoSeconds);
     }
 
-    // 시간 소진 시 강제 종료
     private void ForceStopUndo()
     {
         isUndoActive = false;
@@ -263,16 +286,10 @@ public class InGameUIManager : MonoBehaviour
             hudUndoUI.UpdateUndoUI(0f, maxUndoSeconds);
     }
 
-    // 외부에서 Undo 활성 여부 확인
     public bool IsUndoActive => isUndoActive;
 
-    // 태그 (중앙 관리)
-
-    // 태그 중복 호출 방지
     private int _lastTagFrame = -1;
 
-    // 태그 시도 — PlayerController와 버튼 모두 이 메서드를 통해야 함
-    // 성공하면 true 반환
     public bool TryTag()
     {
         // 같은 프레임 중복 호출 차단 (Tab키 + UI버튼 동시 트리거 방지)
@@ -298,25 +315,40 @@ public class InGameUIManager : MonoBehaviour
         return true;
     }
 
-    // 버튼 클릭 시 호출
     public void OnClickTagButton()
     {
         TryTag();
     }
 
-    // 기타
-
-    public void SetStageCount(int stgCount)
+    
+    // Todo: 스테이지 Or 튜토리얼 진입시 몇 Stage인지 지정. (겜씬 HUD 보이기 전 반영)
+    public void SetStageCount(int stgCount, bool isTutorial)
     {
         stageCount = stgCount;
+        isTutorialStage = isTutorial; 
         if (hudController != null)
-            hudController.UpdateStageText(stageCount);
+        {
+            // Todo: 게임 클리어 시 기획에 맞게 해당 스테이지 타이틀 텍스트 + "\n" + "Clear!" 텍스트 표시. 
+            stageTitleText = hudController.UpdateStageText(stageCount, isTutorial);
+            //Debug.Log(stageTitleText);
+        }
     }
 
+    // 이 함수를 사용하여 이동횟수 업데이트 (이동횟수 표시 폐기되어서 사용X)
     public void SetMoveCount(int crtMoveCount, int mxMoveCount)
     {
         maxMoveCount = mxMoveCount;
         if (hudController != null)
             hudController.UpdateMoveCountText(crtMoveCount, mxMoveCount);
+    }
+    
+    // 언어 바뀔때 새로고침. 
+    private void OnLanguageChanged()
+    {
+        if (hudController != null)
+        {
+            stageTitleText = hudController.UpdateStageText(stageCount, isTutorialStage);
+            //Debug.Log(stageTitleText);
+        }
     }
 }
