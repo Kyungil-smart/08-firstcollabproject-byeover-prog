@@ -449,11 +449,12 @@ MonoBehaviour:
     type: 3}
   gameQuitPrefab: {fileID: 4678675293507642822, guid: 0d839841899192f48864584c2d53d0eb,
     type: 3}
-  maxUndoCount: 3
+  maxUndoSeconds: 20
   maxTagCount: 3
   maxMoveCount: 0
   currentMoveCount: 0
   stageCount: 0
+  stageTitleText: 
   timeElapsed: 0
   isTutorialStage: 0
 --- !u!4 &925338799
@@ -931,6 +932,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LocalizationManager
   currentLanguage: 0
   mainFont: {fileID: 11400000, guid: a57ef6b431120ca4fb39dc8e967eebc7, type: 2}
+  storyFont: {fileID: 11400000, guid: c33426e76726e524a91fdedce0bb6ded, type: 2}
 --- !u!4 &1663903950
 Transform:
   m_ObjectHideFlags: 0
@@ -1306,6 +1308,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1639441855335521515, guid: cac6e654612ccd34ea3822ed117bb9d8,
+        type: 3}
+      propertyPath: m_FillAmount
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2594141762475021307, guid: cac6e654612ccd34ea3822ed117bb9d8,
         type: 3}
       propertyPath: m_Pivot.x

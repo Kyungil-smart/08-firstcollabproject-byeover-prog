@@ -256,6 +256,71 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 52333916}
   m_CullTransparentMesh: 1
+--- !u!1 &243419643
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 243419646}
+  - component: {fileID: 243419645}
+  - component: {fileID: 243419644}
+  m_Layer: 0
+  m_Name: LocalizationManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &243419644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243419643}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0e8e8b215422cb429ade05fc1c287b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GoogleSheetDownloader
+  sheetsToDownload:
+  - fileName: LocalizationTable
+    sheetURL: https://docs.google.com/spreadsheets/d/e/2PACX-1vT2UZqE-l6VeUOQfEa7j8TFFuU0lqMopMzXBgBqE4BfsJlpzjc0t4mtkFtSKVfohXwZZ3PiqwwsUIYC/pub?gid=0&single=true&output=csv
+  - fileName: StoryTable
+    sheetURL: https://docs.google.com/spreadsheets/d/e/2PACX-1vT2UZqE-l6VeUOQfEa7j8TFFuU0lqMopMzXBgBqE4BfsJlpzjc0t4mtkFtSKVfohXwZZ3PiqwwsUIYC/pub?gid=1462058133&single=true&output=csv
+--- !u!114 &243419645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243419643}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e550208a1a6cac4dad1f544c575096c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LocalizationManager
+  currentLanguage: 0
+  mainFont: {fileID: 11400000, guid: a57ef6b431120ca4fb39dc8e967eebc7, type: 2}
+  storyFont: {fileID: 11400000, guid: c33426e76726e524a91fdedce0bb6ded, type: 2}
+--- !u!4 &243419646
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 243419643}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 997.712, y: 541.38074, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &303541275
 GameObject:
   m_ObjectHideFlags: 0
@@ -2149,3 +2214,4 @@ SceneRoots:
   - {fileID: 1817725693}
   - {fileID: 1209936347}
   - {fileID: 1307487354}
+  - {fileID: 243419646}
