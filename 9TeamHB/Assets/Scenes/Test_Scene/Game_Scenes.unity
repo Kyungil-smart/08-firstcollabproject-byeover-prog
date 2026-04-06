@@ -848,7 +848,7 @@ MonoBehaviour:
   stageFiles:
   - {fileID: 4900000, guid: c7dffe5b722e33e43ae5c37bcee051bf, type: 3}
   - {fileID: 4900000, guid: 700cdbf4faec48a4488d2e5383fa76f7, type: 3}
-  - {fileID: 4900000, guid: b98f1760da5d2954f9d9a0bac085a4e3, type: 3}
+  - {fileID: 4900000, guid: 2afdea268305c2649ad7b1b8a9b2ec1a, type: 3}
   - {fileID: 4900000, guid: 5e052a0b7117f8c4ab7e6d0a3b167b52, type: 3}
   - {fileID: 4900000, guid: b84f641af89418a4c8a87cbbdee68a4e, type: 3}
   - {fileID: 4900000, guid: 823a5acd4e08baa4990301262494dd37, type: 3}

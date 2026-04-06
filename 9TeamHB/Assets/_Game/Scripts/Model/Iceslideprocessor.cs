@@ -83,7 +83,7 @@ namespace MyGame2.Stage
             CellData cell = state.GetCell(next);
 
             // 벽 -> 정지
-            if (cell.HasWall)
+            if (cell.HasWall || cell.IsClosedDoor)
             {
                 StopSliding(box);
                 return false;
