@@ -6,8 +6,9 @@ public class StageCardCreator : MonoBehaviour
     public Transform contentTransform; // Scroll View 안의 Content 오브젝트
     
     [Header("캐러셀 연결")]
-    public StageCarousel stageCarousel; // ★ 추가: StageCarousel 스크립트 연결용
+    public StageCarousel stageCarousel;
     private int maxUnlockedStage = 1;
+    private int _globalIndex = 0; // stageFiles 배열 순서와 매핑되는 순차 인덱스
     void Start()
     {
         
@@ -60,6 +61,7 @@ public class StageCardCreator : MonoBehaviour
        
         
         // 카드에 데이터 넣어주기 (캐러셀 정보와 자신의 RectTransform도 같이 넘겨줍니다)
-        stageCard.SetupCard(index, record, isTutorial, starCount, stageCarousel, cardRect, isUnlocked);
+        stageCard.SetupCard(index, record, isTutorial, starCount, stageCarousel, cardRect, isUnlocked, _globalIndex);
+        _globalIndex++;
     }
 }

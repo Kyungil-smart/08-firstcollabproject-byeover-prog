@@ -18,8 +18,12 @@ public class StageCard : MonoBehaviour
     [Header("별(Star) 표시")]
     public GameObject[] starImages;
     
-    public void SetupCard(int stageIndex, int bestRecord, bool isTutorial, int starCount, StageCarousel carousel, RectTransform myRect, bool isUnlocked)
+    private int _stageFilesIndex; // StageManager.stageFiles 배열 인덱스
+
+    public void SetupCard(int stageIndex, int bestRecord, bool isTutorial, int starCount, StageCarousel carousel, RectTransform myRect, bool isUnlocked, int stageFilesIndex = -1)
     {
+        _stageFilesIndex = stageFilesIndex >= 0 ? stageFilesIndex : stageIndex;
+
         if (isTutorial == false) stageStringText.text = LocalizationManager.Instance.GetText("Stage_Text");
         else stageStringText.text = LocalizationManager.Instance.GetText("Tutorial_Text");
 
@@ -34,15 +38,22 @@ public class StageCard : MonoBehaviour
         cardButton.onClick.AddListener(() => OnClickStageCard(stageIndex));
         cardButton.onClick.AddListener(() => carousel.OnCardClicked(myRect));
         
+        // 스타트 버튼 — 씬 로드 연결
+        if (startButton != null)
+        {
+            startButton.onClick.RemoveAllListeners();
+            startButton.onClick.AddListener(OnClickStart);
+        }
+
         if (isUnlocked)
         {
-            lockImage.SetActive(false); // 자물쇠 숨기기
-            startButton.gameObject.SetActive(true); // 시작 버튼 켜기
+            lockImage.SetActive(false);
+            startButton.gameObject.SetActive(true);
         }
         else
         {
-            lockImage.SetActive(true); // 자물쇠 보여주기
-            startButton.gameObject.SetActive(false); // 시작 버튼 숨기기 
+            lockImage.SetActive(true);
+            startButton.gameObject.SetActive(false);
         }
         
         UpdateStars(starCount);
@@ -70,5 +81,13 @@ public class StageCard : MonoBehaviour
     private void OnClickStageCard(int stageIndex)
     {
         Debug.Log(stageIndex + "번 스테이지 클릭됨");
+    }
+
+    // 플레이 버튼 클릭 — 게임 씬 로드
+    private void OnClickStart()
+    {
+        PlayerPrefs.SetInt("SelectedStage", _stageFilesIndex);
+        PlayerPrefs.Save();
+        LoadingManager.LoadScene("Game_Scenes");
     }
 }
