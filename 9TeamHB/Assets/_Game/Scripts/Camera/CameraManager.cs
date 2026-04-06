@@ -102,6 +102,7 @@ public class CameraManager : MonoBehaviour
 
     private void OnOpenDoorEvent(GridPos cell)
     {
+        Debug.Log("OnOpenDoorEvent");
         if(IsPointVisible(cell.ToWorld(1f))) return;
         StartCoroutine(ShowEventCamera(cell));
     }
