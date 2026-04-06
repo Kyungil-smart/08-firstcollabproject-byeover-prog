@@ -57,10 +57,12 @@ namespace MyGame2.Stage
         private readonly List<GameObject> _camDetections = new List<GameObject>(64);
         private readonly List<GameObject> _robotDetections = new List<GameObject>(16);
         private readonly List<GameObject> _summonerDetections = new List<GameObject>(16);
+        private readonly List<GameObject> _animalDetections = new List<GameObject>(16);
         private Transform _tileRoot;
         private Transform _camDetRoot;
         private Transform _robotDetRoot;
         private Transform _summonerDetRoot;
+        private Transform _animalDetRoot;
 
         private CameraEnemy _cameraEnemy;
         private RobotEnemy _robotEnemy;
@@ -116,6 +118,7 @@ namespace MyGame2.Stage
             RenderCameraDetection(state);
             RenderRobotDetection(state);
             RenderSummonerDetection(state);
+            RenderAnimalDetection(state);
         }
 
         // 타일
@@ -244,6 +247,31 @@ namespace MyGame2.Stage
                     _summonerDetections.Add(MakeTile(
                         $"SD_{summonerId}_{j}", _summonerDetRoot,
                         cells[j].ToWorld(1f), scale, summonerDetectionColor, null, detectionOrder));
+                }
+            }
+        }
+        
+        // 동물 감시자 3x3 감지 범위
+        private void RenderAnimalDetection(StageState state)
+        {
+            Clear(_animalDetections);
+            EnsureRoot(ref _animalDetRoot, "_AnimalDetRoot");
+            float scale = 1f - tilePadding;
+
+            for (int i = 0; i < state.AnimalIds.Count; i++)
+            {
+                int animalId = state.AnimalIds[i];
+                if(!state.TryGetEntity(animalId, out EntityState animal) || !animal.IsAlive)
+                    continue;
+                
+                List<GridPos> cells = _detector3x3.CollectDetectionCells(
+                    state, animal.Position, animal.Facing, true);
+                
+                for (int j = 0; j < cells.Count; j++)
+                {
+                    _animalDetections.Add(MakeTile(
+                        $"SD_{animalId}_{j}", _animalDetRoot,
+                        cells[j].ToWorld(1f), scale, cameraDetectionColor,null, detectionOrder));
                 }
             }
         }
