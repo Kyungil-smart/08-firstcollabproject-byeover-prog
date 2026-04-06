@@ -96,12 +96,18 @@ namespace MyGame2.Stage
                 state.OpenDoor(moveResult.MoverId, moveResult.To);
             }
 
+            // 플레이어가 떠나기 전: 현재 위치에 IsStepped된 부서지는 상자가 있으면 파괴
+            if (state.TryGetEntity(playerId, out EntityState mover))
+            {
+                BreakSteppedBoxAt(state, mover.Position);
+            }
+
             // 플레이어 이동 실행
             state.TryMoveEntity(playerId, moveResult.To);
             state.SetFacing(playerId, direction);
 
-            // 틈새 위의 부서지는 상자 밟기 체크
-            CheckBreakableOnCrack(state, moveResult.To);
+            // 수정: 틈새 위의 부서지는 상자 밟기 → IsStepped만 표시 (즉시 파괴 안 함)
+            MarkBreakableOnCrack(state, moveResult.To);
 
             // 히든 함정 판정 (일반 함정보다 먼저)
             if (state.HasHiddenTrap(moveResult.To))
@@ -143,8 +149,6 @@ namespace MyGame2.Stage
             }
 
             // 바닥형 함정 판정
-            // 엔티티 기반: 각 SawTrap의 커버 범위에 플레이어가 있는지 체크
-            // 앵커 셀에 Active 플래그가 켜져 있으면 (버튼/스위치로 비활성화) 안전
             if (state.IsInSawTrapRange(moveResult.To))
             {
                 state.KillEntity(playerId);
@@ -220,8 +224,9 @@ namespace MyGame2.Stage
             return outcome;
         }
 
-        // 플레이어가 틈새 위의 부서지는 상자를 밟았는지 체크
-        private void CheckBreakableOnCrack(StageState state, GridPos playerPos)
+        // 수정: 플레이어가 틈새 위의 부서지는 상자를 밟으면 IsStepped만 표시
+        // 실제 파괴는 플레이어가 이 칸을 떠날 때 BreakSteppedBoxAt()에서 처리
+        private void MarkBreakableOnCrack(StageState state, GridPos playerPos)
         {
             foreach (EntityState e in state.Entities)
             {
@@ -229,9 +234,31 @@ namespace MyGame2.Stage
                 if (e.Position.X != playerPos.X || e.Position.Y != playerPos.Y) continue;
                 if (!e.Has<BreakableData>()) continue;
 
-                // IsBreaking 플래그 설정
+                // IsStepped 플래그만 설정 — 아직 파괴하지 않음
                 BreakableData bd = e.Get<BreakableData>();
+                bd.IsStepped = true;
+                e.Set(bd);
+
+                break;
+            }
+        }
+
+        // 추가: 플레이어가 떠나는 칸에 IsStepped 부서지는 상자가 있으면 파괴
+        // Fallable 상태(틈새에 빠진 비주얼)에서 부서지므로 자연스러운 연출이 됨
+        private void BreakSteppedBoxAt(StageState state, GridPos pos)
+        {
+            foreach (EntityState e in state.Entities)
+            {
+                if (!e.IsAlive || !e.IsBox) continue;
+                if (e.Position.X != pos.X || e.Position.Y != pos.Y) continue;
+                if (!e.Has<BreakableData>()) continue;
+
+                BreakableData bd = e.Get<BreakableData>();
+                if (!bd.IsStepped) continue;
+
+                // 이제 진짜 파괴
                 bd.IsBreaking = true;
+                bd.IsStepped = false;
                 e.Set(bd);
 
                 e.IsAlive = false;
@@ -239,10 +266,10 @@ namespace MyGame2.Stage
                 state.SetViewDirty();
 
                 // 틈새 복원
-                CellData crackCell = state.GetCell(playerPos);
+                CellData crackCell = state.GetCell(pos);
                 if (crackCell.HasCrack && crackCell.HasActive)
                 {
-                    state.ClearCellActive(playerPos);
+                    state.ClearCellActive(pos);
                 }
 
                 break;

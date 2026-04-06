@@ -3,17 +3,6 @@ using UnityEngine;
 namespace MyGame2.Stage
 {
     // 추격 감시자 프리팹에 부착하는 등장/퇴장 연출
-    //
-    // [등장] Start()에서 스케일 0 -> 1 팝업
-    // [퇴장] StageEvents.EnemyDespawnStarted 구독 -> 스케일 1 -> 0 축소
-    //
-    // [Inspector]
-    //   Stage Manager: Hierarchy의 StageManager 오브젝트 드래그
-    //   Spawn Duration: 0.3
-    //   Despawn Duration: 0.5
-    //
-    // [프리팹 설정]
-    //   추격자 프리팹(Animal_Chase 등)에 Add Component -> ChaserViewEffect
 
     public class ChaserViewEffect : MonoBehaviour
     {
@@ -55,7 +44,7 @@ namespace MyGame2.Stage
                 _entityId = _entityView.EntityId;
 
                 // StageManager를 씬에서 찾아서 이벤트 구독
-                StageManager sm = FindObjectOfType<StageManager>();
+                StageManager sm = FindFirstObjectByType<StageManager>();
                 if (sm != null && sm.Events != null)
                 {
                     _events = sm.Events;

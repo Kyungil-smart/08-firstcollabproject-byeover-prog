@@ -861,7 +861,7 @@ MonoBehaviour:
   - {fileID: 4900000, guid: 1581c4c323b6db0429d2845df6a44a1b, type: 3}
   - {fileID: 4900000, guid: 00ac4dc607b08d1419d0c84400d56872, type: 3}
   - {fileID: 4900000, guid: c98c9e82ba042864c8f8a3e4c67facbb, type: 3}
-  startStageIndex: 6
+  startStageIndex: 0
   cellSize: 1
   symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
   stageStateReference: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511,
