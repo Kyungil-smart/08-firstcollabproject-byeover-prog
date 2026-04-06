@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,16 +25,8 @@ namespace MyGame2.Stage
         [Tooltip("EntityFunctionSO 등이 StageState에 접근하기 위한 SO")]
         [SerializeField] private StageStateReferenceSO stageStateReference;
 
-        [Header("되돌리기 설정")]
-        [Tooltip("되감기 시 한 턴당 소요 시간 (초)")]
-        [SerializeField] private float undoStepInterval = 0.15f;
-
-        [Tooltip("되감기 시 종료 후 일시정지 시간 (초)")]
-        [SerializeField] private float undoPostPauseInterval = 0.2f;
-
-
         private MapLoader _mapLoader;
-        
+
         // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
@@ -44,10 +35,6 @@ namespace MyGame2.Stage
         // 런타임 상태
         private readonly Dictionary<int, GridEntityView> _views = new Dictionary<int, GridEntityView>(16);
         private int _currentStageIndex;
-
-        // Undo 스냅샷 스택
-        private readonly Stack<StageSnapshot> _undoStack = new Stack<StageSnapshot>(64);
-        private Coroutine _undoCoroutine;
 
         // 외부에서 현재 스테이지 인덱스 참조용
         public int CurrentStageIndex => _currentStageIndex;
@@ -60,9 +47,6 @@ namespace MyGame2.Stage
 
         // 마지막 턴의 결과.
         public TurnOutcome LastOutcome { get; private set; }
-
-        private int _undoNum = 0;
-        private const int _undoNumLimit = 50;
 
         private void Awake()
         {
@@ -93,7 +77,7 @@ namespace MyGame2.Stage
             LastOutcome = outcome;
             SyncViews();
             SyncSelection();
-            
+
             //게임오버관련 Invoke
             if (CurrentState != null && CurrentState.IsGameOver)
             {
@@ -137,9 +121,6 @@ namespace MyGame2.Stage
             // 투사체 속도 레지스트리 초기화
             ProjectileSpeedRegistry.Clear();
 
-            _undoStack.Clear(); // Undo 스택 초기화
-            _undoNum = 0;
-
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
 
@@ -162,9 +143,9 @@ namespace MyGame2.Stage
         }
 
         // 현재 스테이지를 다시 로드한다.
-        public void RestartCurrentStage() 
-        { 
-            LoadStage(_currentStageIndex); 
+        public void RestartCurrentStage()
+        {
+            LoadStage(_currentStageIndex);
         }
 
         // 다음 스테이지를 로드한다.
@@ -194,131 +175,7 @@ namespace MyGame2.Stage
                 return LastOutcome;
             }
 
-            // 턴 실행 전 스냅샷 저장 (Undo용)
-            CaptureSnapshot();
-
             return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
-        }
-
-        // 되돌리기 (Undo)
-
-        // 턴 실행 직전에 호출하여 현재 상태를 스냅샷으로 저장.
-        private void CaptureSnapshot()
-        {
-            if (CurrentState == null) return;
-            StageSnapshot snapshot = StageSnapshot.Capture(CurrentState);
-            if (snapshot != null)
-            {
-                _undoStack.Push(snapshot);
-                Debug.Log($"[Undo] 스냅샷 저장 — 턴 {CurrentState.TurnIndex}, 스택 {_undoStack.Count}개");
-            }
-        }
-
-        // 되돌리기 모드 진입 (Space 누름). 연속 되감기 코루틴 시작.
-        public bool TryEnterUndo()
-        {
-            if (CurrentState == null || CurrentState.IsGameOver || CurrentState.IsStageClear)
-            {
-                Debug.Log($"[Undo] 진입 실패: state={CurrentState != null}, gameOver={CurrentState?.IsGameOver}, clear={CurrentState?.IsStageClear}");
-                return false;
-            }
-            if (CurrentState.IsUndoProcessing)
-            {
-                Debug.Log("[Undo] 이미 되돌리기 중");
-                return false;
-            }
-            if (_undoNum >= _undoNumLimit)
-            {
-                Debug.Log($"[Undo] Undo 횟수({_undoNum}/{_undoNumLimit}회) 소진");
-                return false;
-            }
-            if (_undoStack.Count == 0)
-            {
-                Debug.Log("[Undo] 스냅샷 없음 (첫 턴 전)");
-                return false;
-            }
-
-            Debug.Log($"[Undo] 되돌리기 시작 — 스냅샷 {_undoStack.Count}개");
-            CurrentState.IsUndoProcessing = true;
-
-            // 즉시 1턴 되돌리기 + 이후 홀딩 중 연속 되감기
-            _undoCoroutine = StartCoroutine(UndoRewindLoop());
-            return true;
-        }
-
-        // 되돌리기 모드 해제 (Space 뗌).
-        public void LeaveUndo()
-        {
-            if (_undoCoroutine != null)
-            {
-                StopCoroutine(_undoCoroutine);
-                _undoCoroutine = null;
-            }
-
-            if (CurrentState == null) return;
-            CurrentState.IsUndoProcessing = false;
-
-            // 되돌려진 상태를 View에 반영
-            SyncViews();
-            SyncSelection();
-
-            // Undo 완료 이벤트 발행 (InteractableTileVisual 등이 구독)
-            _events.RaiseUndoExecuted();
-        }
-
-        // Space 홀딩 중 연속으로 턴을 되감는 코루틴.
-        private IEnumerator UndoRewindLoop()
-        {
-            while (_undoStack.Count > 0 && CurrentState.IsUndoProcessing)
-            {
-                StageSnapshot snapshot = _undoStack.Pop();
-                CurrentState.Restore(snapshot);
-                _undoNum++;
-
-                Debug.Log($"[Undo] Undo 횟수 : ${_undoNum}/${_undoNumLimit}");
-
-                // 동적 스폰된 엔티티의 View 정리
-                CleanupOrphanViews();
-
-                // 부드러운 슬라이딩으로 되감기 (Lerp 기반)
-                SyncViews();
-                SyncSelection();
-                _events.RaiseTurnExecuted(TurnOutcome.None());
-
-                yield return new WaitForSecondsRealtime(undoStepInterval);
-            }
-
-            // 스냅샷 소진 시 자동 해제
-            if (CurrentState.IsUndoProcessing)
-            {
-                _events.RaiseUndoExecuted();
-                yield return new WaitForSecondsRealtime(undoPostPauseInterval);
-                CurrentState.IsUndoProcessing = false;
-            }
-            _undoCoroutine = null;
-        }
-
-        // Undo 후 상태에 없는 View를 제거.
-        private void CleanupOrphanViews()
-        {
-            List<int> orphans = null;
-            foreach (var pair in _views)
-            {
-                if (!CurrentState.TryGetEntity(pair.Key, out _))
-                {
-                    if (orphans == null) orphans = new List<int>(4);
-                    orphans.Add(pair.Key);
-                }
-            }
-            if (orphans != null)
-            {
-                for (int i = 0; i < orphans.Count; i++)
-                {
-                    if (_views.TryGetValue(orphans[i], out GridEntityView view) && view != null)
-                        Destroy(view.gameObject);
-                    _views.Remove(orphans[i]);
-                }
-            }
         }
 
         // 페어 그룹 자동 연결
@@ -400,8 +257,7 @@ namespace MyGame2.Stage
 
                 if (members.Count < 2)
                 {
-                    Debug.LogWarning($"[StageManager] PairGroup {kvp.Key}: " +
-                                     $"멤버 {members.Count}개 — 페어 연결 불가.");
+                    // 멤버 1개 → 페어 연결 불가 (의도적 단일 배치일 수 있으므로 경고 생략)
                 }
             }
         }
