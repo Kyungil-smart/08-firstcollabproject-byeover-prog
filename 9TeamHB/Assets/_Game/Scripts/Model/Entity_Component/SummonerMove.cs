@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using MyGame2.Stage;
 
-public class SummonerMove : IComponentData, IUpdate
+public class SummonerMove : IComponentData, IUpdate, IDisposable
 {
     private readonly StageStateReferenceSO _stageStateRef;
     private readonly EntityState _entityState;
@@ -247,5 +247,10 @@ public class SummonerMove : IComponentData, IUpdate
             return dx > 0 ? Direction.Right : Direction.Left;
 
         return dy > 0 ? Direction.Down : Direction.Up;
+    }
+
+    public void Dispose()
+    {
+        _eventChannel.OnEventRaised -= OnUpdate;
     }
 }
