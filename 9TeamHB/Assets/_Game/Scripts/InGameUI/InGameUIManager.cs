@@ -85,6 +85,7 @@ public class InGameUIManager : MonoBehaviour
             stageManager.Events.TurnExecuted        += OnTurnExecuted;
             stageManager.Events.StageClearTriggered += OnStageClear;
             stageManager.Events.WarpComplete        += OnWarpComplete;
+            stageManager.Events.GameOverTriggered   += OnGameOver;
         }
         LocalizationManager.LanguageChangedEvent += OnLanguageChanged;
     }
@@ -97,6 +98,7 @@ public class InGameUIManager : MonoBehaviour
             stageManager.Events.TurnExecuted        -= OnTurnExecuted;
             stageManager.Events.StageClearTriggered -= OnStageClear;
             stageManager.Events.WarpComplete        -= OnWarpComplete;
+            stageManager.Events.GameOverTriggered   -= OnGameOver;
         }
         LocalizationManager.LanguageChangedEvent -= OnLanguageChanged;
     }
@@ -182,6 +184,25 @@ public class InGameUIManager : MonoBehaviour
             stageManager.LoadNextStage();
     }
 
+    // 게임 오버 코루틴 
+    
+    private void OnGameOver()
+    {
+        ShowGameQuit();
+        _autoNextCoroutine = StartCoroutine(AutoGameOverCoroutine());
+    }
+
+    private IEnumerator AutoGameOverCoroutine()
+    {
+        // 2초 대기 (Time.timeScale 영향 안 받음)
+        yield return new WaitForSecondsRealtime(2f);
+
+        _autoNextCoroutine = null;
+        CloseGameQuit();
+
+        ExecuteGameQuitRetry();
+    }
+    
     // 타이머·예산·통계 전부 초기값으로
     private void ResetAll()
     {

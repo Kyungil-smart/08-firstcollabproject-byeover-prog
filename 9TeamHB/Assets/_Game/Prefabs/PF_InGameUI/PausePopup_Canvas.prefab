@@ -116,7 +116,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b7618e056501d2429176be824600225, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PausePopupController
-  titleSceneName: Title_Scene
+  stageSelectionSceneName: Stage_Scene
 --- !u!114 &2338981124999955080
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -253,7 +253,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 8471595271322244130}
         m_TargetAssemblyTypeName: PausePopupController, Assembly-CSharp
-        m_MethodName: OnClickSettingButton
+        m_MethodName: OnClickQuitButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -960,7 +960,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 8471595271322244130}
         m_TargetAssemblyTypeName: PausePopupController, Assembly-CSharp
-        m_MethodName: OnClickMainButton
+        m_MethodName: OnClickStageSelectionButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -1094,7 +1094,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 8471595271322244130}
         m_TargetAssemblyTypeName: PausePopupController, Assembly-CSharp
-        m_MethodName: OnClickContinueButton
+        m_MethodName: OnClickRetryButton
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
