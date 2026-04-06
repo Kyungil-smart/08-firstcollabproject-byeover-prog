@@ -178,7 +178,7 @@ MonoBehaviour:
     description: "\uB3D9\uBB3C"
     cellFlags: 0
     spawnsEntity: 1
-    entityConfig: {fileID: 11400000, guid: fe699ce4ae355834f8a230066d5037ea, type: 2}
+    entityConfig: {fileID: 11400000, guid: a1da5bfbf83c33f429ea870f4cae3810, type: 2}
     facing: 4
     pairGroup: 0
   - symbol: 67

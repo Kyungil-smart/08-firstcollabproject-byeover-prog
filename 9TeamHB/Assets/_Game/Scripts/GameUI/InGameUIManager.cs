@@ -146,6 +146,7 @@ public class InGameUIManager : MonoBehaviour
         CloseGameClear();
 
         SetStageCount(stageIndex, isTutorialStage);
+        SetTagCount(stageIndex);
     }
 
     // 이동 성공 턴만 카운트
@@ -260,6 +261,30 @@ public class InGameUIManager : MonoBehaviour
     {
         if (hudTagUI != null)
             hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
+    }
+
+    // 스테이지 별 태그 카운터 최대치 조정
+    private void SetTagCount(int index)
+    {
+        maxTagCount = 3;
+        switch (index)
+        {
+            case 0: maxTagCount = 4; break;
+            case 1: maxTagCount = 5; break;
+            case 2: maxTagCount = 5; break;
+            case 3: maxTagCount = 4; break;
+            case 4: maxTagCount = 7; break;
+            case 5: maxTagCount = 4; break;
+            case 6: maxTagCount = 9; break;
+            case 7: maxTagCount = 5; break;
+            case 8: maxTagCount = 6; break;
+            case 9: maxTagCount = 5; break;
+            case 10: maxTagCount = 6; break;
+            case 11: maxTagCount = 6; break;
+            case 12: maxTagCount = 6; break;
+            case 13: maxTagCount = 5; break;
+            case 14: maxTagCount = 8; break;
+        }
     }
     
     // Undo (Space) — 시간 예산 + 플래그만 관리
@@ -403,6 +428,8 @@ public class InGameUIManager : MonoBehaviour
 
     public void ShowGameClear()
     {
+        InGameSoundManager.Instance?.PlayGameClearPopup();
+        
         if (activeGameClear == null)
             activeGameClear = Instantiate(gameClearPrefab);
         else
@@ -426,6 +453,9 @@ public class InGameUIManager : MonoBehaviour
 
     public void ShowGameQuit()
     {
+        
+        InGameSoundManager.Instance?.PlayGameOverPopup();
+        
         if (activeGameQuit == null)
             activeGameQuit = Instantiate(gameQuitPrefab);
         else

@@ -21,6 +21,6 @@ public class AnimalEnemyMove_Fn : EntityFunctionSO
 
     public override IComponentData CreateComponent(EntityState entity)
     {
-        return new AnimalEnemyMoveComponent(this, stageStateReference, entity, onUpdateEvent);
+        return new AnimalMove(this, stageStateReference, entity, onUpdateEvent);
     }
 }

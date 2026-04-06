@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 15c9a0a68de871e48ab77e4021a1965d, type: 3}
-  m_Name: Enemy_B
+  m_Name: Enemy_Animal
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
-  _kind: 7
+  _kind: 5
   isBlocking: 1
   blocksCameraSight: 0
-  isLethal: 0
-  _viewPrefab: {fileID: 651025039593506988, guid: faf5ba42911ba534ca309c17577156f7,
+  isLethal: 1
+  _viewPrefab: {fileID: 651025039593506988, guid: f9e4323eba98f3240b07a17a57ffb4e2,
     type: 3}
   Functions:
-  - {fileID: 11400000, guid: 9d999d109b53ae24d8ca7f742d445b7d, type: 2}
+  - {fileID: 11400000, guid: 3261159c18ef173469029997a9a12435, type: 2}
