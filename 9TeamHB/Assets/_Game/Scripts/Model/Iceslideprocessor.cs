@@ -20,7 +20,7 @@ namespace MyGame2.Stage
         private void Update()
         {
             if (stageManager == null || stageManager.CurrentState == null) return;
-            if (stageManager.CurrentState.IsGameOver || stageManager.CurrentState.IsStageClear) return;
+            if (!stageManager.CurrentState.IsUpdatable()) return;
 
             StageState state = stageManager.CurrentState;
 
@@ -51,8 +51,9 @@ namespace MyGame2.Stage
 
             // 미끄러지는 모든 얼음 상자를 1칸씩 이동
             bool viewDirty = false;
-            for (int i = 0; i < state.BoxIds.Count; i++)
+            for (int i = state.BoxIds.Count - 1; i >= 0; i--)
             {
+                if (i >= state.BoxIds.Count) continue; // 중간에 제거될 수 있음
                 int boxId = state.BoxIds[i];
                 if (!state.TryGetEntity(boxId, out EntityState box)) continue;
                 if (!box.IsAlive || !box.Has<IceSlideData>()) continue;
@@ -72,7 +73,7 @@ namespace MyGame2.Stage
         {
             GridPos next = box.Position.Move(ice.SlideDirection);
 
-            // 맵 밖 → 정지
+            // 맵 밖 -> 정지
             if (!state.IsInside(next))
             {
                 StopSliding(box);
@@ -81,14 +82,14 @@ namespace MyGame2.Stage
 
             CellData cell = state.GetCell(next);
 
-            // 벽 → 정지
-            if (cell.HasWall)
+            // 벽 -> 정지
+            if (cell.HasWall || cell.IsClosedDoor)
             {
                 StopSliding(box);
                 return false;
             }
 
-            // 다른 엔티티(상자/감시자/캐릭터) → 정지
+            // 다른 엔티티(상자/감시자/캐릭터) -> 정지
             if (cell.IsOccupied)
             {
                 StopSliding(box);
@@ -98,7 +99,34 @@ namespace MyGame2.Stage
             // 이동
             state.TryMoveEntity(boxId, next);
 
-            // 함정 → 함정 비활성화 + 정지
+            // 틈새 타일 -> 상자가 끼면서 정지
+            if (state.HasCrackNotCovered(next))
+            {
+                state.SetCrackMovable(next, boxId);
+                StopSliding(box);
+                return true;
+            }
+
+            // 톱날 함정 범위 진입 -> 반 쪼개짐 파괴
+            if (state.IsInSawTrapRange(next))
+            {
+                Direction sawFacing = state.GetSawTrapFacingAt(next);
+                // 이벤트 발행 -> IceBoxSplitEffect가 수신하여 쪼개짐 연출
+                state.Events?.RaiseIceBoxSawDestroyed(boxId, next, sawFacing);
+                state.RemoveEntity(boxId);
+                state.SetViewDirty();
+                return true;
+            }
+
+            // 파괴 함정 -> 상자 파괴 (함정은 유지)
+            if (state.HasDestroyTrap(next))
+            {
+                state.RemoveEntity(boxId);
+                state.SetViewDirty();
+                return true;
+            }
+
+            // 일반 함정 -> 함정 비활성화 + 정지
             if (state.HasTrap(next))
             {
                 state.DisableTrap(next);

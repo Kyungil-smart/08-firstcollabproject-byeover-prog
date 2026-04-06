@@ -17,15 +17,31 @@ namespace MyGame2.Stage
         [Header("방향 애니메이션")]
         [SerializeField] private bool useDirectionAnim = false;
         [SerializeField] private Animator targetAnimator;
+        [Tooltip("Left일 때 스프라이트 X 반전 (AD 애니메이션이 Right 기준일 때 체크)")]
+        [SerializeField] private bool flipXOnLeft = true;
+        [Tooltip("FlipX를 적용할 SpriteRenderer (비우면 자식에서 자동 탐색)")]
+        [SerializeField] private SpriteRenderer targetSpriteRenderer;
 
         private static readonly int AnimDirection = Animator.StringToHash("Direction");
         private static readonly int AnimIsMoving = Animator.StringToHash("IsMoving");
+        private static readonly int AnimIsDead = Animator.StringToHash("IsDead");
 
         private Vector3 _targetPosition;
         private Quaternion _targetRotation;
         private bool _isSliding;
         private Animator _animator;
+        private SpriteRenderer _spriteRenderer;
         private Direction _lastFacing;
+
+        // Animator 파라미터 존재 여부 캐싱
+        private bool _hasDirection;
+        private bool _hasIsMoving;
+        private bool _hasIsDead;
+
+        // Fallable 낙하 애니메이션 실행 여부 (Undo 시 복원용)
+        private bool _hasFallen;
+        private Vector3 _originalChildLocalPos;
+        private int _originalChildSortingOrder;
 
         public int EntityId { get; private set; }
         public EntityKind Kind { get; private set; }
@@ -37,14 +53,9 @@ namespace MyGame2.Stage
                 ? targetAnimator
                 : GetComponentInChildren<Animator>();
 
-            // ── 디버그: Animator 연결 확인 ──
-            // if (useDirectionAnim)
-            // {
-            //     if (_animator == null)
-            //         Debug.LogError($"[GridEntityView] {name}: useDirectionAnim이 켜져있는데 Animator를 찾을 수 없음!", this);
-            //     else
-            //         Debug.Log($"[GridEntityView] {name}: Animator 연결됨 → {_animator.name}", this);
-            // }
+            _spriteRenderer = targetSpriteRenderer != null
+                ? targetSpriteRenderer
+                : GetComponentInChildren<SpriteRenderer>();
         }
 
         public void Bind(EntityState entity, float cellSize)
@@ -58,6 +69,16 @@ namespace MyGame2.Stage
                     ? targetAnimator
                     : GetComponentInChildren<Animator>();
             }
+
+            if (_spriteRenderer == null)
+            {
+                _spriteRenderer = targetSpriteRenderer != null
+                    ? targetSpriteRenderer
+                    : GetComponentInChildren<SpriteRenderer>();
+            }
+
+            // Animator 파라미터 캐싱 (Bind 시 1회)
+            CacheAnimParams();
 
             Vector3 worldPos = entity.Position.ToWorld(cellSize);
             transform.position = worldPos;
@@ -77,14 +98,24 @@ namespace MyGame2.Stage
             gameObject.SetActive(entity.IsAlive);
             _isSliding = false;
 
-            // ── 디버그: Bind 확인 ──
-            Debug.Log($"[GridEntityView] Bind: {name}, Kind={entity.Kind}, Facing={entity.Facing}, Pos={entity.Position}", this);
+            // 자식의 원래 localPosition 저장 (Fallable 복원용)
+            if (transform.childCount > 0)
+            {
+                Transform child = transform.GetChild(0);
+                _originalChildLocalPos = child.localPosition;
+                SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+                if (sr != null) _originalChildSortingOrder = sr.sortingOrder;
+            }
         }
 
         public void Sync(EntityState entity, float cellSize)
         {
             if (!entity.IsAlive)
             {
+                // 사망 애니메이션 트리거
+                if (useDirectionAnim && _animator != null && _hasIsDead)
+                    _animator.SetTrigger(AnimIsDead);
+
                 gameObject.SetActive(false);
                 _isSliding = false;
                 UpdateMovingAnim(false);
@@ -94,7 +125,7 @@ namespace MyGame2.Stage
             gameObject.SetActive(true);
 
             Vector3 newTarget = entity.Position.ToWorld(cellSize);
-            
+
             // 텔레포트
             if (entity.CanTeleport && entity.Get<Teleportable>().IsTeleporting)
             {
@@ -102,7 +133,7 @@ namespace MyGame2.Stage
                 transform.position = _targetPosition;
                 entity.Get<Teleportable>().IsTeleporting = false;
             }
-            
+
             // 일반 이동
             if ((_targetPosition - newTarget).sqrMagnitude > snapThreshold * snapThreshold)
             {
@@ -110,8 +141,16 @@ namespace MyGame2.Stage
                 _isSliding = true;
                 UpdateMovingAnim(true);
 
-                // ── 디버그: 이동 시작 ──
-                //Debug.Log($"[GridEntityView] {name}: 이동 시작 → {entity.Position}, Facing={entity.Facing}", this);
+                // 틈새 낙하 복원: FallAnimation을 실행한 View만 리셋
+                if (_hasFallen && transform.childCount > 0)
+                {
+                    Transform child = transform.GetChild(0);
+                    child.localPosition = _originalChildLocalPos;
+                    SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+                    if (sr != null)
+                        sr.sortingOrder = _originalChildSortingOrder;
+                    _hasFallen = false;
+                }
             }
 
             if (rotateWithFacing)
@@ -121,9 +160,6 @@ namespace MyGame2.Stage
 
             if (entity.Facing != _lastFacing)
             {
-                // ── 디버그: 방향 변경 ──
-                //Debug.Log($"[GridEntityView] {name}: 방향 변경 {_lastFacing} → {entity.Facing}", this);
-
                 _lastFacing = entity.Facing;
                 UpdateDirectionAnim(entity.Facing);
             }
@@ -162,39 +198,141 @@ namespace MyGame2.Stage
                     transform.rotation, _targetRotation, slideSpeed * dt);
             }
         }
+        
+        // Animator Controller에 실제로 존재하는 파라미터만 캐싱.
+        // Bind 시 1회 호출되어, 파라미터가 없는 엔티티에서는 SetBool/SetFloat/SetTrigger를 스킵.
+        private void CacheAnimParams()
+        {
+            _hasDirection = false;
+            _hasIsMoving = false;
+            _hasIsDead = false;
+
+            if (_animator == null || _animator.runtimeAnimatorController == null)
+                return;
+
+            foreach (var p in _animator.parameters)
+            {
+                if (p.nameHash == AnimIsMoving)       _hasIsMoving = true;
+                else if (p.nameHash == AnimDirection)  _hasDirection = true;
+                else if (p.nameHash == AnimIsDead)     _hasIsDead = true;
+            }
+        }
 
         private void UpdateDirectionAnim(Direction facing)
         {
             if (!useDirectionAnim || _animator == null) return;
 
-            int dirValue;
-            switch (facing)
+            // Direction 파라미터가 있을 때만 Blend Tree 값 설정
+            if (_hasDirection)
             {
-                case Direction.Up:    dirValue = 1; break;
-                case Direction.Left:  dirValue = 2; break;
-                case Direction.Right: dirValue = 3; break;
-                case Direction.Down:  dirValue = 0; break;
-                default:              dirValue = 0; break;
+                // Blend Tree용 Float 파라미터
+                // 0=Down(S), 1=Up(W), 2=Left(AD), 3=Right(AD)
+                float dirValue;
+                switch (facing)
+                {
+                    case Direction.Down:  dirValue = 0f; break;
+                    case Direction.Up:    dirValue = 1f; break;
+                    case Direction.Left:  dirValue = 2f; break;
+                    case Direction.Right: dirValue = 2f; break; // Left와 같은 AD 애니메이션
+                    default:              dirValue = 0f; break;
+                }
+
+                _animator.SetFloat(AnimDirection, dirValue);
             }
 
-            _animator.SetInteger(AnimDirection, dirValue);
-
-            // ── 디버그: Direction 파라미터 설정 ──
-            //Debug.Log($"[GridEntityView] {name}: Animator.Direction = {dirValue} ({facing})", this);
+            // 좌우 반전 처리 (파라미터와 무관하므로 항상 실행)
+            if (flipXOnLeft && _spriteRenderer != null)
+            {
+                if (facing == Direction.Left)
+                    _spriteRenderer.flipX = true;
+                else if (facing == Direction.Right)
+                    _spriteRenderer.flipX = false;
+            }
         }
 
         private void UpdateMovingAnim(bool isMoving)
         {
-            if (!useDirectionAnim || _animator == null) return;
+            if (!useDirectionAnim || _animator == null || !_hasIsMoving) return;
             _animator.SetBool(AnimIsMoving, isMoving);
-
-            // ── 디버그: IsMoving 파라미터 설정 ──
-            //Debug.Log($"[GridEntityView] {name}: Animator.IsMoving = {isMoving}", this);
         }
 
         public void OnRequestView(ViewRequest request)
         {
             request.Callback(this);
+        }
+        
+        // Fallable.FallAnimation에서 호출.
+        // 이 View가 틈새에 빠졌음을 표시하여 Undo 시 자식 위치를 복원할 수 있게 한다.
+        
+        public void MarkAsFallen()
+        {
+            _hasFallen = true;
+        }
+        
+        // Undo 시 Fallable이 변경한 자식 위치/sortingOrder를 복원.
+        // 실제로 낙하한 엔티티(localPosition.y가 음수)만 선별하여 부드럽게 올라옴.
+
+        public void ResetFallVisual()
+        {
+            if (transform.childCount == 0) return;
+
+            Transform firstChild = transform.GetChild(0);
+
+            // 낙하하지 않은 엔티티는 무시
+            if (firstChild.localPosition.y >= -0.01f) return;
+
+            StartCoroutine(RiseFromGap(firstChild));
+        }
+
+        private System.Collections.IEnumerator RiseFromGap(Transform child)
+        {
+            Vector3 start = child.localPosition;
+            Vector3 end = _originalChildLocalPos;
+            float duration = 0.25f;
+            float elapsed = 0f;
+
+            SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+            if (sr != null) sr.sortingOrder = _originalChildSortingOrder;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                child.localPosition = Vector3.Lerp(start, end, t);
+                yield return null;
+            }
+
+            child.localPosition = end;
+        }
+        
+        // Undo 시 Lerp 없이 즉시 위치/회전을 엔티티 상태로 스냅.
+
+        public void ForceSnap(EntityState entity, float cellSize)
+        {
+            if (!entity.IsAlive)
+            {
+                gameObject.SetActive(false);
+                _isSliding = false;
+                return;
+            }
+
+            gameObject.SetActive(true);
+
+            Vector3 worldPos = entity.Position.ToWorld(cellSize);
+            transform.position = worldPos;
+            _targetPosition = worldPos;
+            _isSliding = false;
+
+            if (rotateWithFacing)
+            {
+                Quaternion rot = Quaternion.Euler(0f, 0f, entity.Facing.ToZRotation());
+                transform.rotation = rot;
+                _targetRotation = rot;
+            }
+
+            _lastFacing = entity.Facing;
+            UpdateDirectionAnim(entity.Facing);
+            UpdateMovingAnim(false);
         }
     }
 }

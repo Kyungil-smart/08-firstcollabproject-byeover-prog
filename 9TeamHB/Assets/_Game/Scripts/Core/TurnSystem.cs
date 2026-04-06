@@ -40,17 +40,51 @@ namespace MyGame2.Stage
 
             int playerId = state.ActivePlayerId;
 
-            // 1. 판정 (상태 변이 없음)
+            // 판정 (상태 변이 없음)
             if (state.IsPlayerOnLockedDoor)
                 direction = Direction.None; // 문이 잠기면 방향을 지워 이동 막음
             MoveResult moveResult = _movementRule.TryMove(state, playerId, direction);
 
             if (!moveResult.CanMove)
             {
+                // 부서지는 상자 체크
+                if (state.TryGetEntity(playerId, out EntityState player))
+                {
+                    GridPos target = player.Position.Move(direction);
+                    if (state.IsInside(target))
+                    {
+                        int occupantId = state.GetOccupantId(target);
+                        if (occupantId != StageState.InvalidEntityId
+                            && state.TryGetEntity(occupantId, out EntityState box))
+                        {
+                            // 벽/상자에 막힌 부서지는 상자 -> 파괴
+                            if (_pushRule.ShouldBreak(state, playerId, occupantId, direction))
+                            {
+                                // IsBreaking 플래그만 세움 (애니메이션 후 제거는 Visual이 처리)
+                                if (box.Has<BreakableData>())
+                                {
+                                    BreakableData bd = box.Get<BreakableData>();
+                                    bd.IsBreaking = true;
+                                    box.Set(bd);
+                                }
+                                _pushRule.ExecuteBreak(state, occupantId);
+                                return FinishTurn(state, playerId, moveResult, direction);
+                            }
+
+                            // 톱날 범위로 밀리는 부서지는/얼음 상자 -> 파괴
+                            if (_pushRule.ShouldBreakBySaw(state, playerId, occupantId, direction))
+                            {
+                                _pushRule.ExecuteSawBreak(state, occupantId, direction);
+                                return FinishTurn(state, playerId, moveResult, direction);
+                            }
+                        }
+                    }
+                }
+
                 return TurnOutcome.Ignored(moveResult);
             }
 
-            // 2. 상자 밀기 실행 (PushAndMove인 경우)
+            // 상자 밀기 실행 (PushAndMove인 경우)
             if (moveResult.IsPushAndMove)
             {
                 _pushRule.ExecutePush(state, moveResult.TargetEntityId, direction);
@@ -62,11 +96,41 @@ namespace MyGame2.Stage
                 state.OpenDoor(moveResult.MoverId, moveResult.To);
             }
 
-            // 3. 플레이어 이동 실행
+            // 플레이어가 떠나기 전: 현재 위치에 IsStepped된 부서지는 상자가 있으면 파괴
+            if (state.TryGetEntity(playerId, out EntityState mover))
+            {
+                BreakSteppedBoxAt(state, mover.Position);
+            }
+
+            // 플레이어 이동 실행
             state.TryMoveEntity(playerId, moveResult.To);
             state.SetFacing(playerId, direction);
 
-            // 4. 함정 밟기 판정
+            // 수정: 틈새 위의 부서지는 상자 밟기 → IsStepped만 표시 (즉시 파괴 안 함)
+            MarkBreakableOnCrack(state, moveResult.To);
+
+            // 히든 함정 판정 (일반 함정보다 먼저)
+            if (state.HasHiddenTrap(moveResult.To))
+            {
+                state.RevealHiddenTrap(moveResult.To);
+                state.SetGameOverSilent(); // 입력만 차단, 팝업은 애니메이션 후
+
+                state.Events?.RaiseHiddenTrapPlayerKill(playerId, moveResult.To);
+
+                state.AdvanceTurn();
+
+                TurnOutcome hiddenTrapDeath = TurnOutcome.Create(
+                    moveResult,
+                    Array.Empty<MoveResult>(),
+                    Array.Empty<MoveResult>(),
+                    Array.Empty<int>(),
+                    true, false);
+
+                state.Events?.RaiseTurnExecuted(hiddenTrapDeath);
+                return hiddenTrapDeath;
+            }
+
+            // 일반 함정 밟기 판정
             if (state.HasTrap(moveResult.To))
             {
                 state.KillEntity(playerId);
@@ -84,17 +148,35 @@ namespace MyGame2.Stage
                 return trapDeath;
             }
 
-            // 5. 카메라 회전
+            // 바닥형 함정 판정
+            if (state.IsInSawTrapRange(moveResult.To))
+            {
+                state.KillEntity(playerId);
+                state.MarkGameOver();
+                state.AdvanceTurn();
+
+                TurnOutcome sawDeath = TurnOutcome.Create(
+                    moveResult,
+                    Array.Empty<MoveResult>(),
+                    Array.Empty<MoveResult>(),
+                    Array.Empty<int>(),
+                    true, false);
+
+                state.Events?.RaiseTurnExecuted(sawDeath);
+                return sawDeath;
+            }
+
+            // 카메라 회전
             state.RotateAllCameras();
 
-            // 6. 카메라 감지
+            // 카메라 감지
             _detectedBuffer.Clear();
             _detectionRule.DetectPlayers(state, _detectedBuffer);
 
             if (_detectedBuffer.Count > 0)
                 _deathRule.ApplyCameraDetections(state, _detectedBuffer);
 
-            // 7. 클리어 판정
+            // 클리어 판정
             bool stageClear = false;
             if (!state.IsGameOver)
                 stageClear = _clearRule.Evaluate(state);
@@ -111,6 +193,87 @@ namespace MyGame2.Stage
 
             state.Events?.RaiseTurnExecuted(outcome);
             return outcome;
+        }
+
+        // 상자 파괴 후 턴 마무리
+        private TurnOutcome FinishTurn(StageState state, int playerId,
+            MoveResult originalMove, Direction direction)
+        {
+            state.SetFacing(playerId, direction);
+            state.RotateAllCameras();
+
+            _detectedBuffer.Clear();
+            _detectionRule.DetectPlayers(state, _detectedBuffer);
+            if (_detectedBuffer.Count > 0)
+                _deathRule.ApplyCameraDetections(state, _detectedBuffer);
+
+            bool stageClear = false;
+            if (!state.IsGameOver)
+                stageClear = _clearRule.Evaluate(state);
+
+            state.AdvanceTurn();
+
+            TurnOutcome outcome = TurnOutcome.Create(
+                originalMove,
+                Array.Empty<MoveResult>(),
+                Array.Empty<MoveResult>(),
+                new List<int>(_detectedBuffer),
+                state.IsGameOver, stageClear);
+
+            state.Events?.RaiseTurnExecuted(outcome);
+            return outcome;
+        }
+
+        // 수정: 플레이어가 틈새 위의 부서지는 상자를 밟으면 IsStepped만 표시
+        // 실제 파괴는 플레이어가 이 칸을 떠날 때 BreakSteppedBoxAt()에서 처리
+        private void MarkBreakableOnCrack(StageState state, GridPos playerPos)
+        {
+            foreach (EntityState e in state.Entities)
+            {
+                if (!e.IsAlive || !e.IsBox) continue;
+                if (e.Position.X != playerPos.X || e.Position.Y != playerPos.Y) continue;
+                if (!e.Has<BreakableData>()) continue;
+
+                // IsStepped 플래그만 설정 — 아직 파괴하지 않음
+                BreakableData bd = e.Get<BreakableData>();
+                bd.IsStepped = true;
+                e.Set(bd);
+
+                break;
+            }
+        }
+
+        // 추가: 플레이어가 떠나는 칸에 IsStepped 부서지는 상자가 있으면 파괴
+        // Fallable 상태(틈새에 빠진 비주얼)에서 부서지므로 자연스러운 연출이 됨
+        private void BreakSteppedBoxAt(StageState state, GridPos pos)
+        {
+            foreach (EntityState e in state.Entities)
+            {
+                if (!e.IsAlive || !e.IsBox) continue;
+                if (e.Position.X != pos.X || e.Position.Y != pos.Y) continue;
+                if (!e.Has<BreakableData>()) continue;
+
+                BreakableData bd = e.Get<BreakableData>();
+                if (!bd.IsStepped) continue;
+
+                // 이제 진짜 파괴
+                bd.IsBreaking = true;
+                bd.IsStepped = false;
+                e.Set(bd);
+
+                e.IsAlive = false;
+                e.IsBlocking = false;
+                state.SetViewDirty();
+
+                // 틈새 복원
+                CellData crackCell = state.GetCell(pos);
+                if (crackCell.HasCrack && crackCell.HasActive)
+                {
+                    state.ClearCellActive(pos);
+                }
+
+                break;
+            }
         }
     }
 }

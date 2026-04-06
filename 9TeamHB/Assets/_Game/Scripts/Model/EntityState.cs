@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace MyGame2.Stage
 {
     // ECS-lite 엔티티.
     // 공통 필드(Position, Facing 등)는 직접 보유하고,
     // 종류별 데이터는 Dictionary<Type, IComponentData>로 자유롭게 부착/제거한다.
-    
+
     [Serializable]
     public sealed class EntityState
     {
@@ -52,6 +51,7 @@ namespace MyGame2.Stage
             return _components.Remove(typeof(T));
         }
 
+        public Dictionary<Type, IComponentData> ComponentDict { get { return _components; } }
         public IEnumerable<IComponentData> Components => _components.Values;
 
         // 편의 프로퍼티
@@ -62,7 +62,7 @@ namespace MyGame2.Stage
         public bool IsCamera { get { return Kind == EntityKind.CameraEnemy; } }
         public bool IsRobot { get { return Kind == EntityKind.RobotEnemy; } }
         public bool IsAnimal { get { return Kind == EntityKind.AnimalEnemy; } }
-        public bool CanTeleport { get { return Has<Teleportable>();  } }
+        public bool CanTeleport { get { return Has<Teleportable>(); } }
 
         // 새 감시자 유형
         public bool IsPatrolCameraEnemy { get { return Kind == EntityKind.PatrolCameraEnemy; } }
@@ -100,11 +100,11 @@ namespace MyGame2.Stage
                 return tag.B;
             return false;
         }
-        
-        // EntitySO 기반 생성자 (런타임 표준)
+
+        // EntitySO 기반 생성자
         // SO의 Functions 리스트에 등록된 EntityFunctionSO들이
         // CreateComponent()를 통해 자동으로 컴포넌트를 부착한다.
-        
+
         public EntityState(EntitySO definition, GridPos position, Direction facing)
         {
             Definition = definition;
@@ -130,9 +130,12 @@ namespace MyGame2.Stage
             var e = new EntityState
             {
                 Kind = EntityKind.Player,
-                Position = position, SpawnPosition = position,
-                Facing = facing, IsAlive = true,
-                IsBlocking = true, BlocksCameraSight = false
+                Position = position,
+                SpawnPosition = position,
+                Facing = facing,
+                IsAlive = true,
+                IsBlocking = true,
+                BlocksCameraSight = false
             };
             e.Set(new PlayerData(slot));
             return e;
@@ -143,9 +146,12 @@ namespace MyGame2.Stage
             var e = new EntityState
             {
                 Kind = EntityKind.Box,
-                Position = position, SpawnPosition = position,
-                Facing = Direction.None, IsAlive = true,
-                IsBlocking = true, BlocksCameraSight = true
+                Position = position,
+                SpawnPosition = position,
+                Facing = Direction.None,
+                IsAlive = true,
+                IsBlocking = true,
+                BlocksCameraSight = true
             };
             e.Set(new BoxData(ownership));
             return e;
@@ -157,9 +163,12 @@ namespace MyGame2.Stage
             var e = new EntityState
             {
                 Kind = EntityKind.CameraEnemy,
-                Position = position, SpawnPosition = position,
-                Facing = facing, IsAlive = true,
-                IsBlocking = true, BlocksCameraSight = false
+                Position = position,
+                SpawnPosition = position,
+                Facing = facing,
+                IsAlive = true,
+                IsBlocking = true,
+                BlocksCameraSight = false
             };
             e.Set(new CameraData(pattern, reverseRotation));
             return e;
@@ -171,9 +180,12 @@ namespace MyGame2.Stage
             var e = new EntityState
             {
                 Kind = EntityKind.RobotEnemy,
-                Position = position, SpawnPosition = position,
-                Facing = facing, IsAlive = true,
-                IsBlocking = true, BlocksCameraSight = true
+                Position = position,
+                SpawnPosition = position,
+                Facing = facing,
+                IsAlive = true,
+                IsBlocking = true,
+                BlocksCameraSight = true
             };
             e.Set(new PatrolData(waypoints));
             return e;
@@ -184,9 +196,12 @@ namespace MyGame2.Stage
             return new EntityState
             {
                 Kind = EntityKind.AnimalEnemy,
-                Position = position, SpawnPosition = position,
-                Facing = facing, IsAlive = true,
-                IsBlocking = true, BlocksCameraSight = false
+                Position = position,
+                SpawnPosition = position,
+                Facing = facing,
+                IsAlive = true,
+                IsBlocking = true,
+                BlocksCameraSight = false
             };
         }
 
@@ -200,6 +215,42 @@ namespace MyGame2.Stage
                 return false;
             }
             return Get<Pushable>().CanBePushed;
+        }
+
+        public EntityState CopyFrom()
+        {
+            EntityState copy = new EntityState
+            {
+                Id = this.Id,
+                Kind = this.Kind,
+                Position = this.Position,
+                SpawnPosition = this.SpawnPosition,
+                Facing = this.Facing,
+                IsAlive = this.IsAlive,
+                IsBlocking = this.IsBlocking,
+                BlocksCameraSight = this.BlocksCameraSight,
+                Definition = this.Definition   // SO 참조 복원 (View 생성에 필수)
+            };
+
+            foreach (KeyValuePair<Type, IComponentData> elem in _components)
+            {
+                copy._components.Add(elem.Key, elem.Value);
+            }
+
+            return copy;
+        }
+
+        // 스냅샷 복사본의 데이터를 이 엔티티에 덮어쓴다.
+        // _components와 Definition은 건드리지 않아 IUpdate 컴포넌트의 참조가 유지된다.
+
+        public void RestoreFrom(EntityState source)
+        {
+            Position = source.Position;
+            SpawnPosition = source.SpawnPosition;
+            Facing = source.Facing;
+            IsAlive = source.IsAlive;
+            IsBlocking = source.IsBlocking;
+            BlocksCameraSight = source.BlocksCameraSight;
         }
     }
 }

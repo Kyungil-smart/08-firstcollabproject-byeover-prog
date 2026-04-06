@@ -5,6 +5,7 @@ namespace MyGame2.Stage
 {
     // 게임 전체 흐름 상태를 관리한다.
     // StageEvents를 구독하여 게임 오버/클리어를 자동 감지한다.
+    // WarpComplete를 구독하여 클리어 기록 저장 + 클리어 UI 표시.
     public enum GameFlowState
     {
         Boot = 0,
@@ -40,8 +41,6 @@ namespace MyGame2.Stage
             UnsubscribeFromStageEvents();
         }
         
-        // StageEvents에 게임 흐름 관련 이벤트를 구독한다.
-        // StageManager가 새 StageEvents를 생성할 때마다 재호출 가능.
         public void SubscribeToStageEvents(StageEvents events)
         {
             UnsubscribeFromStageEvents();
@@ -55,6 +54,7 @@ namespace MyGame2.Stage
             _subscribedEvents.GameOverTriggered += OnGameOver;
             _subscribedEvents.StageClearTriggered += OnStageClear;
             _subscribedEvents.StageLoaded += OnStageLoaded;
+            _subscribedEvents.WarpComplete += OnWarpComplete;
         }
 
         private void UnsubscribeFromStageEvents()
@@ -67,20 +67,29 @@ namespace MyGame2.Stage
             _subscribedEvents.GameOverTriggered -= OnGameOver;
             _subscribedEvents.StageClearTriggered -= OnStageClear;
             _subscribedEvents.StageLoaded -= OnStageLoaded;
+            _subscribedEvents.WarpComplete -= OnWarpComplete;
             _subscribedEvents = null;
         }
         
         private void OnGameOver()
         {
             SetState(GameFlowState.GameOver);
+
+            // 게임오버 시 즉시 GameQuit UI 표시
+            if (InGameUIManager.Instance != null)
+            {
+                InGameUIManager.Instance.ShowGameQuit();
+            }
         }
 
         private void OnStageClear()
         {
+            // 상태만 전환. UI는 워프 연출 완료 후 OnWarpComplete에서 표시.
             SetState(GameFlowState.StageClear);
         }
 
         // 워프 연출 완료 → 클리어 기록 저장 + 클리어 UI 표시
+<<<<<<< HEAD
         // +분기 처리 추가, 엔딩씬으로 이동하기
         private void OnWarpComplete()
         {
@@ -104,6 +113,20 @@ namespace MyGame2.Stage
                         InGameUIManager.Instance.ShowGameClear();
                     }
                 }
+=======
+        private void OnWarpComplete()
+        {
+            // 현재 스테이지 클리어 기록 저장
+            if (stageManager != null)
+            {
+                StageProgressManager.MarkCleared(stageManager.CurrentStageIndex);
+            }
+
+            // 클리어 UI 표시
+            if (InGameUIManager.Instance != null)
+            {
+                InGameUIManager.Instance.ShowGameClear();
+>>>>>>> origin/Develop
             }
         }
 
@@ -112,8 +135,6 @@ namespace MyGame2.Stage
             SetState(GameFlowState.Playing);
         }
         
-        // 게임 흐름 상태를 변경한다.
-        // 외부(Pause UI 등)에서도 호출 가능하도록 public 유지.
         public void SetState(GameFlowState nextState)
         {
             if (CurrentState == nextState)

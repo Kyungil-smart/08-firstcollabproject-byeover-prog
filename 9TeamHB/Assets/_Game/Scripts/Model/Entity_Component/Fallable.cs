@@ -8,6 +8,9 @@ public class Fallable : IComponentData
     private float _fallDistance;
     private EntityState _owner;
 
+    // 틈새에 끼인 상자의 sortingOrder
+    private const int FallenSortingOrder = -3;
+
     public Fallable(float duration, float distance, EntityState owner)
     {
         _fallDuration = duration;
@@ -38,7 +41,8 @@ public class Fallable : IComponentData
         yield return new WaitForSeconds(0.3f);
         
         SpriteRenderer renderer = firstChild.GetComponent<SpriteRenderer>();
-        renderer.sortingOrder -= 1;
+        // 틈새에 끼인 상자는 -3으로 설정 (바닥 타일보다 아래, 틈새 타일보다 위)
+        renderer.sortingOrder = FallenSortingOrder;
         
         Vector3 targetPosition = firstChild.position + Vector3.down * _fallDistance;
         Vector3 startPosition = firstChild.position;
@@ -53,5 +57,8 @@ public class Fallable : IComponentData
             yield return null;
         }
         firstChild.position = targetPosition;
+        
+        // Undo 시 복원할 수 있도록 플래그 설정
+        view.MarkAsFallen();
     }
 }

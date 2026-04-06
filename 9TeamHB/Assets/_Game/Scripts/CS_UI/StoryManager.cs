@@ -31,6 +31,7 @@ public class StoryManager : MonoBehaviour
             nextAction.action.Enable();
             nextAction.action.performed += OnNextPageInput;
         }
+        LocalizationManager.LanguageChangedEvent += OnLanguageChanged; 
     }
 
     private void OnDisable()
@@ -41,10 +42,17 @@ public class StoryManager : MonoBehaviour
             nextAction.action.performed -= OnNextPageInput;
             nextAction.action.Disable();
         }
+        
+        LocalizationManager.LanguageChangedEvent -= OnLanguageChanged;
     }
 
     private void Start()
     {
+        if (LocalizationManager.Instance != null && LocalizationManager.Instance.mainFont != null)
+        {
+            storyText.font = LocalizationManager.Instance.mainFont;
+        }
+        
         UpdateUI();
     }
 
@@ -78,7 +86,11 @@ public class StoryManager : MonoBehaviour
         StoryPage page = currentStoryData.pages[currentPage];
         
         if (cutsceneImage != null) cutsceneImage.sprite = page.cutsceneImage;
-        if (storyText != null) storyText.text = page.storyText;
+
+        if (storyText != null)
+        {
+            storyText.text = LocalizationManager.Instance.GetText(page.storyKey);
+        }
 
 
         if (storyText != null) 
@@ -100,6 +112,12 @@ public class StoryManager : MonoBehaviour
         if (useDebugLog) Debug.Log($"현재 스토리: {currentPage + 1} / {currentStoryData.pages.Length}");
     }
 
+    private void OnLanguageChanged()
+    {
+        storyText.font = LocalizationManager.Instance.mainFont;
+        UpdateUI(); 
+    }
+    
     private void EndStory()
     {
         if (useDebugLog) Debug.Log($"스토리 종료. {nextSceneName}으로 이동.");

@@ -103,37 +103,37 @@ namespace MyGame2.Stage
             }
         }
 
+        // Fixed3x3: 3개 열(좌/중/우)을 각각 독립 라인으로 처리
+        // 기획서(1-4-3): "감시범위에 오브젝트가 위치할 경우, 그 뒤쪽 타일은 감시범위에서 제외"
         private void AddFixed3x3Cells(StageState state, EntityState camera, List<GridPos> result)
         {
-            // Fixed3x3: 아래 방향 기준 (s=Down, S=Up)
             Direction facing = camera.Facing;
             if (facing == Direction.None) facing = Direction.Down;
 
             Direction left = facing.RotateClockwise().RotateClockwise().RotateClockwise();
             Direction right = facing.RotateClockwise();
 
-            // 본인 줄 (본인 + 좌우)
-            AddIfValid(state, camera.Position, result);
-            AddIfValid(state, camera.Position.Move(left), result);
-            AddIfValid(state, camera.Position.Move(right), result);
-
-            // 앞 1줄
-            GridPos front1 = camera.Position.Move(facing);
-            AddIfValid(state, front1, result);
-            AddIfValid(state, front1.Move(left), result);
-            AddIfValid(state, front1.Move(right), result);
-
-            // 앞 2줄
-            GridPos front2 = front1.Move(facing);
-            AddIfValid(state, front2, result);
-            AddIfValid(state, front2.Move(left), result);
-            AddIfValid(state, front2.Move(right), result);
+            // 3개 열별 독립 시야 차단 라인
+            AddLineCellsbyPosition(state, camera, camera.Position.Move(left), 3, result);
+            AddLineCellsbyPosition(state, camera, camera.Position, 3, result);
+            AddLineCellsbyPosition(state, camera, camera.Position.Move(right), 3, result);
         }
 
-        private static void AddIfValid(StageState state, GridPos pos, List<GridPos> result)
+        // 지정 위치에서 facing 방향으로 range칸 라인 감지
+        // BlocksCameraSight 엔티티가 있으면 그 뒤는 감지 안 함
+        private void AddLineCellsbyPosition(StageState state, EntityState camera, GridPos pos, int range, List<GridPos> result)
         {
-            if (state.IsInside(pos) && !state.GetCell(pos).HasWall)
+            for (int i = 0; i < range; i++)
+            {
+                if (!state.IsInside(pos)) break;
+                CellData cell = state.GetCell(pos);
+                if (cell.HasWall) break;
                 result.Add(pos);
+                if (cell.IsOccupied &&
+                    state.TryGetEntity(cell.OccupantId, out EntityState occ) &&
+                    occ.BlocksCameraSight && occ.IsAlive) break;
+                pos = pos.Move(camera.Facing);
+            }
         }
     }
 }

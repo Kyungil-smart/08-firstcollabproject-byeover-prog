@@ -2,49 +2,27 @@ using System;
 
 namespace MyGame2.Stage
 {
-    // 셀의 속성 비트 플래그.
-    // 여러 속성을 동시에 가질 수 있다 (예: Goal | Trap은 불가하지만 확장성 확보).
-    
     [Flags]
     public enum CellFlags
     {
         None = 0,
-
-        // 벽 — 이동 불가, 카메라 시야 차단
         Wall = 1 << 0,
-
-        // 골 — 두 플레이어 모두 서면 클리어
         Goal = 1 << 1,
-
-        // 함정 — 플레이어가 밟으면 즉사, 상자로 덮으면 비활성화
         Trap = 1 << 2,
-
-        // 부쉬 — 플레이어가 위에 있으면 감시자에게 감지되지 않음
-        // 감시자는 이 타일을 지나갈 수 없음
         Bush = 1 << 3,
-            
-        //틈새 타일 - 이동 불가 상자가 올라가면 이동 가능
         Crack = 1 << 4,
-            
-        //텔레포트 타일 - 플레이어가 올라가면 정해진 위치로 이동
         Teleport = 1 << 5,
-            
-        // 타일 활성 여부, 이동 불가 타일이 활성화 되면 이동 가능
         Active = 1 << 6,
-        
-        // 문 - 활성화 전까지 이동 불가
         Door = 1 << 7,
-        
-        // 버튼 - 처음 상호작용 시 페어에 신호 
         Button  = 1 << 8,
-        
-        // 신호 지속성
         Sticky = 1 << 9,
-        
-        // 열린 상태 고정
         OpenFixed = 1 << 10,
+        HiddenTrap = 1 << 11,
+        DestroyTrap = 1 << 12,
+        SawTrap = 1 << 13,
+        Extra = 1 << 14, 
         
-        // 스위치
+        SideWall = Wall | Extra,
         Switch = Button | Sticky
     }
 }

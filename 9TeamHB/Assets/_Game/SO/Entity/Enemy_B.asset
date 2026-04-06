@@ -19,5 +19,4 @@ MonoBehaviour:
   _viewPrefab: {fileID: 651025039593506988, guid: faf5ba42911ba534ca309c17577156f7,
     type: 3}
   Functions:
-  - {fileID: 11400000, guid: 09acc74c87713c24cb22cef184827dee, type: 2}
-  - {fileID: 11400000, guid: dfcce0b472e460b43a35c78e8e97a69c, type: 2}
+  - {fileID: 11400000, guid: 9d999d109b53ae24d8ca7f742d445b7d, type: 2}
