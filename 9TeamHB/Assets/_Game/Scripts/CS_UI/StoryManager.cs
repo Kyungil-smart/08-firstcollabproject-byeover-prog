@@ -89,32 +89,20 @@ public class StoryManager : MonoBehaviour
 
         if (storyText != null)
         {
-            storyText.text = LocalizationManager.Instance.GetText(page.storyKey);
-        }
-
-
-        if (storyText != null) 
-        {
-            // 번역 검사
             if (LocalizationManager.Instance != null)
-            {
-                // 잘되면 정상적으로 번역본을 가져오기
-                // TODO: 병합 에러로 임시 주석 처리, storyText.text = LocalizationManager.Instance.GetText(page.storyKey);
-            }
+                storyText.text = LocalizationManager.Instance.GetText(page.storyKey);
             else
-            {
-                // 바로 씬을 키면 Key값만 띄움
-                // TODO: 병합 에러로 임시 주석 처리, storyText.text = page.storyKey; 
-                Debug.LogWarning("타이틀 씬부터 실행하는걸 추천함.");
-            }
+                storyText.text = page.storyKey;
         }
+
 
         if (useDebugLog) Debug.Log($"현재 스토리: {currentPage + 1} / {currentStoryData.pages.Length}");
     }
 
     private void OnLanguageChanged()
     {
-        storyText.font = LocalizationManager.Instance.mainFont;
+        if (LocalizationManager.Instance != null && LocalizationManager.Instance.mainFont != null)
+            storyText.font = LocalizationManager.Instance.mainFont;
         UpdateUI(); 
     }
     

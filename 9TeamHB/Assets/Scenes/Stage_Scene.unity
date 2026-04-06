@@ -557,71 +557,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 415009676}
   m_CullTransparentMesh: 1
---- !u!1 &464242634
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 464242637}
-  - component: {fileID: 464242636}
-  - component: {fileID: 464242635}
-  m_Layer: 0
-  m_Name: LocalizationManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &464242635
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 464242634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b0e8e8b215422cb429ade05fc1c287b0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GoogleSheetDownloader
-  sheetsToDownload:
-  - fileName: LocalizationTable
-    sheetURL: https://docs.google.com/spreadsheets/d/e/2PACX-1vT2UZqE-l6VeUOQfEa7j8TFFuU0lqMopMzXBgBqE4BfsJlpzjc0t4mtkFtSKVfohXwZZ3PiqwwsUIYC/pub?gid=0&single=true&output=csv
-  - fileName: StoryTable
-    sheetURL: https://docs.google.com/spreadsheets/d/e/2PACX-1vT2UZqE-l6VeUOQfEa7j8TFFuU0lqMopMzXBgBqE4BfsJlpzjc0t4mtkFtSKVfohXwZZ3PiqwwsUIYC/pub?gid=1462058133&single=true&output=csv
---- !u!114 &464242636
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 464242634}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0e550208a1a6cac4dad1f544c575096c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LocalizationManager
-  currentLanguage: 0
-  mainFont: {fileID: 11400000, guid: a57ef6b431120ca4fb39dc8e967eebc7, type: 2}
-  storyFont: {fileID: 11400000, guid: c33426e76726e524a91fdedce0bb6ded, type: 2}
---- !u!4 &464242637
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 464242634}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 997.712, y: 541.38074, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &480256813
 GameObject:
   m_ObjectHideFlags: 0
@@ -2833,6 +2768,74 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
+--- !u!1001 &3641823075056428188
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 997.712
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 541.38074
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1385117511703953462, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5540890622065681849, guid: fe09ecb6a5e9f8543b7aa1787202bd13,
+        type: 3}
+      propertyPath: m_Name
+      value: LocalizationManager
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: fe09ecb6a5e9f8543b7aa1787202bd13, type: 3}
 --- !u!1001 &7944100989600137298
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3072,4 +3075,4 @@ SceneRoots:
   - {fileID: 1925919419}
   - {fileID: 1294246092}
   - {fileID: 480256814}
-  - {fileID: 464242637}
+  - {fileID: 3641823075056428188}

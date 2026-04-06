@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ae55dfa4b250c9849988ad7b56c1ef8d, type: 3}
   m_Name: 1x2Trap_Cmp
   m_EditorClassIdentifier: Assembly-CSharp::SawTrapCmp
-  size: 2
+  size: 1

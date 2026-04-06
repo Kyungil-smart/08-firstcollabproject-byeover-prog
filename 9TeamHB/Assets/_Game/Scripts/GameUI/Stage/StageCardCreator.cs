@@ -6,60 +6,41 @@ public class StageCardCreator : MonoBehaviour
     public Transform contentTransform; // Scroll View 안의 Content 오브젝트
     
     [Header("캐러셀 연결")]
-    public StageCarousel stageCarousel; // ★ 추가: StageCarousel 스크립트 연결용
-    private int maxUnlockedStage = 1;
+    public StageCarousel stageCarousel;
+    private int _globalIndex = 0; // stageFiles 배열 인덱스와 동일
     void Start()
     {
+        // 튜토리얼 1~5 (stageFiles 0~4)
+        for (int i = 1; i <= 5; i++) CreateCard(i, true, 1);
         
-        maxUnlockedStage = PlayerPrefs.GetInt("MaxUnlockedStage", 1);
-        // 튜토리얼 1, 2
-        for (int i = 1; i <= 2; i++) CreateCard(i, true, 1);
+        // 스테이지 1, 2 (stageFiles 5~6)
+        for (int i = 1; i <= 2; i++) CreateCard(i, false, 1);
         
-        // 스테이지 1
-        for (int i = 1; i <= 1; i++) CreateCard(i, false, 1);
-        
-        // 튜토리얼 3, 4, 5
-        for (int i = 3; i <= 5; i++) CreateCard(i, true, 1);
-        
-        // 스테이지 2
-        for (int i = 2; i <= 2; i++) CreateCard(i, false, 1);
-        
-        // 튜토리얼 6, 7
+        // 튜토리얼 6, 7 (stageFiles 7~8)
         for (int i = 6; i <= 7; i++) CreateCard(i, true, 1);
         
-        // 스테이지 3, 4, 5
+        // 스테이지 3~5 (stageFiles 9~11)
         for (int i = 3; i <= 5; i++) CreateCard(i, false, 2);
         
-        // 스테이지 6, 7, 8
+        // 스테이지 6~8 (stageFiles 12~14)
         for (int i = 6; i <= 8; i++) CreateCard(i, false, 3);
         
-        stageCarousel.StartAtCard(0); // TOdo: 나중에 스테이지 시작 부분 바꿀필요있을때 변경.
+        stageCarousel.StartAtCard(0);
     }
 
     // 중복되던 카드 생성 코드를 하나로 합친 함수
     private void CreateCard(int index, bool isTutorial, int starCount)
     {
-        // Content의 자식으로 프리팹 생성
         GameObject newCard = Instantiate(stageCardPrefab, contentTransform);
         StageCard stageCard = newCard.GetComponent<StageCard>();
         RectTransform cardRect = newCard.GetComponent<RectTransform>();
         
         stageCarousel.AddStageCard(cardRect);
-        int record = 0; // 저장된 최고기록
+        int record = 0;
         
-        bool isUnlocked = false;
-        if (isTutorial)
-        {
-            isUnlocked = true; // 튜토리얼은 항상 열려있게 하려면 이렇게 둡니다.
-        }
-        else
-        {
-            if (index <= maxUnlockedStage) isUnlocked = true;
-            else isUnlocked = false;
-        }
-       
+        bool isUnlocked = isTutorial || StageProgressManager.IsUnlocked(_globalIndex);
         
-        // 카드에 데이터 넣어주기 (캐러셀 정보와 자신의 RectTransform도 같이 넘겨줍니다)
-        stageCard.SetupCard(index, record, isTutorial, starCount, stageCarousel, cardRect, isUnlocked);
+        stageCard.SetupCard(index, record, isTutorial, starCount, stageCarousel, cardRect, isUnlocked, _globalIndex);
+        _globalIndex++;
     }
 }
