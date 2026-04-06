@@ -26,7 +26,7 @@ public class TitleUIManager : MonoBehaviour
         if (useDebugLog) Debug.Log("게임 시작. Story_Scene으로 이동합니다.");
         
         // 스토리씬으로 보내기
-        LoadingManager.LoadScene("Story_Scene");
+        LoadingManager.LoadScene(startSceneName);
     }
 
     // 조작키 버튼 연결용 (패널 열기)
