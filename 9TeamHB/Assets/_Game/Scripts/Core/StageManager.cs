@@ -210,7 +210,6 @@ namespace MyGame2.Stage
             if (snapshot != null)
             {
                 _undoStack.Push(snapshot);
-                Debug.Log($"[Undo] 스냅샷 저장 — 턴 {CurrentState.TurnIndex}, 스택 {_undoStack.Count}개");
             }
         }
 
@@ -400,8 +399,7 @@ namespace MyGame2.Stage
 
                 if (members.Count < 2)
                 {
-                    Debug.LogWarning($"[StageManager] PairGroup {kvp.Key}: " +
-                                     $"멤버 {members.Count}개 — 페어 연결 불가.");
+                    // 멤버 1개 → 페어 연결 불가 (의도적 단일 배치일 수 있으므로 경고 생략)
                 }
             }
         }

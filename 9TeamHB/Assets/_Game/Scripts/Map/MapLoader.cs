@@ -89,10 +89,7 @@ namespace MyGame2.Stage
                     {
                         if (entry.entityConfig == null)
                         {
-                            Debug.LogWarning(
-                                $"[MapLoader] 기호 '{symbol}'({entry.description}): " +
-                                $"spawnsEntity=true인데 entityConfig가 null입니다. " +
-                                $"at ({x}, {y})");
+                            // entityConfig 미설정 → 스폰 건너뜀 (경고 생략)
                             continue;
                         }
 

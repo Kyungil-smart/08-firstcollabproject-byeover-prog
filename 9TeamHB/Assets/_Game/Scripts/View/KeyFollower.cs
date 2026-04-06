@@ -13,6 +13,9 @@ public class KeyFollower : MonoBehaviour
     void Update()
     {
         
+        // 대상이 파괴됐으면 추적 중단
+        if (target == null) { return; }
+
         bool isFirstRecord = _history.Count == 0;
         // 첫 기록 0, 나머지는 거리 계산  
         float distFromLast = isFirstRecord ? 
