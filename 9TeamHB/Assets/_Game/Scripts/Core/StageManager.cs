@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -26,16 +25,8 @@ namespace MyGame2.Stage
         [Tooltip("EntityFunctionSO 등이 StageState에 접근하기 위한 SO")]
         [SerializeField] private StageStateReferenceSO stageStateReference;
 
-        [Header("되돌리기 설정")]
-        [Tooltip("되감기 시 한 턴당 소요 시간 (초)")]
-        [SerializeField] private float undoStepInterval = 0.15f;
-
-        [Tooltip("되감기 시 종료 후 일시정지 시간 (초)")]
-        [SerializeField] private float undoPostPauseInterval = 0.2f;
-
-
         private MapLoader _mapLoader;
-        
+
         // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
@@ -93,7 +84,7 @@ namespace MyGame2.Stage
             LastOutcome = outcome;
             SyncViews();
             SyncSelection();
-            
+
             //게임오버관련 Invoke
             if (CurrentState != null && CurrentState.IsGameOver)
             {
@@ -162,9 +153,9 @@ namespace MyGame2.Stage
         }
 
         // 현재 스테이지를 다시 로드한다.
-        public void RestartCurrentStage() 
-        { 
-            LoadStage(_currentStageIndex); 
+        public void RestartCurrentStage()
+        {
+            LoadStage(_currentStageIndex);
         }
 
         // 다음 스테이지를 로드한다.
@@ -194,12 +185,11 @@ namespace MyGame2.Stage
                 return LastOutcome;
             }
 
-            // 턴 실행 전 스냅샷 저장 (Undo용)
-            CaptureSnapshot();
-
             return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
         }
 
+<<<<<<< HEAD
+=======
         // 되돌리기 (Undo)
 
         // 턴 실행 직전에 호출하여 현재 상태를 스냅샷으로 저장.
@@ -320,6 +310,7 @@ namespace MyGame2.Stage
             }
         }
 
+>>>>>>> Develop
         // 페어 그룹 자동 연결
 
         // PairGroupData를 가진 엔티티들을 그룹별로 묶어서
