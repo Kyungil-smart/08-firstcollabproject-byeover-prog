@@ -302,9 +302,9 @@ namespace MyGame2.Stage
                 // 항상 가로 좌우 1칸
                 GridPos left = new GridPos(trap.Position.X - 1, trap.Position.Y);
                 GridPos right = new GridPos(trap.Position.X + 1, trap.Position.Y);
-
-                if (left == pos && IsInside(left) && !GetCell(left).HasWall) return true;
-                if (right == pos && IsInside(right) && !GetCell(right).HasWall) return true;
+                
+                if (left == pos && IsInside(left) && !GetCell(left).HasWall && (trap.Get<SawTrapData>().Size == 5)) return true;
+                if (right == pos && IsInside(right) && !GetCell(right).HasWall && (trap.Get<SawTrapData>().Size == 5)) return true;
             }
             return false;
         }
