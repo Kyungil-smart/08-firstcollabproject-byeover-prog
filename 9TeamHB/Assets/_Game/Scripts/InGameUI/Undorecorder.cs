@@ -135,6 +135,11 @@ namespace MyGame2.Stage
                 _snapshots.Push(StageSnapshot.Capture(state));
         }
 
+        public bool IsRewindable()
+        {
+            return _snapshots.Count >= 2;
+        }
+
         private void ResetReplayTimer()
         {
             _replayTimer = replayFirstFeedbackSecond;
