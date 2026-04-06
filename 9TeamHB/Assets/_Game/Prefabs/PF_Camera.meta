@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:9TeamHB/Assets/Gif/Super_Retro_Collection/Resources/Prefabs.meta
+guid: 2339448bd473c654f8d6737e371859a2
+=======
 guid: dd5fd6e5998c3d74fbedd6f6415688cc
+>>>>>>> origin/Develop:9TeamHB/Assets/_Game/Prefabs/PF_Camera.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}

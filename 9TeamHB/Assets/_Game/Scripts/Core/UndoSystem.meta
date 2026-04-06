@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<< HEAD:9TeamHB/Assets/Gif/Super_Retro_Collection/Resources.meta
+guid: 1d62ed8224ece0f4ea99a8c2d5e20dcb
+=======
 guid: fed5710e4d71cf443935676ee706981a
+>>>>>>> origin/Develop:9TeamHB/Assets/_Game/Scripts/Core/UndoSystem.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
