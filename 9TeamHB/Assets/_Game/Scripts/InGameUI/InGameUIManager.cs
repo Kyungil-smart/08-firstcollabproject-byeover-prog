@@ -147,6 +147,8 @@ public class InGameUIManager : MonoBehaviour
 
         SetStageCount(stageIndex, isTutorialStage);
         SetTagCount(stageIndex);
+        RefreshTagUI();
+        RefreshUndoUI();
     }
 
     // 이동 성공 턴만 카운트
@@ -285,6 +287,7 @@ public class InGameUIManager : MonoBehaviour
             case 13: maxTagCount = 5; break;
             case 14: maxTagCount = 8; break;
         }
+        currentTagCount = maxTagCount;
     }
     
     // Undo (Space) — 시간 예산 + 플래그만 관리
