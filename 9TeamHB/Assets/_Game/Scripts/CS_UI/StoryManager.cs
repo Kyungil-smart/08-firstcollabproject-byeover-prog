@@ -48,7 +48,7 @@ public class StoryManager : MonoBehaviour
 
     private void Start()
     {
-        if (LocalizationManager.Instance != null && LocalizationManager.Instance.mainFont != null)
+        if (storyText != null && LocalizationManager.Instance != null && LocalizationManager.Instance.mainFont != null)
         {
             storyText.font = LocalizationManager.Instance.mainFont;
         }
