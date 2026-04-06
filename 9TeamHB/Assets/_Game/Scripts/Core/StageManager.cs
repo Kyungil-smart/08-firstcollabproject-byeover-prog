@@ -93,6 +93,12 @@ namespace MyGame2.Stage
             LastOutcome = outcome;
             SyncViews();
             SyncSelection();
+            
+            //게임오버관련 Invoke
+            if (CurrentState != null && CurrentState.IsGameOver)
+            {
+                _events.RaiseGameOver();
+            }
         }
 
         // 활성 플레이어 전환 시 선택 마커 갱신.
