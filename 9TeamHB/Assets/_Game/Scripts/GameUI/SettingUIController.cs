@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class SettingUIController : MonoBehaviour
@@ -14,7 +15,14 @@ public class SettingUIController : MonoBehaviour
             fullScreenToggle.isOn = Screen.fullScreen;
         }
     }
-    
+
+    private void Update()
+    {
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            CloseSetting();
+        }
+    }
     // 토글이의 OnValueChanged 연결 함수.
     public void SetFullScreen(bool isFullScreen)
     {
