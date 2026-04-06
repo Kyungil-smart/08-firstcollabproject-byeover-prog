@@ -13,7 +13,10 @@ namespace MyGame2.Stage
 
         [Header("되감기 설정")]
         [Tooltip("되감기 한 스텝 간격 (초, unscaled)")]
-        [SerializeField] private float replayInterval = 0.12f;
+        [SerializeField] private float replayInterval = 0.20f;
+
+        [Tooltip("되감기 첫 입력 피드백 시간 (초, unscaled")]
+        [SerializeField] private float replayFirstFeedbackSecond = 0.20f;
 
         // 스냅샷 스택: [0]=초기, [1]=턴1 이후, [2]=턴2 이후 ...
         private readonly Stack<StageSnapshot> _snapshots = new Stack<StageSnapshot>(64);
@@ -21,18 +24,18 @@ namespace MyGame2.Stage
         private bool _isRestoring; // Restore 중 TurnExecuted 재진입 방지
 
         // 생명주기
-        
+
         private void OnEnable()
         {
             if (stageManager == null) return;
-            stageManager.Events.StageLoaded  += OnStageLoaded;
+            stageManager.Events.StageLoaded += OnStageLoaded;
             stageManager.Events.TurnExecuted += OnTurnExecuted;
         }
 
         private void OnDisable()
         {
             if (stageManager == null) return;
-            stageManager.Events.StageLoaded  -= OnStageLoaded;
+            stageManager.Events.StageLoaded -= OnStageLoaded;
             stageManager.Events.TurnExecuted -= OnTurnExecuted;
         }
 
@@ -44,7 +47,7 @@ namespace MyGame2.Stage
             // Undo 중이 아니면 타이머만 리셋
             if (!state.IsUndoProcessing)
             {
-                _replayTimer = 0f;
+                ResetReplayTimer();
                 return;
             }
 
@@ -56,19 +59,22 @@ namespace MyGame2.Stage
                 ReplayStep();
             }
         }
-        
+
         // 이벤트 핸들러
-        
+
         // 새 스테이지 로드 -> 스택 비우고 초기 스냅샷 기록
         private void OnStageLoaded(int stageIndex)
         {
             _snapshots.Clear();
-            _replayTimer = 0f;
+            ResetReplayTimer();
 
             // 초기 상태 기록
             StageState state = stageManager.CurrentState;
             if (state != null)
+            {
                 _snapshots.Push(StageSnapshot.Capture(state));
+                Debug.Log($"[Undo] 스냅샷 저장 — 턴 {state.TurnIndex}, 스택 {_snapshots.Count}개");
+            }
         }
 
         // 턴 실행 완료 -> 스냅샷 기록
@@ -84,14 +90,19 @@ namespace MyGame2.Stage
             if (state == null) return;
 
             _snapshots.Push(StageSnapshot.Capture(state));
+            Debug.Log($"[Undo] 스냅샷 저장 — 턴 {state.TurnIndex}, 스택 {_snapshots.Count}개");
         }
-        
+
         // 되감기
 
         private void ReplayStep()
         {
             // 초기 스냅샷(맨 아래 1개)은 유지 — 더 이상 되감을 수 없음
-            if (_snapshots.Count <= 1) return;
+            if (_snapshots.Count <= 1)
+            {
+                Debug.Log("[Undo] 스냅샷 없음");
+                return;
+            }
 
             // 현재 상태 스냅샷 버리기
             _snapshots.Pop();
@@ -101,6 +112,7 @@ namespace MyGame2.Stage
 
             _isRestoring = true;
             stageManager.CurrentState.Restore(prev);
+            Debug.Log($"[Undo] Undo 실행 — 턴 {stageManager.CurrentState.TurnIndex}, 스택 {_snapshots.Count}개");
 
             // View 동기화 트리거
             stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
@@ -113,12 +125,19 @@ namespace MyGame2.Stage
         public void ClearHistory()
         {
             _snapshots.Clear();
-            _replayTimer = 0f;
+            Debug.Log("[Undo] Undo 스택 초기화");
+
+            ResetReplayTimer();
 
             // 현재 상태를 새로운 "초기 스냅샷"으로 기록
             StageState state = stageManager != null ? stageManager.CurrentState : null;
             if (state != null)
                 _snapshots.Push(StageSnapshot.Capture(state));
+        }
+
+        private void ResetReplayTimer()
+        {
+            _replayTimer = replayFirstFeedbackSecond;
         }
     }
 }
