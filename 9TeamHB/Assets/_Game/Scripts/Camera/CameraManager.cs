@@ -113,7 +113,7 @@ public class CameraManager : MonoBehaviour
         vcamEvent.Follow = marker;
         vcamEvent.ForceCameraPosition(pos, vcamEvent.transform.rotation);
         vcamEvent.Priority = 100;
-        yield return null;
+        yield return new WaitForEndOfFrame();        
         // 게임 일시정지 이벤트
         yield return new WaitForSecondsRealtime(0.1f);
         Time.timeScale = 0f;
@@ -147,6 +147,10 @@ public class CameraManager : MonoBehaviour
         var confiner = vcamP1.GetComponent<CinemachineConfiner2D>();
         confiner.InvalidateBoundingShapeCache();
         confiner = vcamP2.GetComponent<CinemachineConfiner2D>();
+        confiner.InvalidateBoundingShapeCache();
+        confiner = vcamEvent.GetComponent<CinemachineConfiner2D>();
+        confiner.InvalidateBoundingShapeCache();
+        confiner = vcamStart.GetComponent<CinemachineConfiner2D>();
         confiner.InvalidateBoundingShapeCache();
     }
 
