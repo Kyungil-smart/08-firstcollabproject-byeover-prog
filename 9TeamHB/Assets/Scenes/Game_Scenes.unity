@@ -725,7 +725,7 @@ MonoBehaviour:
     volume: 1
   sfxSlimeStep:
     clip: {fileID: 8300000, guid: c58a452479acb6040bd6fa86cd265869, type: 3}
-    volume: 0
+    volume: 1
   sfxFootSteps:
   - clip: {fileID: 8300000, guid: a46e24a0f7496434c93e76a8441f9ac8, type: 3}
     volume: 1
@@ -774,13 +774,13 @@ MonoBehaviour:
     volume: 1
   sfxGameClearLayer1:
     clip: {fileID: 8300000, guid: 0891b734ebc39ba4080e897c3e4fe20b, type: 3}
-    volume: 0.4
+    volume: 0.3
   sfxGameClearLayer2:
     clip: {fileID: 8300000, guid: 1c2d3a9762ef1a941a45dd4c3b97578d, type: 3}
-    volume: 0.4
+    volume: 0.3
   sfxGameClearPopup:
     clip: {fileID: 8300000, guid: 6b141f25823ab6c4791ced01cb172faf, type: 3}
-    volume: 0.2
+    volume: 0.1
   sfxGameEnter:
     clip: {fileID: 8300000, guid: 9ad8da91624974447af5c06c6c479b32, type: 3}
     volume: 1
