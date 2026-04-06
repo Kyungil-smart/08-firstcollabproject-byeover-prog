@@ -39,8 +39,8 @@ namespace MyGame2.Stage
                 case 10: ConfigureStage4(); break;
                 case 11: ConfigureStage5(); break;
                 case 12: ConfigureStage6(); break;
-                case 14: ConfigureStage7(); break;
-                case 15: ConfigureStage8(); break;
+                case 13: ConfigureStage7(); break;
+                case 14: ConfigureStage8(); break;
             }
         }
 
@@ -89,7 +89,7 @@ namespace MyGame2.Stage
         {
             // 경로 주입
             ConfigureRobotPatrols(stage7Robot);
-            ConfigureAnimalPatrols(stage7Summon);
+            ConfigureAnimalPatrols(stage7Animal);
         }
 
         private void ConfigureStage8()
@@ -278,7 +278,7 @@ namespace MyGame2.Stage
                 new GridPos(16, 12)
             })
         };
-        private PatrolData[] stage7Summon = new PatrolData[]
+        private PatrolData[] stage7Animal = new PatrolData[]
         {
             new PatrolData(new GridPos[]
             {
