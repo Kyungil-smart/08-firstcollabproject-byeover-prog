@@ -28,6 +28,8 @@ public class StageCarousel : MonoBehaviour
         // 스냅 이동 처리 (월드 좌표 기준)
         if (isSnapping && targetCard != null)
         {
+            RectTransform viewRect = scrollRect.viewport != null ? scrollRect.viewport : scrollRect.GetComponent<RectTransform>();
+            
             // 1. 뷰포트(보이는 화면)의 실제 정중앙 X좌표 계산
             Vector3[] viewportCorners = new Vector3[4];
             scrollRect.viewport.GetWorldCorners(viewportCorners);
@@ -69,6 +71,9 @@ public class StageCarousel : MonoBehaviour
 
     private void UpdateCardScale()
     {
+        if (scrollRect == null) return;
+        RectTransform viewRect = scrollRect.viewport != null ? scrollRect.viewport : scrollRect.GetComponent<RectTransform>();
+        
         // 화면 크기와 중앙 위치를 미리 가져옵니다.
         Vector3[] viewportCorners = new Vector3[4];
         scrollRect.viewport.GetWorldCorners(viewportCorners);
@@ -102,14 +107,18 @@ public class StageCarousel : MonoBehaviour
     // 1프레임 대기 후 위치를 잡아주는 코루틴
     private System.Collections.IEnumerator SetInitialPosition(int index)
     {
-        // UI LayoutGroup이 카드를 정렬할 시간을 주기 위해 1프레임 대기 (매우 중요!)
-        yield return null; 
+        if (content != null)
+        {
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content);
+        }
 
         // 만약 카드가 생성되지 않았다면 실행하지 않음
         if (stageCards.Count <= index) yield break;
 
         targetCard = stageCards[index];
-
+        
+        RectTransform viewRect = scrollRect.viewport != null ? scrollRect.viewport : scrollRect.GetComponent<RectTransform>();
+        
         // 뷰포트와 카드의 중앙 좌표 계산
         Vector3[] viewportCorners = new Vector3[4];
         scrollRect.viewport.GetWorldCorners(viewportCorners);
@@ -126,5 +135,7 @@ public class StageCarousel : MonoBehaviour
 
         // 크기도 즉시 갱신
         UpdateCardScale();
+        
+        yield break;
     }
 }

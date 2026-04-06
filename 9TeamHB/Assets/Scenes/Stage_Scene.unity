@@ -1613,8 +1613,8 @@ MonoBehaviour:
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 0
   m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
+  m_ChildScaleWidth: 1
+  m_ChildScaleHeight: 1
   m_ReverseArrangement: 0
 --- !u!1 &1424280419
 GameObject:
@@ -2310,10 +2310,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36e8ef6de162f8b43bdf632c403928b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StageCarousel
-  scrollRect: {fileID: 0}
-  content: {fileID: 0}
+  scrollRect: {fileID: 1883322902}
+  content: {fileID: 1367244600}
   lerpSpeed: 5
-  centerScale: 1.2
+  centerScale: 1
   normalScale: 0.8
 --- !u!1 &1925919416
 GameObject:
