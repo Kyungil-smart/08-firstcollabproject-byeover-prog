@@ -96,7 +96,31 @@ namespace MyGame2.Stage
 
         private void OnStageLoaded(int idx) { UpdateVisual(); }
         private void OnTurnExecuted(TurnOutcome outcome) { UpdateVisual(); }
-        private void OnUndoExecuted() { UpdateVisual(); }
+
+        // 수정: Undo 시 레버 활성화 캐시를 리셋하고 현재 상태에서 재판정
+        private void OnUndoExecuted()
+        {
+            _leverActivated = false;
+
+            // 현재 상태에서 레버가 여전히 활성이어야 하는지 재판정
+            if (_initialized && stageManager != null)
+            {
+                StageState state = stageManager.CurrentState;
+                if (state != null && state.TryGetEntity(_entityId, out EntityState entity))
+                {
+                    if (entity.Kind == EntityKind.LeverEntity)
+                    {
+                        // 현재 누군가 레버 위에 있으면 다시 활성화
+                        if (HasOccupantOnTile(state, entity, false))
+                            _leverActivated = true;
+                    }
+                }
+            }
+
+            // 비주얼 강제 갱신 (상태 변화 감지를 위해 firstUpdate 처리)
+            _firstUpdate = true;
+            UpdateVisual();
+        }
 
         private void UpdateVisual()
         {
