@@ -32,7 +32,7 @@ namespace MyGame2.Stage
         {
             switch (stageIndex)
             {
-                // case 0: ConfigureStage2(); break;
+                case 0: ConfigureStage2(); break;
                 case 6: ConfigureStage2(); break;
                 case 8: ConfigureTutorial7(); break;
                 case 9: ConfigureStage3(); break;
@@ -55,7 +55,7 @@ namespace MyGame2.Stage
             // 텔레포트 스팟 연결
             StageState state = stageManager.CurrentState;
             if (state == null) return;
-            state.SetCellDuo(new GridPos(9,6), new GridPos(13,5));
+            state.SetCellDuo(new GridPos(9,8), new GridPos(13,5));
             state.SetCellDuo(new GridPos(9, 13), new GridPos(10, 14));
             state.SetCellDuo(new GridPos(17, 12), new GridPos(16, 14));
         }
