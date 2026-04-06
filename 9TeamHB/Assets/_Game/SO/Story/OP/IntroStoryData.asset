@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b474fbf25f4f5c43a8aa6691cf29376, type: 3}
+  m_Name: IntroStoryData
+  m_EditorClassIdentifier: Assembly-CSharp::StoryData
+  pages:
+  - cutsceneImage: {fileID: 5743844587985476733, guid: fb5846493a347cb48ab7035c85fcaf25,
+      type: 3}
+    storyKey: IntroStoryTest_Ch01_00
+  - cutsceneImage: {fileID: 3171958952398860310, guid: ded8282f3eca43349885fd6a465385ee,
+      type: 3}
+    storyKey: IntroStoryTest_Ch01_01
+  - cutsceneImage: {fileID: 7404082792413861842, guid: e924a636b5dd9d848817ade3d9c4dfbf,
+      type: 3}
+    storyKey: IntroStoryTest_Ch01_02
+  - cutsceneImage: {fileID: 1181352557922471809, guid: ff2dc5c328a49c1438307f6fa445de0f,
+      type: 3}
+    storyKey: IntroStoryTest_Ch01_03
+  - cutsceneImage: {fileID: 3626708467930137701, guid: 294640a5e9feba642881370507e20679,
+      type: 3}
+    storyKey: IntroStoryTest_Ch01_04
+  - cutsceneImage: {fileID: -7036397041410635437, guid: 638ecae91c31dfb4b93c9af40e84eb81,
+      type: 3}
+    storyKey: IntroStoryTest_Ch01_05
+  - cutsceneImage: {fileID: 3166858206241573829, guid: afa4dfef35d389240814633c9bc87c66,
+      type: 3}
+    storyKey: IntroStoryTest_Ch01_06

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b474fbf25f4f5c43a8aa6691cf29376, type: 3}
+  m_Name: EndStoryData
+  m_EditorClassIdentifier: Assembly-CSharp::StoryData
+  pages:
+  - cutsceneImage: {fileID: -9149675760637430151, guid: a21736c5bb8d2b04689a5b1877cc0892,
+      type: 3}
+    storyKey: OutroStoryTest_Ch02_00
+  - cutsceneImage: {fileID: -8180909829475681233, guid: f5c2b92f75885754f91913234c48b72f,
+      type: 3}
+    storyKey: OutroStoryTest_Ch02_01
+  - cutsceneImage: {fileID: 3564767049258341177, guid: 596a8c3e9f3a80142a3f60237de0df99,
+      type: 3}
+    storyKey: OutroStoryTest_Ch02_02
+  - cutsceneImage: {fileID: 493678309739184313, guid: 209becdffffe8784d86a328b86845021,
+      type: 3}
+    storyKey: OutroStoryTest_Ch02_03

@@ -1,69 +1,59 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class TitleUIManager : MonoBehaviour
 {
-    [Header("Panels")]
-    [SerializeField] private GameObject keyboardPanel;
-    // optionPanel을 추후에 추가할 곳
-
-    
-    // 환경설정 버튼 눌렀을때 생성되는 세팅 캔버스 프리펩
-    [SerializeField] private GameObject settingPrefab; 
-    private GameObject activeSetting; // 프리펩으로 생성된 세팅 캔버스 오브젝트를 저장.
-    
     [Header("Scene Settings")]
-    [SerializeField] private string startSceneName = "Stage_Scene";
+    [Tooltip("새 게임 시 이동할 씬 이름")]
+    [SerializeField] private string storySceneName = "Story_Scene";
+    [Tooltip("스테이지 선택 시 이동할 씬 이름")]
+    [SerializeField] private string stageSceneName = "Stage_Scene";
+
+    [Header("Prefabs")]
+    [Tooltip("환경설정 버튼을 눌렀을 때 생성되는 캔버스 프리팹")]
+    [SerializeField] private GameObject settingPrefab;
+    private GameObject activeSetting;
 
     [Header("Debug")]
     [SerializeField] private bool useDebugLog = false;
-    
 
-    // 게임시작 버튼 연결용
-    public void OnClickGameStart()
+
+    // 1. 새 게임 버튼
+    public void OnClickNewGame()
     {
-        if (useDebugLog) Debug.Log("게임 시작. Story_Scene으로 이동합니다.");
+        if (useDebugLog) Debug.Log("새 게임 시작. 로딩 화면을 거쳐 Story_Scene으로 이동.");
         
-        // 스토리씬으로 보내기
-        LoadingManager.LoadScene("Story_Scene");
+        // 팀에서 만든 LoadingManager가 중간 로딩 씬을 자동으로 처리해 줍니다.
+        LoadingManager.LoadScene(storySceneName);
     }
 
-    // 조작키 버튼 연결용 (패널 열기)
-    public void OpenKeyboardPanel()
+    // 2. 스테이지 선택 버튼
+    public void OnClickStageSelect()
     {
-        if (keyboardPanel == null) return;
+        if (useDebugLog) Debug.Log("스테이지 선택. 로딩 화면을 거쳐 Stage_Scene으로 이동.");
         
-        keyboardPanel.SetActive(true);
-        if (useDebugLog) Debug.Log("조작키 안내.");
+        LoadingManager.LoadScene(stageSceneName);
     }
 
-    // 조작키 보고 나가기용 버튼 연결용 (패널 닫기)
-    public void CloseKeyboardPanel()
-    {
-        if (keyboardPanel == null) return;
-        
-        keyboardPanel.SetActive(false);
-    }
-
-    // 게임종료 버튼 연결용
-    public void OnClickQuit()
-    {
-        if (useDebugLog) Debug.Log("게임을 종료.");
-        
-        Application.Quit();
-    }
-    
+    // 3. 환경설정 버튼
     public void OnClickOption()
     {
-        // 한 번도 연 적이 없으면 프리팹을 복제해서 화면에 띄움
+        if (useDebugLog) Debug.Log("환경설정 창 열기.");
+
         if (activeSetting == null)
         {
             activeSetting = Instantiate(settingPrefab);
         }
-        else // 이미 만들어둔 게 있다면 활성화만 .
+        else
         {
             activeSetting.SetActive(true);
         }
+    }
+
+    // 4. 게임 종료 버튼
+    public void OnClickQuit()
+    {
+        if (useDebugLog) Debug.Log("게임 종료.");
+        Application.Quit();
     }
 }
