@@ -62,6 +62,11 @@ public class StageCarousel : MonoBehaviour
         stageCards.Add(newCard);
     }
 
+    public void ClearCards()
+    {
+        stageCards.Clear();
+    }
+
     public void OnCardClicked(RectTransform clickedCard)
     {
         scrollRect.velocity = Vector2.zero; // 스크롤 관성 정지

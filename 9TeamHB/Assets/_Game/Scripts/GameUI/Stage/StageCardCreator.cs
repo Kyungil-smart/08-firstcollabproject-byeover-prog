@@ -2,12 +2,13 @@ using UnityEngine;
 
 public class StageCardCreator : MonoBehaviour
 {
-    public GameObject stageCardPrefab; // Prefab/UI/StageCard 프리펩
-    public Transform contentTransform; // Scroll View 안의 Content 오브젝트
+    public GameObject stageCardPrefab;
+    public Transform contentTransform;
     
     [Header("캐러셀 연결")]
     public StageCarousel stageCarousel;
-    private int _globalIndex = 0; // stageFiles 배열 인덱스와 동일
+    private int _globalIndex = 0;
+
     void Start()
     {
         // 튜토리얼 1~5 (stageFiles 0~4)
@@ -28,18 +29,38 @@ public class StageCardCreator : MonoBehaviour
         stageCarousel.StartAtCard(0);
     }
 
-    // 중복되던 카드 생성 코드를 하나로 합친 함수
+    private void Update()
+    {
+        // Home키: 클리어 기록 초기화 + 카드 잠금 상태 갱신
+        if (Input.GetKeyDown(KeyCode.Home))
+        {
+            StageProgressManager.ResetAll(15);
+            RefreshAllCards();
+        }
+    }
+
+    private void RefreshAllCards()
+    {
+        _globalIndex = 0;
+        foreach (Transform child in contentTransform)
+            Destroy(child.gameObject);
+        stageCarousel.ClearCards();
+        Start();
+    }
+
     private void CreateCard(int index, bool isTutorial, int starCount)
     {
         GameObject newCard = Instantiate(stageCardPrefab, contentTransform);
         StageCard stageCard = newCard.GetComponent<StageCard>();
         RectTransform cardRect = newCard.GetComponent<RectTransform>();
-        
+    
         stageCarousel.AddStageCard(cardRect);
-        int record = 0;
-        
-        bool isUnlocked = isTutorial || StageProgressManager.IsUnlocked(_globalIndex);
-        
+    
+        // 변경: PlayerPrefs에서 best record 읽기
+        int record = PlayerPrefs.GetInt("BestTagRecord_" + index, 0);
+    
+        bool isUnlocked = StageProgressManager.IsUnlocked(_globalIndex);
+    
         stageCard.SetupCard(index, record, isTutorial, starCount, stageCarousel, cardRect, isUnlocked, _globalIndex);
         _globalIndex++;
     }
