@@ -281,10 +281,10 @@ public class InGameUIManager : MonoBehaviour
         {
             case 0: maxTagCount = 4; break;
             case 1: maxTagCount = 5; break;
-            case 2: maxTagCount = 5; break;
-            case 3: maxTagCount = 4; break;
-            case 4: maxTagCount = 7; break;
-            case 5: maxTagCount = 4; break;
+            case 2: maxTagCount = 4; break;
+            case 3: maxTagCount = 7; break;
+            case 4: maxTagCount = 4; break;
+            case 5: maxTagCount = 5; break;
             case 6: maxTagCount = 9; break;
             case 7: maxTagCount = 5; break;
             case 8: maxTagCount = 6; break;
