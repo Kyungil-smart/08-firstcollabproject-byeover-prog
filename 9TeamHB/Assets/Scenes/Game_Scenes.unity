@@ -163,7 +163,7 @@ MonoBehaviour:
   stageCount: 0
   isTutorialStage: 0
   stageTitleText: 
-  maxTagCount: 3
+  maxTagCount: 5
   timeElapsed: 0
 --- !u!4 &42561339
 Transform:
@@ -774,13 +774,13 @@ MonoBehaviour:
     volume: 1
   sfxGameClearLayer1:
     clip: {fileID: 8300000, guid: 0891b734ebc39ba4080e897c3e4fe20b, type: 3}
-    volume: 0.5
+    volume: 0.4
   sfxGameClearLayer2:
     clip: {fileID: 8300000, guid: 1c2d3a9762ef1a941a45dd4c3b97578d, type: 3}
-    volume: 0.5
+    volume: 0.4
   sfxGameClearPopup:
     clip: {fileID: 8300000, guid: 6b141f25823ab6c4791ced01cb172faf, type: 3}
-    volume: 0.3
+    volume: 0.2
   sfxGameEnter:
     clip: {fileID: 8300000, guid: 9ad8da91624974447af5c06c6c479b32, type: 3}
     volume: 1
