@@ -30,8 +30,12 @@ namespace MyGame2.Stage
         [Tooltip("되감기 시 한 턴당 소요 시간 (초)")]
         [SerializeField] private float undoStepInterval = 0.15f;
 
-        private MapLoader _mapLoader;
+        [Tooltip("되감기 시 종료 후 일시정지 시간 (초)")]
+        [SerializeField] private float undoPostPauseInterval = 0.2f;
 
+
+        private MapLoader _mapLoader;
+        
         // 이벤트 허브
         private readonly StageEvents _events = new StageEvents();
         private readonly TagSystem _tagSystem = new TagSystem();
@@ -57,7 +61,8 @@ namespace MyGame2.Stage
         // 마지막 턴의 결과.
         public TurnOutcome LastOutcome { get; private set; }
 
-        bool _isUndoDone = false;
+        private int _undoNum = 0;
+        private const int _undoNumLimit = 50;
 
         private void Awake()
         {
@@ -108,7 +113,26 @@ namespace MyGame2.Stage
 
             _currentStageIndex = stageIndex;
             ClearViews();
+
+            // 이전 상태의 IUpdate/IDisposable 컴포넌트 이벤트 구독 해제
+            // (투사체 발사기 등이 다음 스테이지에서도 계속 발사하는 버그 방지)
+            if (CurrentState != null)
+            {
+                foreach (EntityState e in CurrentState.Entities)
+                {
+                    foreach (IComponentData comp in e.Components)
+                    {
+                        if (comp is System.IDisposable disposable)
+                            disposable.Dispose();
+                    }
+                }
+            }
+
+            // 투사체 속도 레지스트리 초기화
+            ProjectileSpeedRegistry.Clear();
+
             _undoStack.Clear(); // Undo 스택 초기화
+            _undoNum = 0;
 
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
@@ -132,9 +156,9 @@ namespace MyGame2.Stage
         }
 
         // 현재 스테이지를 다시 로드한다.
-        public void RestartCurrentStage()
-        {
-            LoadStage(_currentStageIndex);
+        public void RestartCurrentStage() 
+        { 
+            LoadStage(_currentStageIndex); 
         }
 
         // 다음 스테이지를 로드한다.
@@ -150,14 +174,7 @@ namespace MyGame2.Stage
         public bool SwitchActivePlayer()
         {
             if (!CanAcceptInput()) return false;
-
-            bool switchResult = _tagSystem.Switch(CurrentState);
-            if (switchResult)
-            {
-                _undoStack.Clear();
-            }
-
-            return switchResult;
+            return _tagSystem.Switch(CurrentState);
         }
 
         // 플레이어 턴을 실행한다.
@@ -204,6 +221,11 @@ namespace MyGame2.Stage
                 Debug.Log("[Undo] 이미 되돌리기 중");
                 return false;
             }
+            if (_undoNum >= _undoNumLimit)
+            {
+                Debug.Log($"[Undo] Undo 횟수({_undoNum}/{_undoNumLimit}회) 소진");
+                return false;
+            }
             if (_undoStack.Count == 0)
             {
                 Debug.Log("[Undo] 스냅샷 없음 (첫 턴 전)");
@@ -222,12 +244,10 @@ namespace MyGame2.Stage
         public void LeaveUndo()
         {
             if (_undoCoroutine != null)
-                // Undo 종료 시 모든 View를 정확한 위치로 스냅 (Lerp 잔여 오차 제거)
-                foreach (var pair in _views)
-                {
-                    StopCoroutine(_undoCoroutine);
-                }
-
+            {
+                StopCoroutine(_undoCoroutine);
+                _undoCoroutine = null;
+            }
 
             if (CurrentState == null) return;
             CurrentState.IsUndoProcessing = false;
@@ -247,6 +267,9 @@ namespace MyGame2.Stage
             {
                 StageSnapshot snapshot = _undoStack.Pop();
                 CurrentState.Restore(snapshot);
+                _undoNum++;
+
+                Debug.Log($"[Undo] Undo 횟수 : ${_undoNum}/${_undoNumLimit}");
 
                 // 동적 스폰된 엔티티의 View 정리
                 CleanupOrphanViews();
@@ -262,8 +285,9 @@ namespace MyGame2.Stage
             // 스냅샷 소진 시 자동 해제
             if (CurrentState.IsUndoProcessing)
             {
-                CurrentState.IsUndoProcessing = false;
                 _events.RaiseUndoExecuted();
+                yield return new WaitForSecondsRealtime(undoPostPauseInterval);
+                CurrentState.IsUndoProcessing = false;
             }
             _undoCoroutine = null;
         }
@@ -327,7 +351,7 @@ namespace MyGame2.Stage
                     EntityState e = members[i];
                     if (e.Kind == EntityKind.ButtonEntity || e.Kind == EntityKind.LeverEntity)
                         triggers.Add(e);
-                    else if (e.Kind == EntityKind.DoorEntity)
+                    else if (e.Kind == EntityKind.DoorEntity || e.Has<HiddenTrapData>())
                         doors.Add(e);
                     else
                         others.Add(e);
@@ -454,9 +478,6 @@ namespace MyGame2.Stage
 
         private void SyncViews()
         {
-            // 제거된 엔티티의 View 파괴 (투사체 소멸 등)
-            CleanupOrphanViews();
-
             // 동적 생성된 엔티티의 View가 없으면 자동 생성
             foreach (EntityState e in CurrentState.Entities)
             {

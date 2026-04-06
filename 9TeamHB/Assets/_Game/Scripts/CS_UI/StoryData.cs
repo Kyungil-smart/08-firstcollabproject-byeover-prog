@@ -5,8 +5,8 @@ using UnityEngine;
 public struct StoryPage
 {
     public Sprite cutsceneImage;
-    [TextArea(3, 5)] 
-    public string storyText;
+    [TextArea(1, 2)] 
+    public string storyKey; // 기존 storyText를 storyKey로
 }
 
 [CreateAssetMenu(fileName = "NewStoryData", menuName = "Story/StoryData")]

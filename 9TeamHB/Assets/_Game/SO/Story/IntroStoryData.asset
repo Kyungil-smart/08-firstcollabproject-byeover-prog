@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: IntroStoryData
   m_EditorClassIdentifier: Assembly-CSharp::StoryData
   pages:
-  - cutsceneImage: {fileID: -855298285791758126, guid: 6c1476bc8e8f2be45a31bd9ea23de5e4,
+  - cutsceneImage: {fileID: 7720211684664866777, guid: f1c114f3e8242ee4abc35ab6e5a5da13,
       type: 3}
-    storyText: Test1
-  - cutsceneImage: {fileID: 6937817954938267909, guid: dd9105124b2f13d4baf01e2b93aa897f,
+    storyKey: IntroStoryTest_Ch01_00
+  - cutsceneImage: {fileID: -7773272851656168963, guid: 23bd6b89e5842a3459bea11f16b47b78,
       type: 3}
-    storyText: Test22
-  - cutsceneImage: {fileID: -6470460504253458178, guid: 80b3a33a260091d468846cf26854ebc1,
+    storyKey: IntroStoryTest_Ch01_01
+  - cutsceneImage: {fileID: -616660088389119349, guid: d4b6aaf0cab11c044b7cfe5e9af7e27e,
       type: 3}
-    storyText: Test333
+    storyKey: IntroStoryTest_Ch01_02

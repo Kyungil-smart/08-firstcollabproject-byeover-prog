@@ -107,7 +107,7 @@ namespace MyGame2.Stage
             if (state.HasHiddenTrap(moveResult.To))
             {
                 state.RevealHiddenTrap(moveResult.To);
-                state.MarkGameOver();
+                state.SetGameOverSilent(); // 입력만 차단, 팝업은 애니메이션 후
 
                 state.Events?.RaiseHiddenTrapPlayerKill(playerId, moveResult.To);
 

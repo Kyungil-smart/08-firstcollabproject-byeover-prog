@@ -123,5 +123,9 @@ public class HUDRestartUI : MonoBehaviour, IPointerDownHandler, IPointerUpHandle
         isHolding = false; 
         ResetHold(); 
         // 재시작 함수 호출
+        if (InGameUIManager.Instance != null)
+        {
+            InGameUIManager.Instance.ExecuteGameQuitRetry();
+        }
     }
 }

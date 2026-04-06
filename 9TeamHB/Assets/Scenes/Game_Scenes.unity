@@ -158,11 +158,12 @@ MonoBehaviour:
     type: 3}
   gameQuitPrefab: {fileID: 4678675293507642822, guid: 0d839841899192f48864584c2d53d0eb,
     type: 3}
-  maxUndoCount: 3
-  maxTagCount: 3
-  maxMoveCount: 0
-  currentMoveCount: 0
+  stageManager: {fileID: 823654580}
+  maxUndoSeconds: 20
   stageCount: 0
+  isTutorialStage: 0
+  stageTitleText: 
+  maxTagCount: 3
   timeElapsed: 0
 --- !u!4 &42561339
 Transform:
@@ -822,7 +823,6 @@ GameObject:
   m_Component:
   - component: {fileID: 823654581}
   - component: {fileID: 823654580}
-  - component: {fileID: 823654583}
   - component: {fileID: 823654582}
   m_Layer: 0
   m_Name: StageManager
@@ -852,7 +852,7 @@ MonoBehaviour:
   - {fileID: 4900000, guid: 5e052a0b7117f8c4ab7e6d0a3b167b52, type: 3}
   - {fileID: 4900000, guid: b84f641af89418a4c8a87cbbdee68a4e, type: 3}
   - {fileID: 4900000, guid: 823a5acd4e08baa4990301262494dd37, type: 3}
-  - {fileID: 4900000, guid: 80a90c836090ae94dbe403672a9e4029, type: 3}
+  - {fileID: 4900000, guid: 1ff29eb5a1409c44189095251479ee75, type: 3}
   - {fileID: 4900000, guid: 7c9841a5070e55d448776f30ece11e5a, type: 3}
   - {fileID: 4900000, guid: cc01f476e89943142b71b25f194e03f2, type: 3}
   - {fileID: 4900000, guid: c3098529a593c6b4f8b8d369f7ff8eae, type: 3}
@@ -867,6 +867,7 @@ MonoBehaviour:
   stageStateReference: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511,
     type: 2}
   undoStepInterval: 0.15
+  undoPostPauseInterval: 0.2
 --- !u!4 &823654581
 Transform:
   m_ObjectHideFlags: 0
@@ -897,20 +898,6 @@ MonoBehaviour:
   stageManager: {fileID: 823654580}
   hiddenAlpha: 0.4
   fadeSpeed: 8
---- !u!114 &823654583
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823654579}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 126dce9c5b7fa7142b2dfddef1eb1f71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceSlideProcessor
-  stageManager: {fileID: 823654580}
-  slideInterval: 0.07
 --- !u!1 &899949242
 GameObject:
   m_ObjectHideFlags: 0
@@ -1115,6 +1102,52 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1430747376
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1430747378}
+  - component: {fileID: 1430747377}
+  m_Layer: 0
+  m_Name: UndoRecorder
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1430747377
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1430747376}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed78f742671d3a34eb024de4c8105be7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.UndoRecorder
+  stageManager: {fileID: 823654580}
+  replayInterval: 0.2
+--- !u!4 &1430747378
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1430747376}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1573434692
 GameObject:
   m_ObjectHideFlags: 0
@@ -1281,7 +1314,9 @@ MonoBehaviour:
   activeDuration: 0.4
   rewindDuration: 0.5
   rewindDelay: 1
-  sortingOrder: 0
+  sortingOrder: -1
+  deactivatedColor: {r: 0.6415094, g: 0.6415094, b: 0.6415094, a: 0.5}
+  activeColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &1906414216
 Transform:
   m_ObjectHideFlags: 0
@@ -1326,7 +1361,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 126dce9c5b7fa7142b2dfddef1eb1f71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceSlideProcessor
-  stageManager: {fileID: 0}
+  stageManager: {fileID: 823654580}
   slideInterval: 0.08
 --- !u!4 &1909252390
 Transform:
@@ -1441,3 +1476,4 @@ SceneRoots:
   - {fileID: 308230778}
   - {fileID: 1909252390}
   - {fileID: 646144537}
+  - {fileID: 1430747378}

@@ -23,7 +23,7 @@ namespace MyGame2.Stage
         private readonly List<int> _projectileIds;
         private readonly List<int> _sawTrapIds;
         // 셀 페어 (스위치-문 등)
-        private readonly Dictionary<GridPos, GridPos> _cellPairs = new Dictionary<GridPos, GridPos>();
+        private readonly Dictionary<GridPos, List<GridPos>> _cellPairs = new Dictionary<GridPos, List<GridPos>>();
 
         private int _nextEntityId;
         private readonly StageEvents _events;
@@ -214,7 +214,7 @@ namespace MyGame2.Stage
             _launcherIds = new List<int>(4);
             _projectileIds = new List<int>(16);
             _sawTrapIds = new List<int>(8);
-            _cellPairs = new Dictionary<GridPos, GridPos>(16);
+            _cellPairs = new Dictionary<GridPos, List<GridPos>>(16);
             _nextEntityId = 1;
             ActivePlayerId = InvalidEntityId;
             IsViewDirty = false;
@@ -281,7 +281,7 @@ namespace MyGame2.Stage
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
         public bool HasCrackNotCovered(GridPos pos) { return GetCell(pos).HasCrack && !GetCell(pos).HasActive; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
-        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap; }
+        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap&& !GetCell(pos).HasActive; }
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
 
@@ -373,15 +373,28 @@ namespace MyGame2.Stage
             return bestPos;
         }
 
-        // 셀 페어 (스위치↔문 등)
+        // 셀 페어 (스위치↔문, 버튼↔히든트랩 등) — 1:N 지원
         public void SetCellPair(GridPos a, GridPos b)
         {
-            _cellPairs[a] = b;
-            _cellPairs[b] = a;
+            if (!_cellPairs.ContainsKey(a))
+                _cellPairs[a] = new List<GridPos>(4);
+            if (!_cellPairs[a].Contains(b))
+                _cellPairs[a].Add(b);
+
+            if (!_cellPairs.ContainsKey(b))
+                _cellPairs[b] = new List<GridPos>(4);
+            if (!_cellPairs[b].Contains(a))
+                _cellPairs[b].Add(a);
         }
         public bool TryGetCellPair(GridPos a, out GridPos b)
         {
-            return _cellPairs.TryGetValue(a, out b);
+            if (_cellPairs.TryGetValue(a, out List<GridPos> list) && list.Count > 0)
+            {
+                b = list[0];
+                return true;
+            }
+            b = default;
+            return false;
         }
 
         // 잠긴 문 위에 있는지 판정
@@ -416,6 +429,15 @@ namespace MyGame2.Stage
             if (GetCell(from).HasSignalButton && !GetCell(from).IsSticky)
             {
                 DeactivePairCell(from);
+
+                // 페어된 셀에 히든 트랩이 있으면 재활성화
+                if (_cellPairs.TryGetValue(from, out List<GridPos> paired))
+                {
+                    for (int p = 0; p < paired.Count; p++)
+                    {
+                        ReactivateHiddenTrapAt(paired[p]);
+                    }
+                }
             }
 
             // 상자가 함정에서 벗어나면 함정 재생
@@ -426,6 +448,15 @@ namespace MyGame2.Stage
             if (GetCell(destination).HasSignalButton)
             {
                 ActivePairCell(destination);
+
+                // 페어된 셀에 히든 트랩이 있으면 비활성화
+                if (_cellPairs.TryGetValue(destination, out List<GridPos> paired))
+                {
+                    for (int p = 0; p < paired.Count; p++)
+                    {
+                        DeactivateHiddenTrapAt(paired[p]);
+                    }
+                }
             }
 
             entity.Position = destination;
@@ -471,11 +502,10 @@ namespace MyGame2.Stage
 
             _events?.RaiseHiddenTrapRevealed(position);
         }
+        
+        // 지정한 pairGroup에 속하는 모든 히든 함정을 비활성화한다.
+        // 스위치/레버 상호작용 시 호출.
 
-        /// <summary>
-        /// 지정한 pairGroup에 속하는 모든 히든 함정을 비활성화한다.
-        /// 스위치/레버 상호작용 시 호출.
-        /// </summary>
         public int DeactivateHiddenTrapsByPairGroup(int pairGroup)
         {
             int deactivated = 0;
@@ -511,6 +541,42 @@ namespace MyGame2.Stage
 
             if (deactivated > 0) SetViewDirty();
             return deactivated;
+        }
+
+        // 히든 함정 재활성화 (비고정 버튼에서 발을 뗄 때)
+        public int ReactivateHiddenTrapsByPairGroup(int pairGroup)
+        {
+            int reactivated = 0;
+
+            foreach (EntityState entity in _entitiesById.Values)
+            {
+                if (!entity.IsAlive) continue;
+                if (!entity.Has<PairGroupData>()) continue;
+                if (!entity.Has<HiddenTrapData>()) continue;
+
+                PairGroupData pg = entity.Get<PairGroupData>();
+                if (pg.PairGroup != pairGroup) continue;
+
+                HiddenTrapData trap = entity.Get<HiddenTrapData>();
+                if (trap.IsActive) continue;
+
+                // 히든 함정 컴포넌트 재활성화
+                trap.IsActive = true;
+
+                // 해당 셀의 HiddenTrap CellFlag 복원
+                if (IsInside(entity.Position))
+                {
+                    int cellIndex = ToIndex(entity.Position);
+                    CellData cell = _cells[cellIndex];
+                    cell.Flags |= CellFlags.HiddenTrap;
+                    _cells[cellIndex] = cell;
+                }
+
+                reactivated++;
+            }
+
+            if (reactivated > 0) SetViewDirty();
+            return reactivated;
         }
 
         public void DisableTrap(GridPos position)
@@ -610,32 +676,92 @@ namespace MyGame2.Stage
             }
         }
 
-        // 페어 셀 활성화
+        // 페어 셀 활성화 (1:N 지원)
         private void ActivePairCell(GridPos position)
         {
-            if (!_cellPairs.TryGetValue(position, out GridPos pair)) return;
-            if (!IsInside(pair)) return;
-            int idx = ToIndex(pair);
-            CellData pairCell = _cells[idx];
-            if (!pairCell.HasActive)
+            if (!_cellPairs.TryGetValue(position, out List<GridPos> pairs)) return;
+            for (int i = 0; i < pairs.Count; i++)
             {
-                pairCell.Flags |= CellFlags.Active;
+                GridPos pair = pairs[i];
+                if (!IsInside(pair)) continue;
+                int idx = ToIndex(pair);
+                CellData pairCell = _cells[idx];
+                if (!pairCell.HasActive)
+                {
+                    pairCell.Flags |= CellFlags.Active;
+                }
+                _cells[idx] = pairCell;
+
+                // 히든 트랩 엔티티 비활성화 (isBlocking=false라 점유 안 하므로 전체 검색)
+                SetHiddenTrapActive(pair, false);
             }
-            _cells[idx] = pairCell;
         }
 
-        // 페어 셀 비활성화
+        // 페어 셀 비활성화 (1:N 지원)
         private void DeactivePairCell(GridPos position)
         {
-            if (!_cellPairs.TryGetValue(position, out GridPos pair)) return;
-
-            int idx = ToIndex(pair);
-            CellData pairCell = _cells[idx];
-            if (pairCell.HasActive && !pairCell.IsOpenFixed)
+            if (!_cellPairs.TryGetValue(position, out List<GridPos> pairs)) return;
+            for (int i = 0; i < pairs.Count; i++)
             {
-                pairCell.Flags &= ~CellFlags.Active;
+                GridPos pair = pairs[i];
+                if (!IsInside(pair)) continue;
+                int idx = ToIndex(pair);
+                CellData pairCell = _cells[idx];
+                if (pairCell.HasActive && !pairCell.IsOpenFixed)
+                {
+                    pairCell.Flags &= ~CellFlags.Active;
+                }
+                _cells[idx] = pairCell;
+
+                // 히든 트랩 엔티티 재활성화
+                SetHiddenTrapActive(pair, true);
             }
-            _cells[idx] = pairCell;
+        }
+
+        // 특정 위치의 히든 트랩 엔티티 활성/비활성 설정
+        private void SetHiddenTrapActive(GridPos pos, bool active)
+        {
+            foreach (var kvp in _entitiesById)
+            {
+                EntityState e = kvp.Value;
+                if (e.Position == pos && e.Has<HiddenTrapData>())
+                {
+                    e.Get<HiddenTrapData>().IsActive = active;
+                }
+            }
+        }
+
+        // 특정 위치의 히든 트랩 비활성화 (셀 플래그 + 엔티티 데이터)
+        private void DeactivateHiddenTrapAt(GridPos pos)
+        {
+            if (!IsInside(pos)) return;
+            CellData cell = GetCell(pos);
+            if (!cell.HasHiddenTrap) return;
+
+            // 셀 플래그 제거
+            int idx = ToIndex(pos);
+            cell.Flags &= ~CellFlags.HiddenTrap;
+            _cells[idx] = cell;
+
+            // 엔티티 데이터 비활성화
+            SetHiddenTrapActive(pos, false);
+            SetViewDirty();
+        }
+
+        // 특정 위치의 히든 트랩 재활성화 (셀 플래그 + 엔티티 데이터)
+        private void ReactivateHiddenTrapAt(GridPos pos)
+        {
+            if (!IsInside(pos)) return;
+
+            // 셀 플래그 복원
+            int idx = ToIndex(pos);
+            CellData cell = _cells[idx];
+            cell.Flags |= CellFlags.HiddenTrap;
+            _cells[idx] = cell;
+
+            // 엔티티 데이터 재활성화
+            SetHiddenTrapActive(pos, true);
+            SetViewDirty();
         }
 
         public void RotateAllCameras()
@@ -672,6 +798,19 @@ namespace MyGame2.Stage
             _events?.RaiseGameOver();
         }
 
+        // 게임오버 상태만 설정 (입력 차단용, 이벤트 미발행)
+        // 히든 트랩 등 연출이 필요한 경우 사용
+        public void SetGameOverSilent()
+        {
+            IsGameOver = true;
+        }
+
+        // 연출 완료 후 게임오버 이벤트 발행 (팝업 표시)
+        public void ConfirmGameOver()
+        {
+            _events?.RaiseGameOver();
+        }
+
         public void MarkStageClear()
         {
             if (IsStageClear) return;
@@ -687,6 +826,13 @@ namespace MyGame2.Stage
 
         public void SetViewDirty() { IsViewDirty = true; }
         public void ClearViewDirty() { IsViewDirty = false; }
+
+        // 셀 점유 강제 해제 (외부에서 호출 가능)
+        // ExecuteBreak 등에서 엔티티를 딕셔너리에 유지하면서 셀만 비울 때 사용
+        public void ForceClearOccupant(GridPos pos)
+        {
+            ClearOccupant(pos);
+        }
 
         public int SpawnEntity(EntitySO definition, GridPos position, Direction facing)
         {
@@ -745,7 +891,6 @@ namespace MyGame2.Stage
                 case EntityKind.DoorEntity:
                 case EntityKind.LeverEntity:
                 case EntityKind.ButtonEntity:
-                case EntityKind.FireTrap:
                     break;
             }
             return entity.Id;
