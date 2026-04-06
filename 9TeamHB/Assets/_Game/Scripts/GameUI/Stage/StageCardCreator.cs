@@ -53,12 +53,14 @@ public class StageCardCreator : MonoBehaviour
         GameObject newCard = Instantiate(stageCardPrefab, contentTransform);
         StageCard stageCard = newCard.GetComponent<StageCard>();
         RectTransform cardRect = newCard.GetComponent<RectTransform>();
-        
+    
         stageCarousel.AddStageCard(cardRect);
-        int record = 0;
-        
+    
+        // 변경: PlayerPrefs에서 best record 읽기
+        int record = PlayerPrefs.GetInt("BestTagRecord_" + index, 0);
+    
         bool isUnlocked = StageProgressManager.IsUnlocked(_globalIndex);
-        
+    
         stageCard.SetupCard(index, record, isTutorial, starCount, stageCarousel, cardRect, isUnlocked, _globalIndex);
         _globalIndex++;
     }
