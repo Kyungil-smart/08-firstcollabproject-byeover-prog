@@ -32,6 +32,18 @@ namespace MyGame2.Stage
                     patrol.AdvanceToNext();
                 return result;
             }
+            CellData nextCell = state.GetCell(result.To);
+            if (nextCell.IsOccupied &&
+                state.TryGetEntity(nextCell.OccupantId, out EntityState occ) &&
+                occ.IsPlayer && occ.IsAlive)
+            {
+                state.SetFacing(robotId, dir);
+                state.KillEntity(occ.Id);
+                state.MarkGameOver();
+                state.SetViewDirty();
+                return result;
+            }
+            
 
             if (result.IsContactKill)
             {
