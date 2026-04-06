@@ -165,6 +165,7 @@ MonoBehaviour:
   stageTitleText: 
   maxTagCount: 3
   timeElapsed: 0
+  isTutorialStage: 0
 --- !u!4 &42561339
 Transform:
   m_ObjectHideFlags: 0
