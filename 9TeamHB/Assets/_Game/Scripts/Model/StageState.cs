@@ -386,6 +386,24 @@ namespace MyGame2.Stage
             if (!_cellPairs[b].Contains(a))
                 _cellPairs[b].Add(a);
         }
+        public void SetCellDuo(GridPos a, GridPos b)
+        {
+            if (!_cellPairs.ContainsKey(a))
+                _cellPairs[a] = new List<GridPos>(4);
+            if (!_cellPairs[a].Contains(b))
+            {
+                _cellPairs[a].Clear();
+                _cellPairs[a].Add(b);
+            }
+
+            if (!_cellPairs.ContainsKey(b))
+                _cellPairs[b] = new List<GridPos>(4);
+            if (!_cellPairs[b].Contains(a))
+            {
+                _cellPairs[b].Clear();
+                _cellPairs[b].Add(a);
+            }
+        }
         public bool TryGetCellPair(GridPos a, out GridPos b)
         {
             if (_cellPairs.TryGetValue(a, out List<GridPos> list) && list.Count > 0)

@@ -16,7 +16,7 @@ wTTT..H.;Lwwwwwww.;..ww;wwww
 w>TT.;...Lwwww###H.Z.##W###w
 wTTT.W..R#####.R...;;......w
 w..W...F.;CCCC..X...W.W.I.Ww
-w........CCCC...;..B.X;....w
+w...M....CCCC...;..B.X;....w
 wB..W;wwwwwwww=...IW.....M;w
 wwwwwUwwwwwwwwwW...p.W;.W..w
 ############################

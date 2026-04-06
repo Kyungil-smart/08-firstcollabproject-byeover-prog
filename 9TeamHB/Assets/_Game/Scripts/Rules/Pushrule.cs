@@ -34,9 +34,27 @@ namespace MyGame2.Stage
             GridPos dest = box.Position.Move(direction);
             state.TryMoveEntity(boxId, dest);
 
+            // 얼음 상자: 미끄러짐 상태로 전환
+            if (box.Has<IceSlideData>())
+            {
+                IceSlideData ice = box.Get<IceSlideData>();
+                ice.IsSliding = true;
+                ice.SlideDirection = direction;
+                box.Set(ice);
+            }
+            
             // 틈새 타일 처리
             if (state.HasCrackNotCovered(dest))
+            {
                 state.SetCrackMovable(dest, boxId);
+                if (box.Has<IceSlideData>())
+                {
+                    IceSlideData ice = box.Get<IceSlideData>();
+                    ice.IsSliding = false;
+                    ice.SlideDirection = Direction.None;
+                    box.Set(ice);
+                }
+            }
 
             // 파괴 함정: 상자를 파괴하고 함정은 유지
             if (state.HasDestroyTrap(dest))
@@ -51,15 +69,6 @@ namespace MyGame2.Stage
             {
                 state.DisableTrap(dest);
                 return;
-            }
-
-            // 얼음 상자: 미끄러짐 상태로 전환
-            if (box.Has<IceSlideData>())
-            {
-                IceSlideData ice = box.Get<IceSlideData>();
-                ice.IsSliding = true;
-                ice.SlideDirection = direction;
-                box.Set(ice);
             }
         }
 

@@ -80,19 +80,19 @@ public class HUDController : MonoBehaviour
         // 일반 스테이지의 경우.
         if (stageText != null && !isTutorial)
         {
-            string titleKey = $"Stage{stageNum}_Title_Text";
+            string titleKey = $"Stage{stageNum+1}_Title_Text";
             string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
             
-            stageText.text = $"Stage {stageNum}: {localizedTitle}";
+            stageText.text = $"Stage {stageNum+1}: {localizedTitle}";
             return stageText.text;
         }
         // 튜토리얼의 경우.
         else if(stageText != null && isTutorial)
         {
-            string titleKey = $"Tutorial{stageNum}_Title_Text";
+            string titleKey = $"Tutorial{stageNum+1}_Title_Text";
             string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
             
-            stageText.text = $"Tutorial {stageNum}: {localizedTitle}";
+            stageText.text = $"Tutorial {stageNum+1}: {localizedTitle}";
             return stageText.text;
         }
         return stageText.text;
