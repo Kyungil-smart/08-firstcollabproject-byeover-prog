@@ -89,6 +89,31 @@ namespace MyGame2.Stage
         }
 
         // 워프 연출 완료 → 클리어 기록 저장 + 클리어 UI 표시
+<<<<<<< HEAD
+        // +분기 처리 추가, 엔딩씬으로 이동하기
+        private void OnWarpComplete()
+        {
+            if (stageManager != null)
+            {
+                // 1. 임시 처리: 병합 에러 해결 전까지 currentIndex를 0으로 고정
+                int currentIndex = 0; 
+                // StageProgressManager.MarkCleared(currentIndex); // 에러가 나므로 이 줄은 계속 주석 유지!
+
+                // 2. 만약 방금 깬 스테이지가 마지막 메인 스테이지 클리어라면?
+                if (currentIndex == 14) // <--- 이 if문이 살아있어야 아래 else가 에러 나지 않습니다!
+                {
+                    // 곧바로 엔딩 씬으로 이동!
+                    LoadingManager.LoadScene("Ending_Scene");
+                }
+                else
+                {
+                    // 마지막 판 x -> 평소처럼 클리어 UI 표시
+                    if (InGameUIManager.Instance != null)
+                    {
+                        InGameUIManager.Instance.ShowGameClear();
+                    }
+                }
+=======
         private void OnWarpComplete()
         {
             // 현재 스테이지 클리어 기록 저장
@@ -101,6 +126,7 @@ namespace MyGame2.Stage
             if (InGameUIManager.Instance != null)
             {
                 InGameUIManager.Instance.ShowGameClear();
+>>>>>>> origin/Develop
             }
         }
 

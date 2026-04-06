@@ -18,6 +18,9 @@ public class StoryManager : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool useDebugLog = false;
 
+    [Header("Scene Transition")]
+    [SerializeField] private string nextSceneName = "Stage_Scene"; // 다음에 이동할 씬 이름
+
     private int currentPage = 0;
 
     private void OnEnable()
@@ -72,7 +75,7 @@ public class StoryManager : MonoBehaviour
             return; // 업데이트 후엔 종료
         }
 
-        // 남은 페이지가 없을 경우 -> 끝
+        // 남은 페이지가 없을 경우 끝
         EndStory();
     }
 
@@ -89,6 +92,23 @@ public class StoryManager : MonoBehaviour
             storyText.text = LocalizationManager.Instance.GetText(page.storyKey);
         }
 
+
+        if (storyText != null) 
+        {
+            // 번역 검사
+            if (LocalizationManager.Instance != null)
+            {
+                // 잘되면 정상적으로 번역본을 가져오기
+                // TODO: 병합 에러로 임시 주석 처리, storyText.text = LocalizationManager.Instance.GetText(page.storyKey);
+            }
+            else
+            {
+                // 바로 씬을 키면 Key값만 띄움
+                // TODO: 병합 에러로 임시 주석 처리, storyText.text = page.storyKey; 
+                Debug.LogWarning("타이틀 씬부터 실행하는걸 추천함.");
+            }
+        }
+
         if (useDebugLog) Debug.Log($"현재 스토리: {currentPage + 1} / {currentStoryData.pages.Length}");
     }
 
@@ -100,13 +120,14 @@ public class StoryManager : MonoBehaviour
     
     private void EndStory()
     {
-        if (useDebugLog) Debug.Log("스토리 종료. 스테이지로 이동.");
-        
-        // 다시 보지 않도록 저장
+        if (useDebugLog) Debug.Log($"스토리 종료. {nextSceneName}으로 이동.");
+
+        // 다시 보지 않도록 저장 (오프닝용)
         PlayerPrefs.SetInt("HasSeenStory", 1);
         PlayerPrefs.Save();
-        
-        // 로딩 매니저를 통해 이동
-        LoadingManager.LoadScene("Stage_Scene");
+
+        // 로딩 매니저를 통해 지정한 씬으로 이동
+        LoadingManager.LoadScene(nextSceneName);
     }
+    
 }
