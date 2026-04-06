@@ -20,6 +20,11 @@ public class TitleUIManager : MonoBehaviour
     [SerializeField] private bool useDebugLog = false;
     
 
+    private void Start()
+    {
+        InGameSoundManager.Instance?.PlayTitleBGM();
+    }
+    
     // 게임시작 버튼 연결용
     public void OnClickGameStart()
     {

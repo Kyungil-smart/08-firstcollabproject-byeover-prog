@@ -403,6 +403,8 @@ public class InGameUIManager : MonoBehaviour
 
     public void ShowGameClear()
     {
+        InGameSoundManager.Instance?.PlayGameClearPopup();
+        
         if (activeGameClear == null)
             activeGameClear = Instantiate(gameClearPrefab);
         else
@@ -426,6 +428,9 @@ public class InGameUIManager : MonoBehaviour
 
     public void ShowGameQuit()
     {
+        
+        InGameSoundManager.Instance?.PlayGameOverPopup();
+        
         if (activeGameQuit == null)
             activeGameQuit = Instantiate(gameQuitPrefab);
         else
