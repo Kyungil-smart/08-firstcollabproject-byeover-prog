@@ -130,15 +130,48 @@ namespace MyGame2.Stage
 
                 if (state.TryGetEntity(id, out EntityState box))
                 {
-                    Vector3 pos = box.Position.ToWorld(1f);
+                    // 수정: View의 실제 자식 위치를 사용 (Fallen 상태면 내려간 위치)
+                    Vector3 pos = GetActualVisualPosition(id, box.Position.ToWorld(1f));
+                    int sortingOrder = GetActualSortingOrder(id);
+
                     _brokenPositions[id] = box.Position;
-                    Coroutine co = StartCoroutine(AnimateBreak(pos, id));
+                    Coroutine co = StartCoroutine(AnimateBreak(pos, id, sortingOrder));
                     _activeCoroutines[id] = co;
                 }
             }
         }
 
-        private IEnumerator AnimateBreak(Vector3 position, int entityId)
+        // 추가: View의 실제 자식 위치를 가져옴 (Fallen이면 아래로 내려간 상태)
+        private Vector3 GetActualVisualPosition(int entityId, Vector3 fallbackPos)
+        {
+            GridEntityView view = FindViewForEntity(entityId);
+            if (view == null) return fallbackPos;
+
+            if (view.transform.childCount > 0)
+            {
+                Transform child = view.transform.GetChild(0);
+                return child.position;
+            }
+
+            return view.transform.position;
+        }
+
+        // 추가: Fallen 상태의 sortingOrder를 가져옴
+        private int GetActualSortingOrder(int entityId)
+        {
+            GridEntityView view = FindViewForEntity(entityId);
+            if (view == null) return 1;
+
+            if (view.transform.childCount > 0)
+            {
+                SpriteRenderer sr = view.transform.GetChild(0).GetComponent<SpriteRenderer>();
+                if (sr != null) return sr.sortingOrder;
+            }
+
+            return 1;
+        }
+
+        private IEnumerator AnimateBreak(Vector3 position, int entityId, int sortingOrder = 1)
         {
             if (frames == null || frames.Length < 2)
             {
@@ -146,10 +179,15 @@ namespace MyGame2.Stage
                 yield break;
             }
 
+            // View 즉시 숨기기 (Fallen 상태의 원본 스프라이트가 보이지 않도록)
+            GridEntityView view = FindViewForEntity(entityId);
+            if (view != null)
+                view.gameObject.SetActive(false);
+
             GameObject temp = new GameObject($"BreakFX_{entityId}");
             temp.transform.position = position;
             SpriteRenderer sr = temp.AddComponent<SpriteRenderer>();
-            sr.sortingOrder = 1;
+            sr.sortingOrder = sortingOrder;
             sr.sprite = frames[0];
 
             // 임시 오브젝트 등록 (Undo 취소 시 정리용)
@@ -219,11 +257,12 @@ namespace MyGame2.Stage
                     _trackedIds.Add(id);
                     _breakingIds.Remove(id);
 
-                    // IsBreaking 플래그 초기화
+                    // IsBreaking / IsStepped 플래그 초기화
                     if (entity.Has<BreakableData>())
                     {
                         BreakableData bd = entity.Get<BreakableData>();
                         bd.IsBreaking = false;
+                        bd.IsStepped = false;
                         entity.Set(bd);
                     }
 
