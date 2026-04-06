@@ -823,7 +823,6 @@ GameObject:
   m_Component:
   - component: {fileID: 823654581}
   - component: {fileID: 823654580}
-  - component: {fileID: 823654583}
   - component: {fileID: 823654582}
   m_Layer: 0
   m_Name: StageManager
@@ -899,20 +898,6 @@ MonoBehaviour:
   stageManager: {fileID: 823654580}
   hiddenAlpha: 0.4
   fadeSpeed: 8
---- !u!114 &823654583
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 823654579}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 126dce9c5b7fa7142b2dfddef1eb1f71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceSlideProcessor
-  stageManager: {fileID: 823654580}
-  slideInterval: 0.07
 --- !u!1 &899949242
 GameObject:
   m_ObjectHideFlags: 0
