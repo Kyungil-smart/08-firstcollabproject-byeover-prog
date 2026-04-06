@@ -21,5 +21,11 @@ namespace MyGame2.Stage
             if (state.IsAnyPlayerDead()) state.MarkGameOver();
             return changed;
         }
+
+        // 카메라 감지 — 입력만 차단, KillEntity는 딜레이 후 처리
+        public void ApplyCameraDetectionsSilent(StageState state)
+        {
+            state.SetGameOverSilent();
+        }
     }
 }

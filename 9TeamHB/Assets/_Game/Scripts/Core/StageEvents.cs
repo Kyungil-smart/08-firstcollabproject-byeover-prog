@@ -56,6 +56,8 @@ namespace MyGame2.Stage
         public event Action<GridPos> PairActivated;
         // Undo 실행 완료 시 (다른 팀원 구현용 스텁)
         public event Action UndoExecuted;
+        // CCTV 감지 → 딜레이 후 플레이어 Kill 요청 (detectedPlayerIds)
+        public event Action<List<int>> CameraDetectionPlayerKill;
 
         // ID로 view 콜백을 위한 이벤트 딕셔너리
         private Dictionary<int, Action<ViewRequest>> _viewRequests = new();
@@ -150,6 +152,11 @@ namespace MyGame2.Stage
             UndoExecuted?.Invoke();
         }
 
+        public void RaiseCameraDetectionPlayerKill(List<int> playerIds)
+        {
+            CameraDetectionPlayerKill?.Invoke(playerIds);
+        }
+
         public void RaisePairActivated(GridPos pairPosition)
         {
             PairActivated?.Invoke(pairPosition);
@@ -184,6 +191,7 @@ namespace MyGame2.Stage
             HiddenTrapPlayerKill = null;
             IceBoxSawDestroyed = null;
             UndoExecuted = null;
+            CameraDetectionPlayerKill = null;
             _viewRequests.Clear();
         }
     }

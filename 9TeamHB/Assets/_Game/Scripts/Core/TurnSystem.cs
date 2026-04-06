@@ -169,16 +169,13 @@ namespace MyGame2.Stage
             // 카메라 회전
             state.RotateAllCameras();
 
-            // 카메라 감지
+            // 카메라 감지 — 수집만, 사망 처리는 CameraDetectionDelayHandler가 TurnExecuted에서 처리
             _detectedBuffer.Clear();
             _detectionRule.DetectPlayers(state, _detectedBuffer);
 
-            if (_detectedBuffer.Count > 0)
-                _deathRule.ApplyCameraDetections(state, _detectedBuffer);
-
-            // 클리어 판정
+            // 클리어 판정 (감지 시 스킵)
             bool stageClear = false;
-            if (!state.IsGameOver)
+            if (!state.IsGameOver && _detectedBuffer.Count == 0)
                 stageClear = _clearRule.Evaluate(state);
 
             state.AdvanceTurn();
@@ -204,11 +201,9 @@ namespace MyGame2.Stage
 
             _detectedBuffer.Clear();
             _detectionRule.DetectPlayers(state, _detectedBuffer);
-            if (_detectedBuffer.Count > 0)
-                _deathRule.ApplyCameraDetections(state, _detectedBuffer);
 
             bool stageClear = false;
-            if (!state.IsGameOver)
+            if (!state.IsGameOver && _detectedBuffer.Count == 0)
                 stageClear = _clearRule.Evaluate(state);
 
             state.AdvanceTurn();
@@ -255,8 +250,7 @@ namespace MyGame2.Stage
 
                 BreakableData bd = e.Get<BreakableData>();
                 if (!bd.IsStepped) continue;
-
-                // 이제 진짜 파괴
+                
                 bd.IsBreaking = true;
                 bd.IsStepped = false;
                 e.Set(bd);

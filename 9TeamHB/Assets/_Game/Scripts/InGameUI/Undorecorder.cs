@@ -73,7 +73,6 @@ namespace MyGame2.Stage
             if (state != null)
             {
                 _snapshots.Push(StageSnapshot.Capture(state));
-                Debug.Log($"[Undo] 스냅샷 저장 — 턴 {state.TurnIndex}, 스택 {_snapshots.Count}개");
             }
         }
 
@@ -90,7 +89,6 @@ namespace MyGame2.Stage
             if (state == null) return;
 
             _snapshots.Push(StageSnapshot.Capture(state));
-            Debug.Log($"[Undo] 스냅샷 저장 — 턴 {state.TurnIndex}, 스택 {_snapshots.Count}개");
         }
 
         // 되감기
@@ -99,10 +97,7 @@ namespace MyGame2.Stage
         {
             // 초기 스냅샷(맨 아래 1개)은 유지 — 더 이상 되감을 수 없음
             if (_snapshots.Count <= 1)
-            {
-                Debug.Log("[Undo] 스냅샷 없음");
                 return;
-            }
 
             // 현재 상태 스냅샷 버리기
             _snapshots.Pop();
@@ -112,7 +107,6 @@ namespace MyGame2.Stage
 
             _isRestoring = true;
             stageManager.CurrentState.Restore(prev);
-            Debug.Log($"[Undo] Undo 실행 — 턴 {stageManager.CurrentState.TurnIndex}, 스택 {_snapshots.Count}개");
 
             // View 동기화 트리거
             stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
@@ -125,8 +119,6 @@ namespace MyGame2.Stage
         public void ClearHistory()
         {
             _snapshots.Clear();
-            Debug.Log("[Undo] Undo 스택 초기화");
-
             ResetReplayTimer();
 
             // 현재 상태를 새로운 "초기 스냅샷"으로 기록
