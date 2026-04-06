@@ -55,7 +55,7 @@ namespace MyGame2.Stage
             // 텔레포트 스팟 연결
             StageState state = stageManager.CurrentState;
             if (state == null) return;
-            state.SetCellDuo(new GridPos(9,6), new GridPos(13,5));
+            state.SetCellDuo(new GridPos(9,8), new GridPos(13,5));
             state.SetCellDuo(new GridPos(9, 13), new GridPos(10, 14));
             state.SetCellDuo(new GridPos(17, 12), new GridPos(16, 14));
         }
