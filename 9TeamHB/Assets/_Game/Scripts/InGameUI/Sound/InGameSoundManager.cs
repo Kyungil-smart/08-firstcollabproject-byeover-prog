@@ -104,15 +104,21 @@ public class InGameSoundManager : MonoBehaviour
     }
     
     // 마스터 볼륨 (설정 슬라이더용)
+    private float _masterBGMVolume = 1f;
+    private float _masterSFXVolume = 1f;
+    private float _currentBGMEntryVolume = 1f;
 
     public void SetBGMVolume(float volume)
     {
-        if (bgmSource != null) bgmSource.volume = volume;
+        _masterBGMVolume = volume;
+        if (bgmSource != null)
+            bgmSource.volume = _masterBGMVolume * _currentBGMEntryVolume;
     }
 
     public void SetSFXVolume(float volume)
     {
-        if (sfxSource != null) sfxSource.volume = volume;
+        _masterSFXVolume = volume;
+        if (sfxSource != null) sfxSource.volume = _masterSFXVolume;
     }
     
     // SFX 재생 (개별 볼륨 적용)
@@ -120,14 +126,14 @@ public class InGameSoundManager : MonoBehaviour
     public void PlaySFX(SoundEntry entry)
     {
         if (entry.clip == null || sfxSource == null) return;
-        sfxSource.PlayOneShot(entry.clip, entry.SafeVolume);
+        sfxSource.PlayOneShot(entry.clip, entry.SafeVolume * _masterSFXVolume);
     }
 
     // AudioClip 직접 재생 (하위 호환)
     public void PlaySFX(AudioClip clip)
     {
         if (clip == null || sfxSource == null) return;
-        sfxSource.PlayOneShot(clip);
+        sfxSource.PlayOneShot(clip, _masterSFXVolume);
     }
 
     public void PlayBasicButtonClickSound()
@@ -171,11 +177,10 @@ public class InGameSoundManager : MonoBehaviour
         if (entry.clip == null || bgmSource == null) return;
         if (bgmSource.clip == entry.clip && bgmSource.isPlaying) return;
 
-        // BGM 볼륨 = 마스터 볼륨은 유지하되, 개별 볼륨으로 스케일
-        float masterVol = bgmSource.volume;
+        _currentBGMEntryVolume = entry.SafeVolume;
         bgmSource.clip = entry.clip;
         bgmSource.loop = true;
-        bgmSource.volume = masterVol * entry.SafeVolume;
+        bgmSource.volume = _masterBGMVolume * _currentBGMEntryVolume;
         bgmSource.Play();
     }
 
@@ -184,8 +189,10 @@ public class InGameSoundManager : MonoBehaviour
     {
         if (clip == null || bgmSource == null) return;
         if (bgmSource.clip == clip && bgmSource.isPlaying) return;
+        _currentBGMEntryVolume = 1f;
         bgmSource.clip = clip;
         bgmSource.loop = true;
+        bgmSource.volume = _masterBGMVolume;
         bgmSource.Play();
     }
 
