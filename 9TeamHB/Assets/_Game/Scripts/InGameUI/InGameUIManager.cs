@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using MyGame2.Stage;
 
@@ -59,6 +60,9 @@ public class InGameUIManager : MonoBehaviour
     // 동일 프레임 중복 호출 방지
     private int _lastTagFrame  = -1;
     private int _lastUndoFrame = -1;
+
+    // 자동 다음 스테이지 코루틴 참조 (중복 방지)
+    private Coroutine _autoNextCoroutine;
     
     // 생명주기
 
@@ -129,6 +133,13 @@ public class InGameUIManager : MonoBehaviour
     // 스테이지 로드 시 모든 것 초기화
     private void OnStageLoaded(int stageIndex)
     {
+        // 자동 전환 코루틴이 남아있으면 정리
+        if (_autoNextCoroutine != null)
+        {
+            StopCoroutine(_autoNextCoroutine);
+            _autoNextCoroutine = null;
+        }
+
         ResetAll();
         CloseGameClear();
 
@@ -142,18 +153,33 @@ public class InGameUIManager : MonoBehaviour
             MoveCount++;
     }
 
-    // 클리어 판정 → 통계 저장 + 팝업 즉시 표시
+    // 수정: 클리어 판정 → 통계만 저장 (UI는 워프 끝난 후 표시)
     private void OnStageClear()
     {
         _savedMoveCount = MoveCount;
         _savedTagCount  = TagCount;
         _savedClearTime = timeElapsed;
-        ShowGameClear();
+        // ShowGameClear()는 여기서 호출하지 않음!
+        // 워프 이펙트가 끝난 후 OnWarpComplete()에서 호출
     }
 
-    // 워프 연출 완료 (팝업과 무관 — 다음 스테이지 로드는 버튼 클릭으로)
+    // 수정: 워프 연출 완료 → 클리어 UI 표시 → 2초 뒤 자동 다음 스테이지
     private void OnWarpComplete()
     {
+        ShowGameClear();
+        _autoNextCoroutine = StartCoroutine(AutoNextStageCoroutine());
+    }
+
+    private IEnumerator AutoNextStageCoroutine()
+    {
+        // 2초 대기 (Time.timeScale 영향 안 받음)
+        yield return new WaitForSecondsRealtime(2f);
+
+        _autoNextCoroutine = null;
+        CloseGameClear();
+
+        if (stageManager != null)
+            stageManager.LoadNextStage();
     }
 
     // 타이머·예산·통계 전부 초기값으로
@@ -175,7 +201,7 @@ public class InGameUIManager : MonoBehaviour
     }
     
     // 태그 (Tab)
-
+    
     public bool TryTag()
     {
         if (Time.frameCount == _lastTagFrame) return false;
@@ -190,6 +216,16 @@ public class InGameUIManager : MonoBehaviour
             currentTagCount--;
             TagCount++;
             RefreshTagUI();
+
+            // 태그 후 Undo 이력 차단
+            // 진행 중인 Undo가 있으면 먼저 종료
+            if (isUndoActive)
+                OnReleaseUndoButton();
+
+            // UndoRecorder의 히스토리를 현재 시점으로 리셋
+            UndoRecorder recorder = FindFirstObjectByType<UndoRecorder>();
+            if (recorder != null)
+                recorder.ClearHistory();
         }
         return switched;
     }
@@ -206,7 +242,7 @@ public class InGameUIManager : MonoBehaviour
     }
     
     // Undo (Space) — 시간 예산 + 플래그만 관리
-    // 실제 스냅샷 녹화/복원은 기존 Undorecorder가 담당
+    // 실제 스냅샷 녹화/복원은 UndoRecorder가 담당
 
     public void OnClickUndoButton()
     {
@@ -237,7 +273,7 @@ public class InGameUIManager : MonoBehaviour
     }
     
     // 재시작
-
+    
     public void ExecuteGameQuitRetry()
     {
         CloseGameQuit();

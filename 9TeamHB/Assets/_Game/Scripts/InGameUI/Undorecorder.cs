@@ -57,7 +57,9 @@ namespace MyGame2.Stage
             }
         }
         
-        // 새 스테이지 로드 → 스택 비우고 초기 스냅샷 기록
+        // 이벤트 핸들러
+        
+        // 새 스테이지 로드 -> 스택 비우고 초기 스냅샷 기록
         private void OnStageLoaded(int stageIndex)
         {
             _snapshots.Clear();
@@ -69,7 +71,7 @@ namespace MyGame2.Stage
                 _snapshots.Push(StageSnapshot.Capture(state));
         }
 
-        // 턴 실행 완료 → 스냅샷 기록
+        // 턴 실행 완료 -> 스냅샷 기록
         private void OnTurnExecuted(TurnOutcome outcome)
         {
             // Restore 중 발생하는 TurnExecuted는 무시
@@ -83,7 +85,7 @@ namespace MyGame2.Stage
 
             _snapshots.Push(StageSnapshot.Capture(state));
         }
-
+        
         // 되감기
 
         private void ReplayStep()
@@ -103,6 +105,20 @@ namespace MyGame2.Stage
             // View 동기화 트리거
             stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
             _isRestoring = false;
+        }
+
+        // 태그 전환 시 호출: 히스토리를 현재 시점으로 초기화
+        // 이전 플레이어의 행동으로 되돌릴 수 없게 됨
+
+        public void ClearHistory()
+        {
+            _snapshots.Clear();
+            _replayTimer = 0f;
+
+            // 현재 상태를 새로운 "초기 스냅샷"으로 기록
+            StageState state = stageManager != null ? stageManager.CurrentState : null;
+            if (state != null)
+                _snapshots.Push(StageSnapshot.Capture(state));
         }
     }
 }
