@@ -188,6 +188,129 @@ namespace MyGame2.Stage
             return _turnSystem.TryExecutePlayerTurn(CurrentState, direction);
         }
 
+<<<<<<< HEAD
+=======
+        // 되돌리기 (Undo)
+
+        // 턴 실행 직전에 호출하여 현재 상태를 스냅샷으로 저장.
+        private void CaptureSnapshot()
+        {
+            if (CurrentState == null) return;
+            StageSnapshot snapshot = StageSnapshot.Capture(CurrentState);
+            if (snapshot != null)
+            {
+                _undoStack.Push(snapshot);
+            }
+        }
+
+        // 되돌리기 모드 진입 (Space 누름). 연속 되감기 코루틴 시작.
+        public bool TryEnterUndo()
+        {
+            if (CurrentState == null || CurrentState.IsGameOver || CurrentState.IsStageClear)
+            {
+                Debug.Log($"[Undo] 진입 실패: state={CurrentState != null}, gameOver={CurrentState?.IsGameOver}, clear={CurrentState?.IsStageClear}");
+                return false;
+            }
+            if (CurrentState.IsUndoProcessing)
+            {
+                Debug.Log("[Undo] 이미 되돌리기 중");
+                return false;
+            }
+            if (_undoNum >= _undoNumLimit)
+            {
+                Debug.Log($"[Undo] Undo 횟수({_undoNum}/{_undoNumLimit}회) 소진");
+                return false;
+            }
+            if (_undoStack.Count == 0)
+            {
+                Debug.Log("[Undo] 스냅샷 없음 (첫 턴 전)");
+                return false;
+            }
+
+            Debug.Log($"[Undo] 되돌리기 시작 — 스냅샷 {_undoStack.Count}개");
+            CurrentState.IsUndoProcessing = true;
+
+            // 즉시 1턴 되돌리기 + 이후 홀딩 중 연속 되감기
+            _undoCoroutine = StartCoroutine(UndoRewindLoop());
+            return true;
+        }
+
+        // 되돌리기 모드 해제 (Space 뗌).
+        public void LeaveUndo()
+        {
+            if (_undoCoroutine != null)
+            {
+                StopCoroutine(_undoCoroutine);
+                _undoCoroutine = null;
+            }
+
+            if (CurrentState == null) return;
+            CurrentState.IsUndoProcessing = false;
+
+            // 되돌려진 상태를 View에 반영
+            SyncViews();
+            SyncSelection();
+
+            // Undo 완료 이벤트 발행 (InteractableTileVisual 등이 구독)
+            _events.RaiseUndoExecuted();
+        }
+
+        // Space 홀딩 중 연속으로 턴을 되감는 코루틴.
+        private IEnumerator UndoRewindLoop()
+        {
+            while (_undoStack.Count > 0 && CurrentState.IsUndoProcessing)
+            {
+                StageSnapshot snapshot = _undoStack.Pop();
+                CurrentState.Restore(snapshot);
+                _undoNum++;
+
+                Debug.Log($"[Undo] Undo 횟수 : ${_undoNum}/${_undoNumLimit}");
+
+                // 동적 스폰된 엔티티의 View 정리
+                CleanupOrphanViews();
+
+                // 부드러운 슬라이딩으로 되감기 (Lerp 기반)
+                SyncViews();
+                SyncSelection();
+                _events.RaiseTurnExecuted(TurnOutcome.None());
+
+                yield return new WaitForSecondsRealtime(undoStepInterval);
+            }
+
+            // 스냅샷 소진 시 자동 해제
+            if (CurrentState.IsUndoProcessing)
+            {
+                _events.RaiseUndoExecuted();
+                yield return new WaitForSecondsRealtime(undoPostPauseInterval);
+                CurrentState.IsUndoProcessing = false;
+            }
+            _undoCoroutine = null;
+        }
+
+        // Undo 후 상태에 없는 View를 제거.
+        private void CleanupOrphanViews()
+        {
+            List<int> orphans = null;
+            foreach (var pair in _views)
+            {
+                if (!CurrentState.TryGetEntity(pair.Key, out _))
+                {
+                    if (orphans == null) orphans = new List<int>(4);
+                    orphans.Add(pair.Key);
+                }
+            }
+            if (orphans != null)
+            {
+                for (int i = 0; i < orphans.Count; i++)
+                {
+                    if (_views.TryGetValue(orphans[i], out GridEntityView view) && view != null)
+                        Destroy(view.gameObject);
+                    _views.Remove(orphans[i]);
+                }
+            }
+        }
+
+>>>>>>> Develop
         // 페어 그룹 자동 연결
 
         // PairGroupData를 가진 엔티티들을 그룹별로 묶어서
@@ -267,8 +390,7 @@ namespace MyGame2.Stage
 
                 if (members.Count < 2)
                 {
-                    Debug.LogWarning($"[StageManager] PairGroup {kvp.Key}: " +
-                                     $"멤버 {members.Count}개 — 페어 연결 불가.");
+                    // 멤버 1개 → 페어 연결 불가 (의도적 단일 배치일 수 있으므로 경고 생략)
                 }
             }
         }
