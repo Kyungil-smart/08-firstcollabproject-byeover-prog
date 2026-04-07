@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class TitleUIManager : MonoBehaviour
 {
@@ -29,20 +30,17 @@ public class TitleUIManager : MonoBehaviour
 
     public void OnClickGameStart()
     {
-        // 첫 실행이면 Option_Scene(언어선택) -> Story -> Stage
         if (PlayerPrefs.GetInt("FirstRunDone", 0) == 0)
         {
-            LoadingManager.LoadScene("Option_Scene");
+            SceneManager.LoadScene("Option_Scene");
             return;
         }
-
-        // 이미 본 적 있으면 바로 스테이지 선택
-        LoadingManager.LoadScene(startSceneName);
+        SceneManager.LoadScene("Stage_Scene");
     }
 
     public void OnClickReplayStory()
     {
-        LoadingManager.LoadScene("Story_Scene");
+        SceneManager.LoadScene("Story_Scene");
     }
 
     public void OpenKeyboardPanel()
