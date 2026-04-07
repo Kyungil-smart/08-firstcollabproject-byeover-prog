@@ -20,9 +20,12 @@ public class LocalizationManager : MonoBehaviour
         {
             Instance = this; 
             DontDestroyOnLoad(gameObject); 
-            
+        
             LoadCSV("LocalizationTable");
             LoadCSV("StoryTable");
+        
+            // 저장된 언어 불러오기
+            currentLanguage = (Language)PlayerPrefs.GetInt("SavedLanguage", (int)Language.English);
         }
         else
         {
@@ -119,7 +122,12 @@ public class LocalizationManager : MonoBehaviour
     public void ChangeLanguage(int index)
     {
         currentLanguage = (Language)index;
-        LanguageChangedEvent?.Invoke(); // 전체 UI 새로고침 ( LocalizedText에서 텍스트 바꾸는 함수 등록해놨음)
+    
+        // 언어 설정 저장
+        PlayerPrefs.SetInt("SavedLanguage", index);
+        PlayerPrefs.Save();
+    
+        LanguageChangedEvent?.Invoke();
         Debug.Log("Changed Text");
     }
 }
