@@ -90,6 +90,11 @@ namespace MyGame2.Stage
                     // IUpdate 컴포넌트의 _entityState 참조가 그대로 유효
                     existing.RestoreFrom(kvp.Value);
 
+                    if (existing.Has<IceSlideData>() == true)
+                    {
+                        existing.Set<IceSlideData>(kvp.Value.Get<IceSlideData>());
+                    }
+
                     if (existing.Has<PocketData>() == true)
                     {
                         PocketData pocketData = existing.Get<PocketData>();
@@ -281,7 +286,7 @@ namespace MyGame2.Stage
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
         public bool HasCrackNotCovered(GridPos pos) { return GetCell(pos).HasCrack && !GetCell(pos).HasActive; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
-        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap&& !GetCell(pos).HasActive; }
+        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap && !GetCell(pos).HasActive; }
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
 
@@ -520,7 +525,7 @@ namespace MyGame2.Stage
 
             _events?.RaiseHiddenTrapRevealed(position);
         }
-        
+
         // 지정한 pairGroup에 속하는 모든 히든 함정을 비활성화한다.
         // 스위치/레버 상호작용 시 호출.
 

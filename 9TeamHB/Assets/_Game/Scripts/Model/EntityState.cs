@@ -24,7 +24,7 @@ namespace MyGame2.Stage
 
         // 컴포넌트 저장소
 
-        private readonly Dictionary<Type, IComponentData> _components
+        private Dictionary<Type, IComponentData> _components
             = new Dictionary<Type, IComponentData>(4);
 
         // 컴포넌트 API
@@ -251,6 +251,8 @@ namespace MyGame2.Stage
             IsAlive = source.IsAlive;
             IsBlocking = source.IsBlocking;
             BlocksCameraSight = source.BlocksCameraSight;
+
+            _components = source._components;
         }
     }
 }

@@ -36,10 +36,6 @@ namespace MyGame2.Stage
         private readonly Dictionary<int, GridEntityView> _views = new Dictionary<int, GridEntityView>(16);
         private int _currentStageIndex;
 
-        // Undo 스냅샷 스택
-        private readonly Stack<StageSnapshot> _undoStack = new Stack<StageSnapshot>(64);
-        private Coroutine _undoCoroutine;
-
         // 외부에서 현재 스테이지 인덱스 참조용
         public int CurrentStageIndex => _currentStageIndex;
 
@@ -51,9 +47,6 @@ namespace MyGame2.Stage
 
         // 마지막 턴의 결과.
         public TurnOutcome LastOutcome { get; private set; }
-
-        private int _undoNum = 0;
-        private const int _undoNumLimit = 50;
 
         private void Awake()
         {
@@ -127,9 +120,6 @@ namespace MyGame2.Stage
 
             // 투사체 속도 레지스트리 초기화
             ProjectileSpeedRegistry.Clear();
-
-            _undoStack.Clear(); // Undo 스택 초기화
-            _undoNum = 0;
 
             MapDefinition def = _mapLoader.Load(file);
             CurrentState = StageState.FromMapDefinition(def, _events);
