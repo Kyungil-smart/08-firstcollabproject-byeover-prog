@@ -23,6 +23,7 @@ namespace MyGame2.Stage
         {
             if (stageManager != null)
                 stageManager.Events.StageLoaded -= OnStageLoaded;
+            deltaTimeEvent.Clear();
         }
 
         private void OnStageLoaded(int stageIndex)
