@@ -37,7 +37,7 @@ public class SettingUIController : MonoBehaviour
         {
             InGameUIManager.Instance.CloseSettingPopup();
         }
-        // 2. 타이틀 씬인 경우 (InGameUIManager가 없음)
+        // 타이틀 씬인 경우 (InGameUIManager가 없음)
         else
         {
             gameObject.SetActive(false); 

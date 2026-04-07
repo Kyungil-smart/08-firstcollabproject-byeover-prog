@@ -15,7 +15,7 @@ public class StageCard : MonoBehaviour
     public GameObject lockImage; // 자물쇠 이미지 오브젝트
     public Button startButton; // 스타트 버튼
     
-    [Header("별(Star) 표시")]
+    [Header("별 표시")]
     public GameObject[] starImages;
     
     private int _stageFilesIndex; // StageManager.stageFiles 배열 인덱스

@@ -68,16 +68,12 @@ public class HUDController : MonoBehaviour
         }
     }
     
-    
-    /// <summary>
-    /// 스테이지, 튜토리얼 타이틀 텍스트 업데이트용 함수.
-    /// ex) 스테이지 1 -> UpdateStageText(1, false); , 튜토리얼 2 -> UpdateStageText(2, true); 
-    /// </summary>
-    /// <param name="stageNum"></param>
-    /// <param name="isTutorial"></param>
+    // 스테이지, 튜토리얼 타이틀 텍스트 업데이트용 함수.
+    // ex) 스테이지 1 -> UpdateStageText(1, false); , 튜토리얼 2 -> UpdateStageText(2, true); 
+ 
     public string UpdateStageText(int stageNum, bool isTutorial)
     {
-        if (stageText == null) return ""; // 텍스트가 없으면 안전하게 종료
+        if (stageText == null) return ""; 
 
         // 튜토리얼 여부 
         bool isActuallyTutorial = (stageNum == 0 || stageNum == 1 || stageNum == 2 || stageNum == 3 || stageNum == 4 || stageNum == 7 || stageNum == 8);

@@ -183,7 +183,7 @@ public class InGameUIManager : MonoBehaviour
         }
     }
 
-    // 수정: 워프 연출 완료 -> 클리어 UI 표시 -> 2초 뒤 자동 다음 스테이지
+    // 워프 연출 완료 -> 클리어 UI 표시 -> 2초 뒤 자동 다음 스테이지
     private void OnWarpComplete()
     {
         ShowGameClear();
@@ -192,7 +192,7 @@ public class InGameUIManager : MonoBehaviour
 
     private IEnumerator AutoNextStageCoroutine()
     {
-        // 2초 대기 (Time.timeScale 영향 안 받음)
+        // 2초 대기 
         yield return new WaitForSecondsRealtime(2f);
 
         _autoNextCoroutine = null;
