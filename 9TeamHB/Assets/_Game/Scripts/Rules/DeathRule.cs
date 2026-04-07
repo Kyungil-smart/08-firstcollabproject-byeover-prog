@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace MyGame2.Stage
 {
@@ -10,6 +11,7 @@ namespace MyGame2.Stage
             if (!result.IsContactKill) return false;
             bool killed = state.KillEntity(result.TargetEntityId);
             if (state.IsAnyPlayerDead()) state.MarkGameOver();
+            state.Events.RaisePlayerKilled();
             return killed;
         }
 
@@ -19,6 +21,7 @@ namespace MyGame2.Stage
             for (int i = 0; i < detectedPlayerIds.Count; i++)
                 changed |= state.KillEntity(detectedPlayerIds[i]);
             if (state.IsAnyPlayerDead()) state.MarkGameOver();
+            state.Events.RaisePlayerKilled();
             return changed;
         }
     }

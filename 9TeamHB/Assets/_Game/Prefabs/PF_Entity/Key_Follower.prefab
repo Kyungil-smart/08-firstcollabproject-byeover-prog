@@ -48,6 +48,7 @@ MonoBehaviour:
   target: {fileID: 0}
   distance: 0.5
   minDistance: 0.1
+  stageState: {fileID: 11400000, guid: 36b7172ae45f5dc459c8e8a09a229511, type: 2}
 --- !u!1 &6089652741347096152
 GameObject:
   m_ObjectHideFlags: 0
