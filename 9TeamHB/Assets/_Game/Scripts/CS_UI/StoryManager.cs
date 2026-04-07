@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
+using System.Collections; 
 
 public class StoryManager : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class StoryManager : MonoBehaviour
 
     [Header("Input Settings")]
     [SerializeField] private InputActionReference nextAction; // 클릭+스페이스바로 넘어가기
+    
+    [Header("Typing Effect Settings")]
+    [SerializeField] private float typeSpeed = 0.05f; // 한 글자가 나오는 데 걸리는 시간
 
     [Header("Debug")]
     [SerializeField] private bool useDebugLog = false;
@@ -22,6 +26,9 @@ public class StoryManager : MonoBehaviour
     [SerializeField] private string nextSceneName = "Stage_Scene"; // 다음에 이동할 씬 이름
 
     private int currentPage = 0;
+    
+    private Coroutine typingCoroutine;
+    private bool isTyping = false;
 
     private void OnEnable()
     {
@@ -56,10 +63,19 @@ public class StoryManager : MonoBehaviour
         UpdateUI();
     }
 
-    // New Input System 부르기
+    // New Input System 부르기 (마우스 클릭 또는 스페이스바 감지)
     private void OnNextPageInput(InputAction.CallbackContext context)
     {
-        NextPage();
+        if (isTyping)
+        {
+            // 타이핑 중이라면 전체 글자를 한 번에 팍 띄움 (스킵)
+            SkipTyping();
+        }
+        else
+        {
+            // 타이핑이 다 끝난 상태라면 다음 페이지로 넘어감
+            NextPage();
+        }
     }
 
     private void NextPage()
@@ -89,20 +105,59 @@ public class StoryManager : MonoBehaviour
 
         if (storyText != null)
         {
+            string localizedText = "";
             if (LocalizationManager.Instance != null)
-                storyText.text = LocalizationManager.Instance.GetText(page.storyKey);
+                localizedText = LocalizationManager.Instance.GetText(page.storyKey);
             else
-                storyText.text = page.storyKey;
+                localizedText = page.storyKey;
+
+    
+            if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+            typingCoroutine = StartCoroutine(TypeTextRoutine(localizedText));
         }
 
-
         if (useDebugLog) Debug.Log($"현재 스토리: {currentPage + 1} / {currentStoryData.pages.Length}");
+    }
+
+    
+    private IEnumerator TypeTextRoutine(string fullText)
+    {
+        isTyping = true; // 타이핑 시작!
+
+        storyText.text = fullText;
+        storyText.ForceMeshUpdate(); 
+        int totalVisibleCharacters = storyText.textInfo.characterCount;
+        storyText.maxVisibleCharacters = 0;
+
+        for (int i = 0; i <= totalVisibleCharacters; i++)
+        {
+            storyText.maxVisibleCharacters = i;
+            
+            // 필요하다면 타닥타닥 효과음을 넣는 곳 (주석 해제해서 사용 가능)
+            // InGameSoundManager.Instance?.PlayBasicButtonClickSound();
+
+            yield return new WaitForSeconds(typeSpeed);
+        }
+
+        isTyping = false; // 글자가 다 나오면 타이핑 종료!
+    }
+    
+    private void SkipTyping()
+    {
+        if (typingCoroutine != null)
+        {
+            StopCoroutine(typingCoroutine);
+        }
+        
+        storyText.maxVisibleCharacters = 99999; // 모든 글자를 즉시 화면에 표시
+        isTyping = false; // 타이핑 상태 끄기
     }
 
     private void OnLanguageChanged()
     {
         if (LocalizationManager.Instance != null && LocalizationManager.Instance.storyFont != null)
             storyText.font = LocalizationManager.Instance.storyFont;
+            
         UpdateUI(); 
     }
     
@@ -117,5 +172,4 @@ public class StoryManager : MonoBehaviour
         // 로딩 매니저를 통해 지정한 씬으로 이동
         LoadingManager.LoadScene(nextSceneName);
     }
-    
 }

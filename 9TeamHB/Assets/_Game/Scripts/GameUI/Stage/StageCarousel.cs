@@ -30,20 +30,20 @@ public class StageCarousel : MonoBehaviour
         {
             RectTransform viewRect = scrollRect.viewport != null ? scrollRect.viewport : scrollRect.GetComponent<RectTransform>();
             
-            // 1. 뷰포트(보이는 화면)의 실제 정중앙 X좌표 계산
+            // 뷰포트의 실제 정중앙 X좌표 계산
             Vector3[] viewportCorners = new Vector3[4];
             scrollRect.viewport.GetWorldCorners(viewportCorners);
             float viewportCenterX = (viewportCorners[0].x + viewportCorners[2].x) / 2f;
 
-            // 2. 목표 카드의 실제 정중앙 X좌표 계산
+            // 목표 카드의 실제 정중앙 X좌표 계산
             Vector3[] cardCorners = new Vector3[4];
             targetCard.GetWorldCorners(cardCorners);
             float cardCenterX = (cardCorners[0].x + cardCorners[2].x) / 2f;
 
-            // 3. 뷰포트 중앙과 카드 중앙의 거리 차이 계산
+            // 뷰포트 중앙과 카드 중앙의 거리 차이 계산
             float difference = viewportCenterX - cardCenterX;
 
-            // 4. 차이만큼 Content 전체를 부드럽게 이동
+            // 차이만큼 Content 전체를 부드럽게 이동
             float newX = Mathf.Lerp(content.position.x, content.position.x + difference, Time.deltaTime * lerpSpeed);
             content.position = new Vector3(newX, content.position.y, content.position.z);
 

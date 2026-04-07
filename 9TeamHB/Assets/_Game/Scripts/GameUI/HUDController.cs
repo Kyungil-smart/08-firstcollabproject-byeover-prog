@@ -77,7 +77,7 @@ public class HUDController : MonoBehaviour
     /// <param name="isTutorial"></param>
     public string UpdateStageText(int stageNum, bool isTutorial)
     {
-        if (stageText == null) return ""; // 텍스트가 없으면 안전하게 종료
+        if (stageText == null) return ""; 
 
         // 튜토리얼 여부 
         bool isActuallyTutorial = (stageNum == 0 || stageNum == 1 || stageNum == 2 || stageNum == 3 || stageNum == 4 || stageNum == 7 || stageNum == 8);

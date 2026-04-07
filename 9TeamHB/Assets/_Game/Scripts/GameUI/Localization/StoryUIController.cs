@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro; 
 
+// 사용 안합니다
 // 설명: 스토리의 경우 대사를 마우스 클릭 시 대사를 연속적으로 뱉게 해주는 클래스. (스토리에 한해 LocalizedText대신 사용) 
 // StoryUIController는 LocailzedText처럼 테이블에 일치하는 키 값을 startStoryKey에 넣어주면 그 값부터 _01, _02, _03 ... 차례대로 재생할 수 있게 해줌.   
 public class StoryUIController : MonoBehaviour
