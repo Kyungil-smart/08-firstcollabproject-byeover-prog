@@ -45,6 +45,11 @@ public class StageCardCreator : MonoBehaviour
         foreach (Transform child in contentTransform)
             Destroy(child.gameObject);
         stageCarousel.ClearCards();
+        
+        for (int i = 0; i < 15; i++)
+            PlayerPrefs.DeleteKey("BestTagRecord_" + i);
+        PlayerPrefs.Save();
+        
         Start();
     }
 
