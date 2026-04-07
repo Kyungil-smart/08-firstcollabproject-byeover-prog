@@ -756,6 +756,7 @@ GameObject:
   - component: {fileID: 651521953}
   - component: {fileID: 651521952}
   - component: {fileID: 651521951}
+  - component: {fileID: 651521954}
   m_Layer: 5
   m_Name: Btn_Back
   m_TagString: Untagged
@@ -826,7 +827,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 651521952}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 651521954}
+        m_TargetAssemblyTypeName: StageBackButton, Assembly-CSharp
+        m_MethodName: OnClickBackButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &651521952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -866,6 +879,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 651521949}
   m_CullTransparentMesh: 1
+--- !u!114 &651521954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 651521949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8880a7c38b13fb54883168c339cd7736, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StageBackButton
 --- !u!1 &1095150096
 GameObject:
   m_ObjectHideFlags: 0
