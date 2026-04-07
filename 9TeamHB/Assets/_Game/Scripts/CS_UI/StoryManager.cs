@@ -48,9 +48,9 @@ public class StoryManager : MonoBehaviour
 
     private void Start()
     {
-        if (storyText != null && LocalizationManager.Instance != null && LocalizationManager.Instance.mainFont != null)
+        if (storyText != null && LocalizationManager.Instance != null && LocalizationManager.Instance.storyFont != null)
         {
-            storyText.font = LocalizationManager.Instance.mainFont;
+            storyText.font = LocalizationManager.Instance.storyFont;
         }
         
         UpdateUI();
@@ -101,8 +101,8 @@ public class StoryManager : MonoBehaviour
 
     private void OnLanguageChanged()
     {
-        if (LocalizationManager.Instance != null && LocalizationManager.Instance.mainFont != null)
-            storyText.font = LocalizationManager.Instance.mainFont;
+        if (LocalizationManager.Instance != null && LocalizationManager.Instance.storyFont != null)
+            storyText.font = LocalizationManager.Instance.storyFont;
         UpdateUI(); 
     }
     

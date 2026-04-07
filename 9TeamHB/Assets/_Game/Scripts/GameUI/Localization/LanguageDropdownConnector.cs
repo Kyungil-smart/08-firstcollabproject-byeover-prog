@@ -5,14 +5,16 @@ public class LanguageDropdownLinker : MonoBehaviour
 {
     private TMP_Dropdown dropdown;
 
-    void Start()
+    void OnEnable()
     {
-        dropdown = GetComponent<TMP_Dropdown>();
-
-        // 드롭 다운 선택시 언어 변경될때 세팅하는 ChangeLanguage함수 실행. 
-        if (dropdown != null && LocalizationManager.Instance != null)
+        if (dropdown == null)
         {
-            dropdown.onValueChanged.AddListener(LocalizationManager.Instance.ChangeLanguage);
+            dropdown = GetComponent<TMP_Dropdown>();
+            if (dropdown != null && LocalizationManager.Instance != null)
+                dropdown.onValueChanged.AddListener(LocalizationManager.Instance.ChangeLanguage);
         }
+
+        if (dropdown != null && LocalizationManager.Instance != null)
+            dropdown.SetValueWithoutNotify((int)LocalizationManager.Instance.currentLanguage);
     }
 }

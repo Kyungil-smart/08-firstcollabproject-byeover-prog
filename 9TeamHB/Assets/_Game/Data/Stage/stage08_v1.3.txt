@@ -1,7 +1,7 @@
 ww####wwwww#www#wwww#######w
 ww.GG.w###wNwwwN###w.W.s.XVw
 ww;..XwCF.w.###...@w;.....;w
-wwX...wYwD#..B;.Hp.#W....;.w
+wwX...wYwD#..B;.HU.#W....;.w
 ww.XX.#.#CFC...####K.M..H.Xw
 ww....C;.ww..2...H...;..F.;w
 ww#Y#ww.;ww.I..ww##H..W....w
@@ -18,5 +18,5 @@ w....W..R#####.R...;;......w
 w..W...F.;CCCC..X...W.W.I.Ww
 w...M.....CCCC...;..B.X;...w
 wB..W;wwwwwwww=...IW.....M;w
-wwwwwUwwwwwwwwwW...p.W;.W..w
+wwwwwUwwwwwwwwwW...U.W;.W..w
 ############################

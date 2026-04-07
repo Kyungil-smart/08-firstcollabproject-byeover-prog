@@ -45,6 +45,11 @@ public class StageCardCreator : MonoBehaviour
         foreach (Transform child in contentTransform)
             Destroy(child.gameObject);
         stageCarousel.ClearCards();
+        
+        for (int i = 0; i < 15; i++)
+            PlayerPrefs.DeleteKey("BestTagRecord_" + i);
+        PlayerPrefs.Save();
+        
         Start();
     }
 
@@ -57,7 +62,7 @@ public class StageCardCreator : MonoBehaviour
         stageCarousel.AddStageCard(cardRect);
     
         // 변경: PlayerPrefs에서 best record 읽기
-        int record = PlayerPrefs.GetInt("BestTagRecord_" + index, 0);
+        int record = PlayerPrefs.GetInt("BestTagRecord_" + _globalIndex, 0);
     
         bool isUnlocked = StageProgressManager.IsUnlocked(_globalIndex);
     
