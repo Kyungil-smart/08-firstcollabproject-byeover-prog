@@ -182,11 +182,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6475127209640587191, guid: d9610f81855c750448647d2da532daf3,
+        type: 3}
+      propertyPath: sfxSource
+      value: 
+      objectReference: {fileID: 32782392}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d9610f81855c750448647d2da532daf3, type: 3}
+--- !u!82 &32782392 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 1729135158295801948, guid: d9610f81855c750448647d2da532daf3,
+    type: 3}
+  m_PrefabInstance: {fileID: 32782391}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &45335815
 GameObject:
   m_ObjectHideFlags: 0
