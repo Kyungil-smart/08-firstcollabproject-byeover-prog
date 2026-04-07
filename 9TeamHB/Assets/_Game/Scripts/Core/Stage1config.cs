@@ -32,7 +32,7 @@ namespace MyGame2.Stage
         {
             switch (stageIndex)
             {
-                case 0: ConfigureStage7(); break;
+                case 0: ConfigureStage8(); break;
                 case 6: ConfigureStage2(); break;
                 case 8: ConfigureTutorial7(); break;
                 case 9: ConfigureStage3(); break;
