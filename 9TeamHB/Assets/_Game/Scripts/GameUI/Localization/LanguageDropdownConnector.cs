@@ -5,16 +5,16 @@ public class LanguageDropdownLinker : MonoBehaviour
 {
     private TMP_Dropdown dropdown;
 
-    void Start()
+    void OnEnable()
     {
-        dropdown = GetComponent<TMP_Dropdown>();
+        if (dropdown == null)
+        {
+            dropdown = GetComponent<TMP_Dropdown>();
+            if (dropdown != null && LocalizationManager.Instance != null)
+                dropdown.onValueChanged.AddListener(LocalizationManager.Instance.ChangeLanguage);
+        }
 
         if (dropdown != null && LocalizationManager.Instance != null)
-        {
-            // 저장된 언어로 드롭다운 초기값 세팅
             dropdown.SetValueWithoutNotify((int)LocalizationManager.Instance.currentLanguage);
-        
-            dropdown.onValueChanged.AddListener(LocalizationManager.Instance.ChangeLanguage);
-        }
     }
 }
