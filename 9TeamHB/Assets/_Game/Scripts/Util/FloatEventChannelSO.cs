@@ -23,5 +23,6 @@ public class FloatEventChannelSO : ScriptableObject
     public void Clear()
     {
         OnEventRaised = null;
+        OnAlertAndChaseRaised = null;
     }
 }

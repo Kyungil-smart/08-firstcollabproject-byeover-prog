@@ -2,14 +2,6 @@ using System;
 using UnityEngine;
 using MyGame2.Stage;
 
-// 투사체 이동 컴포넌트
-// facing 방향으로 매 틱 1칸씩 이동
-// 벽 -> 소멸
-// 플레이어 -> 즉사 + 소멸
-// 상자 -> 소멸 (부서지는 상자면 상자도 파괴)
-// 추적형 감시자 -> 감시자 소멸 + 투사체 소멸 [5-7-4]
-// 맵 밖 -> 소멸
-
 public class ProjectileMoveComponent : IComponentData, IUpdate, IDisposable
 {
     public EntityFunctionSO Definition { get; }

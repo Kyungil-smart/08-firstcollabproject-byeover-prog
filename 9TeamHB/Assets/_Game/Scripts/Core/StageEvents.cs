@@ -56,6 +56,8 @@ namespace MyGame2.Stage
         public event Action<GridPos> PairActivated;
         // Undo 실행 완료 시 (다른 팀원 구현용 스텁)
         public event Action UndoExecuted;
+        // 플레이어 사망 시
+        public event Action PlayerKilled;
 
         // ID로 view 콜백을 위한 이벤트 딕셔너리
         private Dictionary<int, Action<ViewRequest>> _viewRequests = new();
@@ -154,6 +156,10 @@ namespace MyGame2.Stage
         {
             PairActivated?.Invoke(pairPosition);
         }
+        public void RaisePlayerKilled()
+        {
+            PlayerKilled?.Invoke();
+        }
 
         public void RaiseViewRequest(ViewRequest request)
         { 
@@ -184,6 +190,8 @@ namespace MyGame2.Stage
             HiddenTrapPlayerKill = null;
             IceBoxSawDestroyed = null;
             UndoExecuted = null;
+            PairActivated = null;
+            PlayerKilled = null;
             _viewRequests.Clear();
         }
     }

@@ -167,17 +167,23 @@ public class InGameUIManager : MonoBehaviour
             MoveCount++;
     }
 
-    // 수정: 클리어 판정 → 통계만 저장 (UI는 워프 끝난 후 표시)
     private void OnStageClear()
     {
         _savedMoveCount = MoveCount;
         _savedTagCount = TagCount;
         _savedClearTime = timeElapsed;
-        // ShowGameClear()는 여기서 호출하지 않음!
-        // 워프 이펙트가 끝난 후 OnWarpComplete()에서 호출
+
+        // 태그 횟수 best record 저장
+        string key = "BestTagRecord_" + stageCount;
+        int prev = PlayerPrefs.GetInt(key, -1);
+        if (prev < 0 || _savedTagCount < prev)
+        {
+            PlayerPrefs.SetInt(key, _savedTagCount);
+            PlayerPrefs.Save();
+        }
     }
 
-    // 수정: 워프 연출 완료 → 클리어 UI 표시 → 2초 뒤 자동 다음 스테이지
+    // 수정: 워프 연출 완료 -> 클리어 UI 표시 -> 2초 뒤 자동 다음 스테이지
     private void OnWarpComplete()
     {
         ShowGameClear();
@@ -200,18 +206,21 @@ public class InGameUIManager : MonoBehaviour
 
     private void OnGameOver()
     {
-        ShowGameQuit();
+        // 1초 뒤에 UI 표시
         _autoNextCoroutine = StartCoroutine(AutoGameOverCoroutine());
     }
 
     private IEnumerator AutoGameOverCoroutine()
     {
-        // 2초 대기 (Time.timeScale 영향 안 받음)
+        // 1초 대기 후 게임오버 UI 표시
+        yield return new WaitForSecondsRealtime(1f);
+        ShowGameQuit();
+
+        // 2초 대기 후 자동 재시작
         yield return new WaitForSecondsRealtime(2f);
 
         _autoNextCoroutine = null;
         CloseGameQuit();
-
         ExecuteGameQuitRetry();
     }
 
@@ -281,10 +290,10 @@ public class InGameUIManager : MonoBehaviour
         {
             case 0: maxTagCount = 4; break;
             case 1: maxTagCount = 5; break;
-            case 2: maxTagCount = 5; break;
-            case 3: maxTagCount = 4; break;
-            case 4: maxTagCount = 7; break;
-            case 5: maxTagCount = 4; break;
+            case 2: maxTagCount = 4; break;
+            case 3: maxTagCount = 7; break;
+            case 4: maxTagCount = 4; break;
+            case 5: maxTagCount = 5; break;
             case 6: maxTagCount = 9; break;
             case 7: maxTagCount = 5; break;
             case 8: maxTagCount = 6; break;

@@ -90,6 +90,11 @@ namespace MyGame2.Stage
                     // IUpdate 컴포넌트의 _entityState 참조가 그대로 유효
                     existing.RestoreFrom(kvp.Value);
 
+                    if (existing.Has<IceSlideData>() == true)
+                    {
+                        existing.Set<IceSlideData>(kvp.Value.Get<IceSlideData>());
+                    }
+
                     if (existing.Has<PocketData>() == true)
                     {
                         PocketData pocketData = existing.Get<PocketData>();
@@ -281,7 +286,7 @@ namespace MyGame2.Stage
         public bool HasTrap(GridPos pos) { return GetCell(pos).HasTrap; }
         public bool HasCrackNotCovered(GridPos pos) { return GetCell(pos).HasCrack && !GetCell(pos).HasActive; }
         public bool HasBush(GridPos pos) { return GetCell(pos).HasBush; }
-        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap&& !GetCell(pos).HasActive; }
+        public bool HasHiddenTrap(GridPos pos) { return GetCell(pos).HasHiddenTrap && !GetCell(pos).HasActive; }
         public bool HasDestroyTrap(GridPos pos) { return GetCell(pos).HasDestroyTrap; }
         public bool HasSawTrapActive(GridPos pos) { return GetCell(pos).IsSawTrapActive; }
 
@@ -302,9 +307,9 @@ namespace MyGame2.Stage
                 // 항상 가로 좌우 1칸
                 GridPos left = new GridPos(trap.Position.X - 1, trap.Position.Y);
                 GridPos right = new GridPos(trap.Position.X + 1, trap.Position.Y);
-
-                if (left == pos && IsInside(left) && !GetCell(left).HasWall) return true;
-                if (right == pos && IsInside(right) && !GetCell(right).HasWall) return true;
+                
+                if (left == pos && IsInside(left) && !GetCell(left).HasWall && (trap.Get<SawTrapData>().Size == 5)) return true;
+                if (right == pos && IsInside(right) && !GetCell(right).HasWall && (trap.Get<SawTrapData>().Size == 5)) return true;
             }
             return false;
         }
@@ -500,6 +505,10 @@ namespace MyGame2.Stage
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
             if (!entity.IsAlive) return false;
+            if (entity.IsPlayer)
+            {
+                _events.RaisePlayerKilled();
+            }
             entity.IsAlive = false;
             ClearOccupant(entity.Position);
             _events?.RaiseEntityKilled(entityId);
@@ -520,7 +529,7 @@ namespace MyGame2.Stage
 
             _events?.RaiseHiddenTrapRevealed(position);
         }
-        
+
         // 지정한 pairGroup에 속하는 모든 히든 함정을 비활성화한다.
         // 스위치/레버 상호작용 시 호출.
 
@@ -866,8 +875,25 @@ namespace MyGame2.Stage
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
             entity.IsAlive = false;
-            ClearOccupant(entity.Position);
 
+            GridPos pos = entity.Position;
+            ClearOccupant(pos);
+
+            // 추가: 버튼 위에서 파괴되면 버튼 비활성화
+            if (IsInside(pos))
+            {
+                CellData cell = GetCell(pos);
+                if (cell.HasSignalButton && !cell.IsSticky)
+                {
+                    DeactivePairCell(pos);
+
+                    if (_cellPairs.TryGetValue(pos, out List<GridPos> paired))
+                    {
+                        for (int p = 0; p < paired.Count; p++)
+                            ReactivateHiddenTrapAt(paired[p]);
+                    }
+                }
+            }
             switch (entity.Kind)
             {
                 case EntityKind.Box: _boxIds.Remove(entityId); break;
