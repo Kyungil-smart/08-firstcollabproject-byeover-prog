@@ -505,6 +505,10 @@ namespace MyGame2.Stage
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
             if (!entity.IsAlive) return false;
+            if (entity.IsPlayer)
+            {
+                _events.RaisePlayerKilled();
+            }
             entity.IsAlive = false;
             ClearOccupant(entity.Position);
             _events?.RaiseEntityKilled(entityId);
