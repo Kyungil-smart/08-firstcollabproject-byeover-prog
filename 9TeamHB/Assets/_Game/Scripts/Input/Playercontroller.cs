@@ -161,6 +161,8 @@ namespace MyGame2.Stage
         {
             if (!IsPlayable()) return;
 
+            if (_lockedDirection != Direction.None) return;
+
             if (_isUndoHeld) return;
             _isUndoHeld = true;
 
