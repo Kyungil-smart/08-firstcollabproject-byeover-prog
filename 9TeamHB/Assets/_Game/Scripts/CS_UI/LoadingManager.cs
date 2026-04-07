@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Video; // 비디오 제어용으로 추가함
 
 public class LoadingManager : MonoBehaviour
 {
@@ -10,6 +11,29 @@ public class LoadingManager : MonoBehaviour
 
     [Header("UI Settings")]
     public Slider loadingBar; // 로딩 바 연결용
+
+    [Header("Video Settings")]
+    public VideoPlayer videoPlayer; // 비디오 재생기
+    public VideoClip koreanVideo;   // 한글 로딩 영상
+    public VideoClip englishVideo;  // 영문 로딩 영상
+
+    // 씬이 켜질 때 언어에 맞는 영상으로 넣기
+    private void Awake()
+    {
+        // 비디오 플레이어와 번역 매니저가 존재하는지 먼저 확인
+        if (videoPlayer != null && LocalizationManager.Instance != null)
+        {
+            // 변수 확인 후 영상 교체용
+            if (LocalizationManager.Instance.currentLanguage == Language.English)
+            {
+                videoPlayer.clip = englishVideo; // 영문 테이프로 교체
+            }
+            else
+            {
+                videoPlayer.clip = koreanVideo;  // 한글 테이프로 교체
+            }
+        }
+    }
 
     private void Start()
     {
@@ -38,10 +62,10 @@ public class LoadingManager : MonoBehaviour
         {
             timer += Time.deltaTime;
 
-            // 실제 씬 로딩 진행도 (0.0 ~ 0.9 범위를 0.0 ~ 1.0으로 변환)
+            // 실제 씬 로딩 진행도
             float loadProgress = op.progress / 0.9f;
 
-            // 우리가 설정한 5초 대기 시간 진행도 (0.0 ~ 1.0)
+            // 우리가 설정한 5초 대기 시간 진행도
             float timeProgress = timer / minimumLoadingTime;
 
             // 로딩이 순식간에 되어도, 일단 5초 정도 걸려서 이뤄지게 제작함
