@@ -89,7 +89,7 @@ namespace MyGame2.Stage
         {
             // 경로 주입
             ConfigureRobotPatrols(stage7Robot);
-            ConfigureAnimalPatrols(stage7Animal);
+            ConfigureSummonerPatrols(stage7Animal);
         }
 
         private void ConfigureStage8()
