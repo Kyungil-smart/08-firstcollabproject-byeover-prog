@@ -17,10 +17,12 @@ public class KeyFollower : MonoBehaviour
     void OnEnable()
     {
         state.Events.PlayerKilled += Delete;
+        state.Events.StageLoaded += Delete;
     }
     void OnDisable()
     {
         state.Events.PlayerKilled -= Delete;
+        state.Events.StageLoaded -= Delete;
     }
 
     void Update()
@@ -63,5 +65,10 @@ public class KeyFollower : MonoBehaviour
     public void Delete()
     {
         Destroy(gameObject);
+    }
+
+    public void Delete(int stageIndex)
+    {
+        Delete();
     }
 }
