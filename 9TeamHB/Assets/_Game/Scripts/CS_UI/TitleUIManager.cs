@@ -16,12 +16,8 @@ public class TitleUIManager : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool useDebugLog = false;
-
-<<<<<<< HEAD
-
-    // 1. 새 게임 버튼
-    public void OnClickNewGame()
-=======
+    
+    // 👇 3번 문제 해결: s를 대문자 S로 바꿔야 유니티가 인식합니다!
     private void Start()
     {
         InGameSoundManager.Instance?.PlayTitleBGM();
@@ -29,17 +25,11 @@ public class TitleUIManager : MonoBehaviour
     
     // 게임시작 버튼 연결용
     public void OnClickGameStart()
->>>>>>> origin/Develop
     {
         if (useDebugLog) Debug.Log("새 게임 시작. 로딩 화면을 거쳐 Story_Scene으로 이동.");
         
-<<<<<<< HEAD
-        // 팀에서 만든 LoadingManager가 중간 로딩 씬을 자동으로 처리해 줍니다.
-        LoadingManager.LoadScene(storySceneName);
-=======
         // 스토리씬으로 보내기
-        LoadingManager.LoadScene(startSceneName);
->>>>>>> origin/Develop
+        LoadingManager.LoadScene(storySceneName);
     }
 
     // 2. 스테이지 선택 버튼
@@ -64,14 +54,4 @@ public class TitleUIManager : MonoBehaviour
             activeSetting.SetActive(true);
         }
     }
-<<<<<<< HEAD
-
-    // 4. 게임 종료 버튼
-    public void OnClickQuit()
-    {
-        if (useDebugLog) Debug.Log("게임 종료.");
-        Application.Quit();
-    }
-=======
->>>>>>> origin/Develop
 }

@@ -867,6 +867,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LoadingManager
   minimumLoadingTime: 5
   loadingBar: {fileID: 291991104}
+  videoPlayer: {fileID: 133676062}
+  koreanVideo: {fileID: 32900000, guid: d085ac5e00a005448b539ee2199040eb, type: 3}
+  englishVideo: {fileID: 32900000, guid: cd0ce644b09583a40aea64f1e6b47588, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
