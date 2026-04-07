@@ -110,6 +110,11 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
             if (dir == Direction.None) return;
         }
         GridPos next = _entityState.Position.Move(dir);
+        if (StageState.GetCell(next).HasBush)
+        {
+            patrol.Reverse();
+            next = _entityState.Position.Move(patrol.GetDirectionFrom(_entityState.Position));
+        }
         MoveToward(next);
     }
 

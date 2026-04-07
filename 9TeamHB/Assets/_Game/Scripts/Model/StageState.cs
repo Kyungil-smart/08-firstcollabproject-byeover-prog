@@ -505,6 +505,10 @@ namespace MyGame2.Stage
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
             if (!entity.IsAlive) return false;
+            if (entity.IsPlayer)
+            {
+                _events.RaisePlayerKilled();
+            }
             entity.IsAlive = false;
             ClearOccupant(entity.Position);
             _events?.RaiseEntityKilled(entityId);
@@ -871,8 +875,25 @@ namespace MyGame2.Stage
         {
             if (!_entitiesById.TryGetValue(entityId, out EntityState entity)) return false;
             entity.IsAlive = false;
-            ClearOccupant(entity.Position);
 
+            GridPos pos = entity.Position;
+            ClearOccupant(pos);
+
+            // 추가: 버튼 위에서 파괴되면 버튼 비활성화
+            if (IsInside(pos))
+            {
+                CellData cell = GetCell(pos);
+                if (cell.HasSignalButton && !cell.IsSticky)
+                {
+                    DeactivePairCell(pos);
+
+                    if (_cellPairs.TryGetValue(pos, out List<GridPos> paired))
+                    {
+                        for (int p = 0; p < paired.Count; p++)
+                            ReactivateHiddenTrapAt(paired[p]);
+                    }
+                }
+            }
             switch (entity.Kind)
             {
                 case EntityKind.Box: _boxIds.Remove(entityId); break;

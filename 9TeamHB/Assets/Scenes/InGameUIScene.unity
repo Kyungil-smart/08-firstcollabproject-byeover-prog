@@ -788,9 +788,97 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InGameSoundManager
   bgmSource: {fileID: 1577928405}
   sfxSource: {fileID: 1577928404}
-  mainBGM: {fileID: 8300000, guid: 3eb059a3b40e7c943bce8b69da14d6e2, type: 3}
-  defaultButtonClickSFX: {fileID: 8300000, guid: 76af94efc703921488ef9d252a7c1334,
-    type: 3}
+  mainBGM:
+    clip: {fileID: 0}
+    volume: 0
+  bgmInPuzzle1:
+    clip: {fileID: 0}
+    volume: 0
+  bgmInPuzzle2:
+    clip: {fileID: 0}
+    volume: 0
+  bgmStageSelect:
+    clip: {fileID: 0}
+    volume: 0
+  bgmEnding:
+    clip: {fileID: 0}
+    volume: 0
+  sfxSlimeStep:
+    clip: {fileID: 0}
+    volume: 0
+  sfxFootSteps: []
+  sfxObjectPush:
+    clip: {fileID: 0}
+    volume: 0
+  sfxIcePush:
+    clip: {fileID: 0}
+    volume: 0
+  sfxPressButton:
+    clip: {fileID: 0}
+    volume: 0
+  sfxBreakBox:
+    clip: {fileID: 0}
+    volume: 0
+  sfxDoorOpen:
+    clip: {fileID: 0}
+    volume: 0
+  sfxDoorClose:
+    clip: {fileID: 0}
+    volume: 0
+  sfxGetKey:
+    clip: {fileID: 0}
+    volume: 0
+  sfxVent:
+    clip: {fileID: 0}
+    volume: 0
+  sfxHideOnBush:
+    clip: {fileID: 0}
+    volume: 0
+  sfxDetect:
+    clip: {fileID: 0}
+    volume: 0
+  sfxSummon:
+    clip: {fileID: 0}
+    volume: 0
+  sfxDamaged:
+    clip: {fileID: 0}
+    volume: 0
+  sfxGameOver:
+    clip: {fileID: 0}
+    volume: 0
+  sfxGameClearLayer1:
+    clip: {fileID: 0}
+    volume: 0
+  sfxGameClearLayer2:
+    clip: {fileID: 0}
+    volume: 0
+  sfxGameClearPopup:
+    clip: {fileID: 0}
+    volume: 0
+  sfxGameEnter:
+    clip: {fileID: 0}
+    volume: 0
+  sfxCorrect:
+    clip: {fileID: 0}
+    volume: 0
+  sfxChange2Slime:
+    clip: {fileID: 0}
+    volume: 0
+  sfxChange2Human:
+    clip: {fileID: 0}
+    volume: 0
+  sfxChrTag:
+    clip: {fileID: 0}
+    volume: 0
+  sfxConfirmUI:
+    clip: {fileID: 0}
+    volume: 0
+  sfxCancelUI:
+    clip: {fileID: 0}
+    volume: 0
+  defaultButtonClickSFX:
+    clip: {fileID: 0}
+    volume: 0
 --- !u!4 &1577928407
 Transform:
   m_ObjectHideFlags: 0

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
+using MyGame2.Stage;
 
 public class KeyFollower : MonoBehaviour
 {
@@ -7,8 +8,20 @@ public class KeyFollower : MonoBehaviour
     public float distance = 0.5f; // 간격 설정
     public float minDistance = 0.1f; // 기록용 최소거리
     
+    [SerializeField] StageStateReferenceSO stageState;
+    private StageState state{ get { return stageState.Instance; }}
+    
     //추적 해나갈 경로
     private List<Vector3> _history = new List<Vector3>(50);
+
+    void OnEnable()
+    {
+        state.Events.PlayerKilled += Delete;
+    }
+    void OnDisable()
+    {
+        state.Events.PlayerKilled -= Delete;
+    }
 
     void Update()
     {
@@ -45,5 +58,10 @@ public class KeyFollower : MonoBehaviour
         {
             _history.RemoveAt(0); // 맨 앞의 가장 오래된 데이터 삭제
         }
+    }
+
+    public void Delete()
+    {
+        Destroy(gameObject);
     }
 }
