@@ -352,12 +352,27 @@ namespace MyGame2.Stage
                     view.Bind(e, cellSize);
                     _views[e.Id] = view;
 
-                    // 동적 생성된 View도 ViewRequest 등록
                     RegisterViewRequest(e.Id, view);
-
-                    // InteractableTileVisual 초기화
                     InitTileVisual(view, e.Id);
                 }
+            }
+
+            // 제거된 엔티티의 View 파괴
+            List<int> toRemove = null;
+            foreach (var pair in _views)
+            {
+                if (pair.Value == null) continue;
+                if (!CurrentState.TryGetEntity(pair.Key, out _))
+                {
+                    Destroy(pair.Value.gameObject);
+                    if (toRemove == null) toRemove = new List<int>(4);
+                    toRemove.Add(pair.Key);
+                }
+            }
+            if (toRemove != null)
+            {
+                for (int i = 0; i < toRemove.Count; i++)
+                    _views.Remove(toRemove[i]);
             }
 
             foreach (var pair in _views)
