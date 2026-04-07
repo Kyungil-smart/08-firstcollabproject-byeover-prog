@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Enemy_B
   m_EditorClassIdentifier: Assembly-CSharp::EntitySO
   _kind: 7
-  isBlocking: 1
+  isBlocking: 0
   blocksCameraSight: 0
   isLethal: 0
   _viewPrefab: {fileID: 651025039593506988, guid: faf5ba42911ba534ca309c17577156f7,
