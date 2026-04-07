@@ -8,55 +8,54 @@ public class StoryManager : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private Image cutsceneImage;
     [SerializeField] private TextMeshProUGUI storyText;
+    [SerializeField] private Button skipButton; // 추가: 스킵 버튼
 
     [Header("Story Data")]
-    [SerializeField] private StoryData currentStoryData; // 스토리 데이터에서 정보 받아옴
+    [SerializeField] private StoryData currentStoryData;
 
     [Header("Input Settings")]
-    [SerializeField] private InputActionReference nextAction; // 클릭+스페이스바로 넘어가기
+    [SerializeField] private InputActionReference nextAction;
 
     [Header("Debug")]
     [SerializeField] private bool useDebugLog = false;
 
     [Header("Scene Transition")]
-    [SerializeField] private string nextSceneName = "Stage_Scene"; // 다음에 이동할 씬 이름
+    [SerializeField] private string nextSceneName = "Stage_Scene";
 
     private int currentPage = 0;
 
     private void OnEnable()
     {
-        // 입력 액션 활성화 및 이벤트 구독
         if (nextAction != null)
         {
             nextAction.action.Enable();
             nextAction.action.performed += OnNextPageInput;
         }
-        LocalizationManager.LanguageChangedEvent += OnLanguageChanged; 
+        LocalizationManager.LanguageChangedEvent += OnLanguageChanged;
     }
 
     private void OnDisable()
     {
-        // 입력 액션 해제
         if (nextAction != null)
         {
             nextAction.action.performed -= OnNextPageInput;
             nextAction.action.Disable();
         }
-        
         LocalizationManager.LanguageChangedEvent -= OnLanguageChanged;
     }
 
     private void Start()
     {
         if (storyText != null && LocalizationManager.Instance != null && LocalizationManager.Instance.storyFont != null)
-        {
             storyText.font = LocalizationManager.Instance.storyFont;
-        }
-        
+
+        // 스킵 버튼 연결
+        if (skipButton != null)
+            skipButton.onClick.AddListener(EndStory);
+
         UpdateUI();
     }
 
-    // New Input System 부르기
     private void OnNextPageInput(InputAction.CallbackContext context)
     {
         NextPage();
@@ -68,14 +67,12 @@ public class StoryManager : MonoBehaviour
 
         currentPage++;
 
-        // 다음 페이지가 남아있을 경우
         if (currentPage < currentStoryData.pages.Length)
         {
             UpdateUI();
-            return; // 업데이트 후엔 종료
+            return;
         }
 
-        // 남은 페이지가 없을 경우 끝
         EndStory();
     }
 
@@ -84,7 +81,7 @@ public class StoryManager : MonoBehaviour
         if (currentStoryData == null) return;
 
         StoryPage page = currentStoryData.pages[currentPage];
-        
+
         if (cutsceneImage != null) cutsceneImage.sprite = page.cutsceneImage;
 
         if (storyText != null)
@@ -95,7 +92,6 @@ public class StoryManager : MonoBehaviour
                 storyText.text = page.storyKey;
         }
 
-
         if (useDebugLog) Debug.Log($"현재 스토리: {currentPage + 1} / {currentStoryData.pages.Length}");
     }
 
@@ -103,19 +99,17 @@ public class StoryManager : MonoBehaviour
     {
         if (LocalizationManager.Instance != null && LocalizationManager.Instance.storyFont != null)
             storyText.font = LocalizationManager.Instance.storyFont;
-        UpdateUI(); 
+        UpdateUI();
     }
-    
+
     private void EndStory()
     {
         if (useDebugLog) Debug.Log($"스토리 종료. {nextSceneName}으로 이동.");
 
-        // 다시 보지 않도록 저장 (오프닝용)
         PlayerPrefs.SetInt("HasSeenStory", 1);
+        PlayerPrefs.SetInt("FirstRunDone", 1); // ── 추가: 첫 실행 완료 ──
         PlayerPrefs.Save();
 
-        // 로딩 매니저를 통해 지정한 씬으로 이동
         LoadingManager.LoadScene(nextSceneName);
     }
-    
 }

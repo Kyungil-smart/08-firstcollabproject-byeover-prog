@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class OptionSceneController : MonoBehaviour
 {
@@ -10,6 +9,13 @@ public class OptionSceneController : MonoBehaviour
 
     private void Start()
     {
+        // 이미 한 번 봤으면 바로 스테이지 선택으로
+        if (PlayerPrefs.GetInt("FirstRunDone", 0) == 1)
+        {
+            LoadingManager.LoadScene("Stage_Scene");
+            return;
+        }
+
         englishButton.onClick.AddListener(() => SelectLanguage(0));
         koreanButton.onClick.AddListener(() => SelectLanguage(1));
     }
