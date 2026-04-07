@@ -68,9 +68,13 @@ public class HUDController : MonoBehaviour
         }
     }
     
-    // 스테이지, 튜토리얼 타이틀 텍스트 업데이트용 함수.
-    // ex) 스테이지 1 -> UpdateStageText(1, false); , 튜토리얼 2 -> UpdateStageText(2, true); 
- 
+    
+    /// <summary>
+    /// 스테이지, 튜토리얼 타이틀 텍스트 업데이트용 함수.
+    /// ex) 스테이지 1 -> UpdateStageText(1, false); , 튜토리얼 2 -> UpdateStageText(2, true); 
+    /// </summary>
+    /// <param name="stageNum"></param>
+    /// <param name="isTutorial"></param>
     public string UpdateStageText(int stageNum, bool isTutorial)
     {
         if (stageText == null) return ""; 
@@ -78,9 +82,9 @@ public class HUDController : MonoBehaviour
         // 튜토리얼 여부 
         bool isActuallyTutorial = (stageNum == 0 || stageNum == 1 || stageNum == 2 || stageNum == 3 || stageNum == 4 || stageNum == 7 || stageNum == 8);
         
-        if (isActuallyTutorial)
+        if (isActuallyTutorial && (stageNum ==0 || stageNum == 1 || stageNum == 2 || stageNum == 3 || stageNum == 4))
         {
-            // 튜토리얼 (0, 1, 2, 3, 4, 7, 8)
+            // 튜토리얼 (0, 1, 2, 3, 4)
             string titleKey = $"Tutorial{stageNum + 1}_Title_Text";
             string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
         
@@ -93,6 +97,14 @@ public class HUDController : MonoBehaviour
             string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
         
             stageText.text = $"Stage {stageNum - 4}: {localizedTitle}";
+        }
+        else if (isActuallyTutorial && (stageNum == 7 || stageNum == 8))
+        {
+            // 튜토리얼 (7, 8)
+            string titleKey = $"Tutorial{stageNum - 1}_Title_Text";
+            string localizedTitle = LocalizationManager.Instance.GetText(titleKey);
+        
+            stageText.text = $"{localizedTitle}";
         }
         else if(stageNum == 9 || stageNum == 10 || stageNum == 11 || stageNum == 12 || stageNum == 13 || stageNum == 14)
         {
