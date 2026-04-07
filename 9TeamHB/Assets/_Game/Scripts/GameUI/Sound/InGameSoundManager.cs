@@ -99,6 +99,12 @@ public class InGameSoundManager : MonoBehaviour
 
     private void Start()
     {
+        // 저장된 볼륨 불러오기
+        if (bgmSource != null)
+            bgmSource.volume = PlayerPrefs.GetFloat("BGMVolume", 1f);
+        if (sfxSource != null)
+            sfxSource.volume = PlayerPrefs.GetFloat("SFXVolume", 1f);
+
         if (mainBGM.clip != null)
             PlayBGM(mainBGM);
     }

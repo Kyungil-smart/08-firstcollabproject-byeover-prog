@@ -206,17 +206,15 @@ public class InGameUIManager : MonoBehaviour
 
     private void OnGameOver()
     {
-        // 1초 뒤에 UI 표시
+        // ShowGameQuit() 바로 안 띄우고 1초 뒤에
         _autoNextCoroutine = StartCoroutine(AutoGameOverCoroutine());
     }
 
     private IEnumerator AutoGameOverCoroutine()
     {
-        // 1초 대기 후 게임오버 UI 표시
         yield return new WaitForSecondsRealtime(1f);
         ShowGameQuit();
 
-        // 2초 대기 후 자동 재시작
         yield return new WaitForSecondsRealtime(2f);
 
         _autoNextCoroutine = null;
