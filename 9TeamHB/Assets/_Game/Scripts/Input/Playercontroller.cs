@@ -23,8 +23,13 @@ namespace MyGame2.Stage
 
         private readonly Dictionary<Direction, float> _pressedAt = new Dictionary<Direction, float>(4);
         private Direction _lockedDirection = Direction.None;
-        private float _nextMoveTime;
+        private float _lastMoveTime;
         private bool _isUndoHeld;
+
+        private float _lastMoveKeyLeaveTime;
+        private float _lastUndoKeyLeaveTime;
+
+        private const float _keyInputDelayTime = 0.2f;
 
         private void Awake()
         {
@@ -132,14 +137,87 @@ namespace MyGame2.Stage
 
         // 이동 콜백
 
-        private void OnMoveUpStarted(InputAction.CallbackContext ctx) { _pressedAt[Direction.Up] = Time.time; }
-        private void OnMoveUpCanceled(InputAction.CallbackContext ctx) { _pressedAt.Remove(Direction.Up); }
-        private void OnMoveLeftStarted(InputAction.CallbackContext ctx) { _pressedAt[Direction.Left] = Time.time; }
-        private void OnMoveLeftCanceled(InputAction.CallbackContext ctx) { _pressedAt.Remove(Direction.Left); }
-        private void OnMoveDownStarted(InputAction.CallbackContext ctx) { _pressedAt[Direction.Down] = Time.time; }
-        private void OnMoveDownCanceled(InputAction.CallbackContext ctx) { _pressedAt.Remove(Direction.Down); }
-        private void OnMoveRightStarted(InputAction.CallbackContext ctx) { _pressedAt[Direction.Right] = Time.time; }
-        private void OnMoveRightCanceled(InputAction.CallbackContext ctx) { _pressedAt.Remove(Direction.Right); }
+        private void OnMoveUpStarted(InputAction.CallbackContext ctx)
+        {
+            if (Time.time < _lastUndoKeyLeaveTime + _keyInputDelayTime)
+            {
+                return;
+            }
+
+            _pressedAt[Direction.Up] = Time.time;
+        }
+
+        private void OnMoveUpCanceled(InputAction.CallbackContext ctx)
+        {
+            if (!_pressedAt.ContainsKey(Direction.Up))
+            {
+                return;
+            }
+
+            _pressedAt.Remove(Direction.Up);
+            _lastMoveKeyLeaveTime = Time.time;
+        }
+
+        private void OnMoveLeftStarted(InputAction.CallbackContext ctx)
+        {
+            if (Time.time < _lastUndoKeyLeaveTime + _keyInputDelayTime)
+            {
+                return;
+            }
+
+            _pressedAt[Direction.Left] = Time.time;
+        }
+
+        private void OnMoveLeftCanceled(InputAction.CallbackContext ctx)
+        {
+            if (!_pressedAt.ContainsKey(Direction.Left))
+            {
+                return;
+            }
+
+            _pressedAt.Remove(Direction.Left); _lastMoveKeyLeaveTime = Time.time;
+        }
+
+        private void OnMoveDownStarted(InputAction.CallbackContext ctx)
+        {
+            if (Time.time < _lastUndoKeyLeaveTime + _keyInputDelayTime)
+            {
+                return;
+            }
+
+            _pressedAt[Direction.Down] = Time.time;
+        }
+
+        private void OnMoveDownCanceled(InputAction.CallbackContext ctx)
+        {
+            if (!_pressedAt.ContainsKey(Direction.Down))
+            {
+                return;
+            }
+
+            _pressedAt.Remove(Direction.Down); _lastMoveKeyLeaveTime = Time.time;
+        }
+
+        private void OnMoveRightStarted(InputAction.CallbackContext ctx)
+        {
+            if (Time.time < _lastUndoKeyLeaveTime + _keyInputDelayTime)
+            {
+                return;
+            }
+
+            _pressedAt[Direction.Right] = Time.time;
+        }
+
+        private void OnMoveRightCanceled(InputAction.CallbackContext ctx)
+        {
+            if (!_pressedAt.ContainsKey(Direction.Right))
+            {
+                return;
+            }
+
+            _pressedAt.Remove(Direction.Right); _lastMoveKeyLeaveTime = Time.time;
+        }
+
 
         // 태그: InGameUIManager를 통해 횟수 차감
 
@@ -151,7 +229,7 @@ namespace MyGame2.Stage
             if (InGameUIManager.Instance != null)
             {
                 bool switched = InGameUIManager.Instance.TryTag();
-                if (switched) _nextMoveTime = 0f;
+                if (switched) _lastMoveTime = 0f;
             }
         }
 
@@ -159,6 +237,11 @@ namespace MyGame2.Stage
 
         private void OnUndoStarted(InputAction.CallbackContext ctx)
         {
+            if (Time.time < _lastMoveKeyLeaveTime + _keyInputDelayTime)
+            {
+                return;
+            }
+
             if (!IsPlayable()) return;
 
             if (_lockedDirection != Direction.None) return;
@@ -178,6 +261,8 @@ namespace MyGame2.Stage
 
                 if (InGameUIManager.Instance != null)
                     InGameUIManager.Instance.OnReleaseUndoButton();
+
+                _lastUndoKeyLeaveTime = Time.time;
             }
         }
 
@@ -199,19 +284,21 @@ namespace MyGame2.Stage
             if (_lockedDirection == Direction.None)
             {
                 _lockedDirection = PickDirection();
-                if (_lockedDirection == Direction.None) return;
-                ExecuteTurn(_lockedDirection);
-                return;
+                if (_lockedDirection == Direction.None)
+                    return;
             }
 
-            if (Time.time >= _nextMoveTime)
+            if (Time.time >= _lastMoveTime + moveRepeatInterval)
+            {
+                _lastMoveTime = Time.time;
                 ExecuteTurn(_lockedDirection);
+            }
         }
 
         private void ExecuteTurn(Direction direction)
         {
+            _lastMoveTime = Time.time;
             TurnOutcome outcome = stageManager.TryExecuteTurn(direction);
-            _nextMoveTime = Time.time + moveRepeatInterval;
 
             if (!outcome.Executed && !_pressedAt.ContainsKey(direction))
                 _lockedDirection = Direction.None;
