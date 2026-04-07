@@ -812,7 +812,7 @@ MonoBehaviour:
   - {fileID: 4900000, guid: 57ea7b4df29f3d54f9ec0ee32537ef9a, type: 3}
   - {fileID: 4900000, guid: 402295d81213ece458706cbfa5ccdea8, type: 3}
   - {fileID: 4900000, guid: 0be36e304a2dd66458be655a85a0b00e, type: 3}
-  - {fileID: 4900000, guid: ff15225fdbf7c034dbe12483cc7b4d0b, type: 3}
+  - {fileID: 4900000, guid: eb1aea4dc5917f64d850af0aae97f05f, type: 3}
   startStageIndex: 0
   cellSize: 1
   symbolRegistry: {fileID: 11400000, guid: bd3f2d53dcf249247a4faf01f7af22a7, type: 2}
@@ -1083,7 +1083,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.UndoRecorder
   stageManager: {fileID: 823654580}
   replayInterval: 0.2
-  replayFirstFeedbackSecond: 0.2
 --- !u!4 &1430747378
 Transform:
   m_ObjectHideFlags: 0
