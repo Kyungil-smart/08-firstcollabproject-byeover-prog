@@ -15,9 +15,6 @@ namespace MyGame2.Stage
         [Tooltip("되감기 한 스텝 간격 (초, unscaled)")]
         [SerializeField] private float replayInterval = 0.20f;
 
-        [Tooltip("되감기 첫 입력 피드백 시간 (초, unscaled")]
-        [SerializeField] private float replayFirstFeedbackSecond = 0.20f;
-
         // 스냅샷 스택: [0]=초기, [1]=턴1 이후, [2]=턴2 이후 ...
         private readonly Stack<StageSnapshot> _snapshots = new Stack<StageSnapshot>(64);
         private float _replayTimer;
@@ -44,18 +41,15 @@ namespace MyGame2.Stage
             StageState state = stageManager != null ? stageManager.CurrentState : null;
             if (state == null) return;
 
-            // Undo 중이 아니면 타이머만 리셋
             if (!state.IsUndoProcessing)
             {
-                ResetReplayTimer();
                 return;
             }
 
             // 되감기 실행
-            _replayTimer += Time.unscaledDeltaTime;
-            if (_replayTimer >= replayInterval)
+            if (Time.time >= _replayTimer + replayInterval)
             {
-                _replayTimer -= replayInterval;
+                ResetReplayTimer();
                 ReplayStep();
             }
         }
@@ -142,7 +136,7 @@ namespace MyGame2.Stage
 
         private void ResetReplayTimer()
         {
-            _replayTimer = replayFirstFeedbackSecond;
+            _replayTimer = Time.time;
         }
     }
 }

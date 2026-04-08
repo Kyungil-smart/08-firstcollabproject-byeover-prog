@@ -159,12 +159,11 @@ public class StoryManager : MonoBehaviour
 
     private void EndStory()
     {
-        if (useDebugLog) Debug.Log($"스토리 종료. {nextSceneName}으로 이동.");
-
         PlayerPrefs.SetInt("HasSeenStory", 1);
         PlayerPrefs.SetInt("FirstRunDone", 1);
         PlayerPrefs.Save();
 
-        LoadingManager.LoadScene(nextSceneName);
+        // 로딩 씬 없이 바로 타이틀로
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Title_Scene");
     }
 }

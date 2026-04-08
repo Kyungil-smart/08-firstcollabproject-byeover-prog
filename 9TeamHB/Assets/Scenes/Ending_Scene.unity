@@ -510,6 +510,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StoryManager
   cutsceneImage: {fileID: 903754277}
   storyText: {fileID: 1890094462}
+  skipButton: {fileID: 0}
   currentStoryData: {fileID: 11400000, guid: ba314f0a09608174888d8541b381c441, type: 2}
   nextAction: {fileID: -7613870275608402159, guid: 783945e90b8487f4bbee13899f264da1,
     type: 3}
@@ -597,7 +598,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_Color: {r: 0.13207549, g: 0.13207549, b: 0.13207549, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

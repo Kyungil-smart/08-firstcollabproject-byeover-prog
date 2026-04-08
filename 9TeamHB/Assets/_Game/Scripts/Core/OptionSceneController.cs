@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class OptionSceneController : MonoBehaviour
 {
@@ -9,10 +10,10 @@ public class OptionSceneController : MonoBehaviour
 
     private void Start()
     {
-        // 이미 한 번 봤으면 바로 스테이지 선택으로
+        // 이미 첫 실행 완료 -> 타이틀로 바로 이동
         if (PlayerPrefs.GetInt("FirstRunDone", 0) == 1)
         {
-            LoadingManager.LoadScene("Stage_Scene");
+            SceneManager.LoadScene("Title_Scene");
             return;
         }
 
@@ -25,6 +26,6 @@ public class OptionSceneController : MonoBehaviour
         if (LocalizationManager.Instance != null)
             LocalizationManager.Instance.ChangeLanguage(index);
 
-        LoadingManager.LoadScene("Story_Scene");
+        SceneManager.LoadScene("Story_Scene");
     }
 }

@@ -1,5 +1,3 @@
-using System.Collections;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace MyGame2.Stage
@@ -40,12 +38,15 @@ namespace MyGame2.Stage
 
         // Fallable 낙하 애니메이션 실행 여부 (Undo 시 복원용)
         private bool _hasFallen;
+        private bool _isFalling;
         private Vector3 _originalChildLocalPos;
         private int _originalChildSortingOrder;
 
         public int EntityId { get; private set; }
         public EntityKind Kind { get; private set; }
         public bool IsSliding { get { return _isSliding; } }
+
+        StageManager _stageManager;
 
         private void Awake()
         {
@@ -56,6 +57,8 @@ namespace MyGame2.Stage
             _spriteRenderer = targetSpriteRenderer != null
                 ? targetSpriteRenderer
                 : GetComponentInChildren<SpriteRenderer>();
+
+            _stageManager = FindAnyObjectByType<StageManager>();
         }
 
         public void Bind(EntityState entity, float cellSize)
@@ -141,6 +144,22 @@ namespace MyGame2.Stage
                 _isSliding = true;
                 UpdateMovingAnim(true);
 
+                if (_isFalling && transform.childCount > 0)
+                {
+                    if (_stageManager.CurrentState.IsUndoProcessing)
+                    {
+                        entity.Get<Fallable>().StopFallAnimation();
+
+                        Transform child = transform.GetChild(0);
+                        child.localPosition = _originalChildLocalPos;
+                        SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+                        if (sr != null)
+                            sr.sortingOrder = _originalChildSortingOrder;
+
+                        _isFalling = false;
+                    }
+                }
+
                 // 틈새 낙하 복원: FallAnimation을 실행한 View만 리셋
                 if (_hasFallen && transform.childCount > 0)
                 {
@@ -198,7 +217,7 @@ namespace MyGame2.Stage
                     transform.rotation, _targetRotation, slideSpeed * dt);
             }
         }
-        
+
         // Animator Controller에 실제로 존재하는 파라미터만 캐싱.
         // Bind 시 1회 호출되어, 파라미터가 없는 엔티티에서는 SetBool/SetFloat/SetTrigger를 스킵.
         private void CacheAnimParams()
@@ -212,9 +231,9 @@ namespace MyGame2.Stage
 
             foreach (var p in _animator.parameters)
             {
-                if (p.nameHash == AnimIsMoving)       _hasIsMoving = true;
-                else if (p.nameHash == AnimDirection)  _hasDirection = true;
-                else if (p.nameHash == AnimIsDead)     _hasIsDead = true;
+                if (p.nameHash == AnimIsMoving) _hasIsMoving = true;
+                else if (p.nameHash == AnimDirection) _hasDirection = true;
+                else if (p.nameHash == AnimIsDead) _hasIsDead = true;
             }
         }
 
@@ -230,11 +249,11 @@ namespace MyGame2.Stage
                 float dirValue;
                 switch (facing)
                 {
-                    case Direction.Down:  dirValue = 0f; break;
-                    case Direction.Up:    dirValue = 1f; break;
-                    case Direction.Left:  dirValue = 2f; break;
+                    case Direction.Down: dirValue = 0f; break;
+                    case Direction.Up: dirValue = 1f; break;
+                    case Direction.Left: dirValue = 2f; break;
                     case Direction.Right: dirValue = 2f; break; // Left와 같은 AD 애니메이션
-                    default:              dirValue = 0f; break;
+                    default: dirValue = 0f; break;
                 }
 
                 _animator.SetFloat(AnimDirection, dirValue);
@@ -260,15 +279,22 @@ namespace MyGame2.Stage
         {
             request.Callback(this);
         }
-        
+
         // Fallable.FallAnimation에서 호출.
         // 이 View가 틈새에 빠졌음을 표시하여 Undo 시 자식 위치를 복원할 수 있게 한다.
-        
+
         public void MarkAsFallen()
         {
+            _isFalling = false;
             _hasFallen = true;
         }
-        
+
+        public void MarkAsFalling()
+        {
+            _isFalling = true;
+            _hasFallen = false;
+        }
+
         // Undo 시 Fallable이 변경한 자식 위치/sortingOrder를 복원.
         // 실제로 낙하한 엔티티(localPosition.y가 음수)만 선별하여 부드럽게 올라옴.
 
@@ -304,7 +330,7 @@ namespace MyGame2.Stage
 
             child.localPosition = end;
         }
-        
+
         // Undo 시 Lerp 없이 즉시 위치/회전을 엔티티 상태로 스냅.
 
         public void ForceSnap(EntityState entity, float cellSize)
