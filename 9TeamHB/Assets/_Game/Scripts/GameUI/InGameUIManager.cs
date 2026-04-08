@@ -25,49 +25,38 @@ public class InGameUIManager : MonoBehaviour
     private bool isUndoActive;
 
     [Header("스테이지 정보 관련")]
-    public int stageCount; // 몇스테이지인지.
-    public bool isTutorialStage; //  현재 스테이지가 튜토리얼인지 일반 스테이지인지 여부
-    public string stageTitleText; // 스테이지 타이틀.
-    private HUDController hudController; // HUD 스크립트 접근용
+    public int stageCount;
+    public bool isTutorialStage;
+    public string stageTitleText;
+    private HUDController hudController;
 
     [Header("태그 설정")]
     public int maxTagCount = 3;
     private int currentTagCount;
 
-    // 프리펩으로 생성된 실시간 활성화된 UI
     private GameObject activeHUD;
     private GameObject activePausePopup;
     private GameObject activeSetting;
     private GameObject activeGameClear;
     private GameObject activeGameQuit;
 
-    // HUD 내부 sub-UI
     private HUDUndoUI hudUndoUI;
     private HUDTagUI hudTagUI;
 
-    // 흐른 시간 체크 변수
     public float timeElapsed = 0f;
 
-    // 스테이지 통계 (클리어 UI 표시용)
     public int MoveCount { get; private set; }
     public int TagCount { get; private set; }
 
-    // 클리어 순간 스냅샷 (워프 연출 중에도 값이 보존됨)
     private int _savedMoveCount;
     private int _savedTagCount;
     private float _savedClearTime;
 
-    // 동일 프레임 중복 호출 방지
     private int _lastTagFrame = -1;
     private int _lastUndoFrame = -1;
 
-    // 자동 다음 스테이지 코루틴 참조 (중복 방지)
     private Coroutine _autoNextCoroutine;
-
-    // 게임오버 시퀀스 코루틴
     private Coroutine _gameOverCoroutine;
-
-    // 생명주기
 
     private UndoRecorder _undoRecorder;
 
@@ -121,40 +110,35 @@ public class InGameUIManager : MonoBehaviour
     {
         timeElapsed += Time.deltaTime;
 
-        // Undo 시간 차감 (누르고 있는 동안)
         if (isUndoActive)
         {
             if (!_undoRecorder.IsRewindable())
             {
-                OnReleaseUndoButton();  // 되돌리기 불가능한 상황에서는 자동 종료
+                OnReleaseUndoButton();
             }
 
             remainingUndoSeconds -= Time.unscaledDeltaTime;
             if (remainingUndoSeconds <= 0f)
             {
                 remainingUndoSeconds = 0f;
-                OnReleaseUndoButton(); // 시간 다 쓰면 자동 종료
+                OnReleaseUndoButton();
             }
         }
 
-        // HUD Undo 게이지 실시간 갱신
         if (hudUndoUI != null)
             hudUndoUI.UpdateUndoUI(remainingUndoSeconds, maxUndoSeconds);
     }
 
     // 스테이지 이벤트 핸들러
 
-    // 스테이지 로드 시 모든 것 초기화
     private void OnStageLoaded(int stageIndex)
     {
-        // 자동 전환 코루틴이 남아있으면 정리
         if (_autoNextCoroutine != null)
         {
             StopCoroutine(_autoNextCoroutine);
             _autoNextCoroutine = null;
         }
 
-        // 게임오버 코루틴 정리
         if (_gameOverCoroutine != null)
         {
             StopCoroutine(_gameOverCoroutine);
@@ -171,7 +155,6 @@ public class InGameUIManager : MonoBehaviour
         RefreshUndoUI();
     }
 
-    // 이동 성공 턴만 카운트
     private void OnTurnExecuted(TurnOutcome outcome)
     {
         if (outcome.Executed && outcome.PlayerMove.CanMove)
@@ -184,7 +167,6 @@ public class InGameUIManager : MonoBehaviour
         _savedTagCount = TagCount;
         _savedClearTime = timeElapsed;
 
-        // 태그 횟수 best record 저장
         string key = "BestTagRecord_" + stageCount;
         int prev = PlayerPrefs.GetInt(key, -1);
         if (prev < 0 || _savedTagCount < prev)
@@ -194,7 +176,6 @@ public class InGameUIManager : MonoBehaviour
         }
     }
 
-    // 워프 연출 완료 -> 클리어 UI 표시 -> 2초 뒤 자동 다음 스테이지
     private void OnWarpComplete()
     {
         ShowGameClear();
@@ -203,7 +184,6 @@ public class InGameUIManager : MonoBehaviour
 
     private IEnumerator AutoNextStageCoroutine()
     {
-        // 2초 대기
         yield return new WaitForSecondsRealtime(2f);
 
         _autoNextCoroutine = null;
@@ -213,10 +193,6 @@ public class InGameUIManager : MonoBehaviour
             stageManager.LoadNextStage();
     }
 
-    // 게임 오버
-    // StageManager에서 1초 딜레이 후 RaiseGameOver() → 여기로 옴
-    // 이 시점에서 플레이어는 이미 1초간 사망 원인을 봤음
-
     private void OnGameOver()
     {
         _gameOverCoroutine = StartCoroutine(GameOverSequence());
@@ -224,10 +200,8 @@ public class InGameUIManager : MonoBehaviour
 
     private IEnumerator GameOverSequence()
     {
-        // 게임오버 팝업 표시
         ShowGameQuit();
 
-        // 2초 뒤 자동 재시작
         yield return new WaitForSecondsRealtime(2f);
 
         _gameOverCoroutine = null;
@@ -235,10 +209,8 @@ public class InGameUIManager : MonoBehaviour
         ExecuteGameQuitRetry();
     }
 
-    // 타이머·예산·통계 전부 초기값으로
     private void ResetAll()
     {
-        // 이전 스테이지에서 Undo 활성 상태였으면 정리
         if (isUndoActive && stageManager != null && stageManager.CurrentState != null)
             stageManager.CurrentState.UndoLeave();
 
@@ -270,12 +242,9 @@ public class InGameUIManager : MonoBehaviour
             TagCount++;
             RefreshTagUI();
 
-            // 태그 후 Undo 이력 차단
-            // 진행 중인 Undo가 있으면 먼저 종료
             if (isUndoActive)
                 OnReleaseUndoButton();
 
-            // UndoRecorder의 히스토리를 현재 시점으로 리셋
             if (_undoRecorder != null)
                 _undoRecorder.ClearHistory();
         }
@@ -293,7 +262,6 @@ public class InGameUIManager : MonoBehaviour
             hudTagUI.UpdateTagUI(currentTagCount, maxTagCount);
     }
 
-    // 스테이지 별 태그 카운터 최대치 조정
     private void SetTagCount(int index)
     {
         maxTagCount = 3;
@@ -318,8 +286,19 @@ public class InGameUIManager : MonoBehaviour
         currentTagCount = maxTagCount;
     }
 
-    // Undo (Space) — 시간 예산 + 플래그만 관리
-    // 실제 스냅샷 녹화/복원은 UndoRecorder가 담당
+    // Canvas 카메라 연결 (Screen Space - Camera용)
+    private void SetCanvasCamera(GameObject canvasObj)
+    {
+        if (canvasObj == null) return;
+        Canvas canvas = canvasObj.GetComponent<Canvas>();
+        if (canvas != null && canvas.renderMode == RenderMode.ScreenSpaceCamera)
+        {
+            canvas.worldCamera = Camera.main;
+        }
+    }
+
+    // Undo
+
     public void OnClickUndoButton()
     {
         if (Time.frameCount == _lastUndoFrame) return;
@@ -327,7 +306,6 @@ public class InGameUIManager : MonoBehaviour
 
         if (stageManager == null || stageManager.CurrentState == null) return;
         if (remainingUndoSeconds <= 0f) return;
-
 
         if (_undoRecorder != null && _undoRecorder.IsRewindable())
         {
@@ -388,7 +366,10 @@ public class InGameUIManager : MonoBehaviour
     public void ShowHUD()
     {
         if (activeHUD == null)
+        {
             activeHUD = Instantiate(hudPrefab);
+            SetCanvasCamera(activeHUD);
+        }
         else
             activeHUD.SetActive(true);
 
@@ -431,7 +412,10 @@ public class InGameUIManager : MonoBehaviour
     public void ShowPausePopup()
     {
         if (activePausePopup == null)
+        {
             activePausePopup = Instantiate(pausePopupPrefab);
+            SetCanvasCamera(activePausePopup);
+        }
         else
             activePausePopup.SetActive(true);
         UpdateTimeScale();
@@ -447,7 +431,10 @@ public class InGameUIManager : MonoBehaviour
     public void ShowSettingPopup()
     {
         if (activeSetting == null)
+        {
             activeSetting = Instantiate(settingPrefab);
+            SetCanvasCamera(activeSetting);
+        }
         else
             activeSetting.SetActive(true);
         UpdateTimeScale();
@@ -465,7 +452,10 @@ public class InGameUIManager : MonoBehaviour
         InGameSoundManager.Instance?.PlayGameClearPopup();
 
         if (activeGameClear == null)
+        {
             activeGameClear = Instantiate(gameClearPrefab);
+            SetCanvasCamera(activeGameClear);
+        }
         else
             activeGameClear.SetActive(true);
 
@@ -487,11 +477,13 @@ public class InGameUIManager : MonoBehaviour
 
     public void ShowGameQuit()
     {
-
         InGameSoundManager.Instance?.PlayGameOverPopup();
 
         if (activeGameQuit == null)
+        {
             activeGameQuit = Instantiate(gameQuitPrefab);
+            SetCanvasCamera(activeGameQuit);
+        }
         else
             activeGameQuit.SetActive(true);
         UpdateTimeScale();
