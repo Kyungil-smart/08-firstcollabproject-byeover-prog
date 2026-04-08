@@ -20,8 +20,6 @@ namespace MyGame2.Stage
         private float _timer;
         private bool _isProcessing;
         private bool _wasSliding;
-        // PushRule Lerp 완료 대기 중
-        private bool _waitingForLerp;
 
         private void Update()
         {
@@ -30,39 +28,32 @@ namespace MyGame2.Stage
 
             StageState state = stageManager.CurrentState;
 
-            // Undo 중이면 슬라이드 즉시 중단
             if (state.IsUndoProcessing)
             {
                 StopAllSliding(state);
                 _timer = 0f;
                 _isProcessing = false;
                 _wasSliding = false;
-                _waitingForLerp = false;
                 return;
             }
 
-            // 미끄러지는 얼음 상자가 있는지 체크
+            // 미끄러지는 얼음 상자 체크
             _isProcessing = false;
-            int slidingBoxId = -1;
             for (int i = 0; i < state.BoxIds.Count; i++)
             {
                 int boxId = state.BoxIds[i];
                 if (!state.TryGetEntity(boxId, out EntityState box)) continue;
                 if (!box.IsAlive || !box.Has<IceSlideData>()) continue;
-
-                IceSlideData ice = box.Get<IceSlideData>();
-                if (!ice.IsSliding) continue;
-
-                _isProcessing = true;
-                slidingBoxId = boxId;
-                break;
+                if (box.Get<IceSlideData>().IsSliding)
+                {
+                    _isProcessing = true;
+                    break;
+                }
             }
 
             if (!_isProcessing)
             {
                 _timer = 0f;
-                _waitingForLerp = false;
-
                 if (_wasSliding)
                 {
                     _wasSliding = false;
@@ -71,29 +62,12 @@ namespace MyGame2.Stage
                 return;
             }
 
-            // 슬라이딩 시작 직후: PushRule이 1칸 밀었으므로 View Lerp 완료 대기
-            if (!_wasSliding)
-            {
-                _wasSliding = true;
-                _waitingForLerp = true;
-                _timer = 0f;
-            }
-
-            // View의 Lerp가 아직 진행 중이면 대기
-            if (_waitingForLerp)
-            {
-                GridEntityView view = FindSlidingView(slidingBoxId);
-                if (view != null && view.IsSliding)
-                    return; // Lerp 진행 중 -> 대기
-                _waitingForLerp = false;
-                _timer = 0f; // Lerp 끝난 직후부터 타이머 시작
-            }
-
+            _wasSliding = true;
             _timer += Time.deltaTime;
             if (_timer < slideInterval) return;
             _timer -= slideInterval;
 
-            // 미끄러지는 모든 얼음 상자를 1칸씩 이동
+            // 1칸씩 이동
             bool viewDirty = false;
             for (int i = state.BoxIds.Count - 1; i >= 0; i--)
             {
@@ -109,13 +83,9 @@ namespace MyGame2.Stage
             }
 
             if (viewDirty)
-            {
-                // 중간 스텝: View를 직접 Sync (TurnExecuted 없이 스냅샷 방지)
                 SyncSlidingViews(state);
-            }
         }
 
-        // 미끄러지는 얼음 상자의 View만 직접 동기화 (이벤트 없이)
         private void SyncSlidingViews(StageState state)
         {
             GridEntityView[] views = FindObjectsByType<GridEntityView>(FindObjectsSortMode.None);
@@ -124,22 +94,8 @@ namespace MyGame2.Stage
                 GridEntityView view = views[i];
                 if (!state.TryGetEntity(view.EntityId, out EntityState entity)) continue;
                 if (!entity.Has<IceSlideData>()) continue;
-
-                IceSlideData ice = entity.Get<IceSlideData>();
-                if (ice.IsSliding || _wasSliding)
-                    view.Sync(entity, cellSize);
+                view.Sync(entity, cellSize);
             }
-        }
-
-        private GridEntityView FindSlidingView(int entityId)
-        {
-            GridEntityView[] views = FindObjectsByType<GridEntityView>(FindObjectsSortMode.None);
-            for (int i = 0; i < views.Length; i++)
-            {
-                if (views[i].EntityId == entityId)
-                    return views[i];
-            }
-            return null;
         }
 
         // Undo 시 모든 얼음 상자 슬라이딩 즉시 정지

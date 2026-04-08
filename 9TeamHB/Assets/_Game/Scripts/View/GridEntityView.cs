@@ -279,8 +279,7 @@ namespace MyGame2.Stage
         {
             request.Callback(this);
         }
-
-        // Fallable.FallAnimation에서 호출.
+        
         // 이 View가 틈새에 빠졌음을 표시하여 Undo 시 자식 위치를 복원할 수 있게 한다.
 
         public void MarkAsFallen()
@@ -344,6 +343,7 @@ namespace MyGame2.Stage
 
             gameObject.SetActive(true);
 
+            Vector3 prevPos = transform.position;
             Vector3 worldPos = entity.Position.ToWorld(cellSize);
             transform.position = worldPos;
             _targetPosition = worldPos;
@@ -360,15 +360,19 @@ namespace MyGame2.Stage
             UpdateDirectionAnim(entity.Facing);
             UpdateMovingAnim(false);
 
-            // Fallable(틈새 낙하) 시각 복원 — 자식 위치/sortingOrder를 원래대로
+            // Fallable(틈새 낙하) 시각 복원 — 위치가 바뀐 경우만
+            // 같은 위치(틈새 위)에서 Undo하면 낙하 상태 유지
             if ((_hasFallen || _isFalling) && transform.childCount > 0)
             {
-                Transform child = transform.GetChild(0);
-                child.localPosition = _originalChildLocalPos;
-                SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
-                if (sr != null) sr.sortingOrder = _originalChildSortingOrder;
-                _hasFallen = false;
-                _isFalling = false;
+                if ((prevPos - worldPos).sqrMagnitude > 0.01f)
+                {
+                    Transform child = transform.GetChild(0);
+                    child.localPosition = _originalChildLocalPos;
+                    SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+                    if (sr != null) sr.sortingOrder = _originalChildSortingOrder;
+                    _hasFallen = false;
+                    _isFalling = false;
+                }
             }
         }
     }

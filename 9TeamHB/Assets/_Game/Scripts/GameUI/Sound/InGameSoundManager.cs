@@ -127,10 +127,15 @@ public class InGameSoundManager : MonoBehaviour
         if (sfxSource != null) sfxSource.volume = volume;
     }
     
+    // Undo 중 SFX 재생 억제 플래그
+    // InGameUIManager가 Undo 시작/종료 시 세팅
+    public bool SuppressSFX { get; set; }
+
     // SFX 재생 (개별 볼륨 적용)
 
     public void PlaySFX(SoundEntry entry)
     {
+        if (SuppressSFX) return;
         if (entry.clip == null || sfxSource == null) return;
         sfxSource.PlayOneShot(entry.clip, entry.SafeVolume);
     }
@@ -138,6 +143,7 @@ public class InGameSoundManager : MonoBehaviour
     // AudioClip 직접 재생 (하위 호환)
     public void PlaySFX(AudioClip clip)
     {
+        if (SuppressSFX) return;
         if (clip == null || sfxSource == null) return;
         sfxSource.PlayOneShot(clip);
     }

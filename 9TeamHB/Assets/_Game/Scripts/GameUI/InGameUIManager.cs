@@ -14,6 +14,12 @@ public class InGameUIManager : MonoBehaviour
     public GameObject gameClearPrefab;
     public GameObject gameQuitPrefab;
 
+    [Header("튜토리얼 단축키 팝업")]
+    [Tooltip("튜토리얼 1에서 표시할 단축키 안내 팝업 프리팹")]
+    public GameObject tutorialShortcutPrefab;
+    private GameObject activeTutorialPopup;
+    private bool _tutorialShown;
+
     [Header("씬 참조")]
     [Tooltip("StageManager")]
     [SerializeField] private StageManager stageManager;
@@ -117,6 +123,13 @@ public class InGameUIManager : MonoBehaviour
                 OnReleaseUndoButton();
             }
 
+            // 추적자가 소환되면 Undo 즉시 해제
+            if (stageManager != null && stageManager.CurrentState != null
+                && stageManager.CurrentState.ChaserIds.Count > 0)
+            {
+                OnReleaseUndoButton();
+            }
+
             remainingUndoSeconds -= Time.unscaledDeltaTime;
             if (remainingUndoSeconds <= 0f)
             {
@@ -148,11 +161,19 @@ public class InGameUIManager : MonoBehaviour
         ResetAll();
         CloseGameClear();
         CloseGameQuit();
+        CloseTutorialPopup();
 
         SetStageCount(stageIndex, isTutorialStage);
         SetTagCount(stageIndex);
         RefreshTagUI();
         RefreshUndoUI();
+
+        // 튜토리얼 1 (stageIndex 0)에서 단축키 팝업 1회 표시
+        if (stageIndex == 0 && !_tutorialShown)
+        {
+            _tutorialShown = true;
+            ShowTutorialPopup();
+        }
     }
 
     private void OnTurnExecuted(TurnOutcome outcome)
@@ -213,6 +234,9 @@ public class InGameUIManager : MonoBehaviour
     {
         if (isUndoActive && stageManager != null && stageManager.CurrentState != null)
             stageManager.CurrentState.UndoLeave();
+
+        if (InGameSoundManager.Instance != null)
+            InGameSoundManager.Instance.SuppressSFX = false;
 
         timeElapsed = 0f;
         MoveCount = 0;
@@ -307,10 +331,16 @@ public class InGameUIManager : MonoBehaviour
         if (stageManager == null || stageManager.CurrentState == null) return;
         if (remainingUndoSeconds <= 0f) return;
 
+        // 추적형 감시자가 활성 중이면 Undo 불가
+        if (stageManager.CurrentState.ChaserIds.Count > 0) return;
+
         if (_undoRecorder != null && _undoRecorder.IsRewindable())
         {
             isUndoActive = true;
             stageManager.CurrentState.UndoEnter();
+
+            if (InGameSoundManager.Instance != null)
+                InGameSoundManager.Instance.SuppressSFX = true;
         }
     }
 
@@ -319,6 +349,9 @@ public class InGameUIManager : MonoBehaviour
         if (!isUndoActive) return;
 
         isUndoActive = false;
+
+        if (InGameSoundManager.Instance != null)
+            InGameSoundManager.Instance.SuppressSFX = false;
 
         if (stageManager != null && stageManager.CurrentState != null)
             stageManager.CurrentState.UndoLeave();
@@ -493,6 +526,30 @@ public class InGameUIManager : MonoBehaviour
     {
         if (activeGameQuit != null)
             activeGameQuit.SetActive(false);
+        UpdateTimeScale();
+    }
+
+    // 튜토리얼 단축키 팝업
+
+    public void ShowTutorialPopup()
+    {
+        if (tutorialShortcutPrefab == null) return;
+
+        if (activeTutorialPopup == null)
+        {
+            activeTutorialPopup = Instantiate(tutorialShortcutPrefab);
+            SetCanvasCamera(activeTutorialPopup);
+        }
+        else
+            activeTutorialPopup.SetActive(true);
+
+        Time.timeScale = 0f;
+    }
+
+    public void CloseTutorialPopup()
+    {
+        if (activeTutorialPopup != null)
+            activeTutorialPopup.SetActive(false);
         UpdateTimeScale();
     }
 }
