@@ -118,7 +118,7 @@ namespace MyGame2.Stage
             if (!state.IsInside(pos)) return false;
 
             CellData cell = state.GetCell(pos);
-            if (cell.HasWall) return false;
+            if (cell.IsBlocked || cell.HasBush) return false;
 
             // 목표 칸은 점유되어 있어도 도달 가능
             if (pos.Equals(target)) return true;
