@@ -159,7 +159,7 @@ MonoBehaviour:
   gameQuitPrefab: {fileID: 4678675293507642822, guid: 0d839841899192f48864584c2d53d0eb,
     type: 3}
   stageManager: {fileID: 823654580}
-  maxUndoSeconds: 20
+  maxUndoSeconds: 10
   stageCount: 0
   isTutorialStage: 0
   stageTitleText: 

@@ -136,6 +136,9 @@ namespace MyGame2.Stage
             // 리스트 복원
             RebuildEntityLists();
 
+            // 페어 셀(문) 시각 상태 재동기화 — Restore는 이벤트를 안 쏘므로 수동 재방송
+            RefreshPairVisuals();
+
             SetViewDirty();
         }
 
@@ -957,6 +960,34 @@ namespace MyGame2.Stage
             CellData c = _cells[i];
             c.OccupantId = CellData.EmptyOccupantId;
             _cells[i] = c;
+        }
+
+        // Undo 복원 후 문 시각 상태 재동기화.
+        // Restore()가 셀 플래그만 복원하고 이벤트를 안 쏘므로,
+        // 문 뷰가 Active 변경을 모르는 문제를 해결.
+        private void RefreshPairVisuals()
+        {
+            if (_events == null) return;
+
+            HashSet<GridPos> fired = null;
+
+            foreach (var kvp in _cellPairs)
+            {
+                List<GridPos> pairs = kvp.Value;
+                for (int i = 0; i < pairs.Count; i++)
+                {
+                    GridPos pair = pairs[i];
+                    if (!IsInside(pair)) continue;
+
+                    CellData cell = GetCell(pair);
+                    if (!cell.HasDoor) continue;
+
+                    if (fired == null) fired = new HashSet<GridPos>();
+                    if (!fired.Add(pair)) continue;
+
+                    _events.RaisePairActivated(pair);
+                }
+            }
         }
 
         private int ToIndex(GridPos pos) { return (pos.Y * Width) + pos.X; }
