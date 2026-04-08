@@ -64,6 +64,9 @@ public class InGameUIManager : MonoBehaviour
     // 자동 다음 스테이지 코루틴 참조 (중복 방지)
     private Coroutine _autoNextCoroutine;
 
+    // 게임오버 시퀀스 코루틴
+    private Coroutine _gameOverCoroutine;
+
     // 생명주기
 
     private UndoRecorder _undoRecorder;
@@ -151,8 +154,16 @@ public class InGameUIManager : MonoBehaviour
             _autoNextCoroutine = null;
         }
 
+        // 게임오버 코루틴 정리
+        if (_gameOverCoroutine != null)
+        {
+            StopCoroutine(_gameOverCoroutine);
+            _gameOverCoroutine = null;
+        }
+
         ResetAll();
         CloseGameClear();
+        CloseGameQuit();
 
         SetStageCount(stageIndex, isTutorialStage);
         SetTagCount(stageIndex);
@@ -192,7 +203,7 @@ public class InGameUIManager : MonoBehaviour
 
     private IEnumerator AutoNextStageCoroutine()
     {
-        // 2초 대기 
+        // 2초 대기
         yield return new WaitForSecondsRealtime(2f);
 
         _autoNextCoroutine = null;
@@ -202,22 +213,24 @@ public class InGameUIManager : MonoBehaviour
             stageManager.LoadNextStage();
     }
 
-    // 게임 오버 코루틴 
+    // 게임 오버
+    // StageManager에서 1초 딜레이 후 RaiseGameOver() → 여기로 옴
+    // 이 시점에서 플레이어는 이미 1초간 사망 원인을 봤음
 
     private void OnGameOver()
     {
-        // ShowGameQuit() 바로 안 띄우고 1초 뒤에
-        _autoNextCoroutine = StartCoroutine(AutoGameOverCoroutine());
+        _gameOverCoroutine = StartCoroutine(GameOverSequence());
     }
 
-    private IEnumerator AutoGameOverCoroutine()
+    private IEnumerator GameOverSequence()
     {
-        yield return new WaitForSecondsRealtime(1f);
+        // 게임오버 팝업 표시
         ShowGameQuit();
 
+        // 2초 뒤 자동 재시작
         yield return new WaitForSecondsRealtime(2f);
 
-        _autoNextCoroutine = null;
+        _gameOverCoroutine = null;
         CloseGameQuit();
         ExecuteGameQuitRetry();
     }
