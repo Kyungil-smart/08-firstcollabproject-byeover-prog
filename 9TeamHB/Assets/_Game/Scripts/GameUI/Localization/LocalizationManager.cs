@@ -55,9 +55,8 @@ public class LocalizationManager : MonoBehaviour
             string[] columns = line.Split(',');
             if (columns.Length >= 3)
             {
-                // 줄바꿈('\n') 변환하는데 쓰인다고 합니다.
-                string englishText = columns[1].Replace("\\n", "\n");
-                string koreanText = columns[2].Replace("\\n", "\n");
+                string englishText = CleanCsvText(columns[1]);
+                string koreanText = CleanCsvText(columns[2]);
                 
                 // 딕셔너리에 key에 대응하는 영한 텍스트 저장. 
                 localizationData[columns[0]] = new string[] { englishText, koreanText };
@@ -65,6 +64,25 @@ public class LocalizationManager : MonoBehaviour
         }
     }
 
+    // CSV 글자 정제
+    private string CleanCsvText(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return "";
+
+        string processed = input;
+        
+        if (processed.StartsWith("\"") && processed.EndsWith("\""))
+        {
+            processed = processed.Substring(1, processed.Length - 2);
+        }
+        
+        processed = processed.Replace("\"\"", "\"");
+        
+        processed = processed.Replace("\\n", "\n");
+
+        return processed;
+    }
+    
     // 현재 설정된 언어의 텍스트르 얻기.
     public string GetText(string key)  
     {

@@ -230,15 +230,12 @@ namespace MyGame2.Stage
 
     CleanupReverseEffects();
 
-    // ── 추가: 현재 파괴 진행 중인 것도 Undo면 전부 취소 ──
+    // 현재 파괴 진행 중인 것도 Undo면 전부 취소
     List<int> cancelBreaking = null;
     foreach (int id in _breakingIds)
     {
-        if (state.TryGetEntity(id, out EntityState entity) && entity.IsAlive)
-        {
-            if (cancelBreaking == null) cancelBreaking = new List<int>(2);
-            cancelBreaking.Add(id);
-        }
+        if (cancelBreaking == null) cancelBreaking = new List<int>(2);
+        cancelBreaking.Add(id);
     }
     if (cancelBreaking != null)
     {
@@ -257,22 +254,12 @@ namespace MyGame2.Stage
             }
             _breakingIds.Remove(id);
 
-            // View 복원
             GridEntityView view = FindViewForEntity(id);
             if (view != null) view.gameObject.SetActive(true);
-
-            // 플래그 초기화
-            if (state.TryGetEntity(id, out EntityState ent) && ent.Has<BreakableData>())
-            {
-                BreakableData bd = ent.Get<BreakableData>();
-                bd.IsBreaking = false;
-                bd.IsStepped = false;
-                ent.Set(bd);
-            }
         }
     }
 
-    // 기존 복원 로직 (파괴 완료된 상자가 Undo로 되살아난 경우)
+    // 파괴 완료된 상자가 Undo로 되살아난 경우
     List<int> restored = null;
     foreach (var kvp in _brokenPositions)
     {
@@ -281,16 +268,7 @@ namespace MyGame2.Stage
         {
             if (restored == null) restored = new List<int>(2);
             restored.Add(id);
-
             _trackedIds.Add(id);
-
-            if (entity.Has<BreakableData>())
-            {
-                BreakableData bd = entity.Get<BreakableData>();
-                bd.IsBreaking = false;
-                bd.IsStepped = false;
-                entity.Set(bd);
-            }
 
             GridEntityView view = FindViewForEntity(id);
             if (view != null) view.gameObject.SetActive(true);
@@ -300,6 +278,21 @@ namespace MyGame2.Stage
     {
         for (int i = 0; i < restored.Count; i++)
             _brokenPositions.Remove(restored[i]);
+    }
+    
+    // 스냅샷 복원 시 IsBreaking=true가 남아서 자동 파괴되는 버그 방지
+    foreach (int id in _trackedIds)
+    {
+        if (state.TryGetEntity(id, out EntityState ent) && ent.Has<BreakableData>())
+        {
+            BreakableData bd = ent.Get<BreakableData>();
+            if (bd.IsBreaking || bd.IsStepped)
+            {
+                bd.IsBreaking = false;
+                bd.IsStepped = false;
+                ent.Set(bd);
+            }
+        }
     }
 }
 
