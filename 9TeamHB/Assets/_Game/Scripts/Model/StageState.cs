@@ -109,22 +109,33 @@ namespace MyGame2.Stage
                 }
             }
 
-            // 투사체는 일시적 엔티티이므로 Undo 시 강제 제거
-            List<int> projectilesToRemove = null;
+            // 투사체·추적자는 일시적 엔티티이므로 Undo 시 강제 제거
+            // (MemberwiseClone으로 복원된 IUpdate 컴포넌트는 이벤트 구독이 끊겨서
+            //  움직이지도, 사라지지도, 죽이지도 않는 유령 엔티티가 됨)
+            List<int> temporariesToRemove = null;
             foreach (var kvp in _entitiesById)
             {
-                if (kvp.Value.Kind == EntityKind.Projectile)
+                if (kvp.Value.Kind == EntityKind.Projectile ||
+                    kvp.Value.Kind == EntityKind.ChaserEnemy)
                 {
                     foreach (var comp in kvp.Value.Components)
                         if (comp is System.IDisposable d) d.Dispose();
 
-                    if (projectilesToRemove == null) projectilesToRemove = new List<int>(4);
-                    projectilesToRemove.Add(kvp.Key);
+                    if (temporariesToRemove == null) temporariesToRemove = new List<int>(4);
+                    temporariesToRemove.Add(kvp.Key);
                 }
             }
-            if (projectilesToRemove != null)
-                for (int i = 0; i < projectilesToRemove.Count; i++)
-                    _entitiesById.Remove(projectilesToRemove[i]);
+            if (temporariesToRemove != null)
+            {
+                for (int i = 0; i < temporariesToRemove.Count; i++)
+                {
+                    int id = temporariesToRemove[i];
+                    // 점유 해제 (셀에 유령으로 남는 것 방지)
+                    if (_entitiesById.TryGetValue(id, out EntityState tempEnt))
+                        ClearOccupant(tempEnt.Position);
+                    _entitiesById.Remove(id);
+                }
+            }
 
             // 상태 복원
             ActivePlayerId = snapshot.ActivePlayerId;
@@ -719,16 +730,15 @@ namespace MyGame2.Stage
                 if (!pairCell.HasActive)
                 {
                     pairCell.Flags |= CellFlags.Active;
-                    if (i == 0)
-                    {
-                        _events.RaisePairActivated(pair);
-                    }
                 }
                 _cells[idx] = pairCell;
 
                 // 히든 트랩 엔티티 비활성화 (isBlocking=false라 점유 안 하므로 전체 검색)
                 SetHiddenTrapActive(pair, false);
-                
+                if (i == 0)
+                {
+                    _events.RaisePairActivated(pair);
+                }
             }
         }
 
@@ -986,7 +996,7 @@ namespace MyGame2.Stage
                     if (fired == null) fired = new HashSet<GridPos>();
                     if (!fired.Add(pair)) continue;
 
-                    // _events.RaisePairActivated(pair);
+                    _events.RaisePairActivated(pair);
                 }
             }
         }

@@ -5,7 +5,7 @@ namespace MyGame2.Stage
 {
     // 플레이어가 부쉬에 진입하면 부쉬와 플레이어 모두 반투명 처리.
     // 부쉬에서 나오면 원래 알파로 복구.
-    
+
     public sealed class BushVisualHandler : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -155,11 +155,57 @@ namespace MyGame2.Stage
 
                 _playerInBush[playerId] = isInBush;
             }
+
+            // 상자 등 비플레이어 엔티티가 부쉬 위에 있으면 해당 부쉬도 반투명
+            CheckBushEntityOccupancy(state);
+        }
+        
+        // 부쉬 타일 위에 비플레이어 엔티티(상자, 얼음 등)가 있으면 부쉬를 반투명 처리.
+        // 플레이어 점유는 위에서 이미 처리했으므로 여기서는 건너뜀.
+
+        private void CheckBushEntityOccupancy(StageState state)
+        {
+            foreach (var kvp in _bushViews)
+            {
+                GridPos bushPos = kvp.Key;
+                GridEntityView bushView = kvp.Value;
+
+                // 플레이어가 이미 이 부쉬를 점유 중이면 스킵 (위에서 처리됨)
+                bool playerOnThisBush = false;
+                foreach (var pp in _playerBushPos)
+                {
+                    if (pp.Value.Equals(bushPos))
+                    {
+                        playerOnThisBush = true;
+                        break;
+                    }
+                }
+                if (playerOnThisBush) continue;
+
+                // 셀에 비플레이어 엔티티가 점유 중인지 체크
+                CellData cell = state.GetCell(bushPos);
+                if (cell.IsOccupied)
+                {
+                    // 점유 엔티티가 플레이어가 아닌 경우만 (상자 등)
+                    if (state.TryGetEntity(cell.OccupantId, out EntityState occ) && !occ.IsPlayer)
+                    {
+                        _targetAlpha[bushView.EntityId] = hiddenAlpha;
+                        _targetAlpha[occ.Id] = hiddenAlpha;
+                    }
+                }
+                else
+                {
+                    // 아무것도 없으면 부쉬 불투명 복구
+                    // (이미 다른 로직에서 hiddenAlpha가 설정되지 않은 경우만)
+                    if (_targetAlpha.ContainsKey(bushView.EntityId))
+                        _targetAlpha[bushView.EntityId] = 1f;
+                }
+            }
         }
         
         // 지정 위치의 부쉬에 다른 플레이어가 점유 중인지 확인.
         // 다른 플레이어가 있으면 true → 부쉬 알파를 복구하면 안 됨.
-
+        
         private bool IsOccupiedByOtherPlayer(int excludePlayerId, GridPos bushPos)
         {
             foreach (var kvp in _playerBushPos)

@@ -359,6 +359,17 @@ namespace MyGame2.Stage
             _lastFacing = entity.Facing;
             UpdateDirectionAnim(entity.Facing);
             UpdateMovingAnim(false);
+
+            // Fallable(틈새 낙하) 시각 복원 — 자식 위치/sortingOrder를 원래대로
+            if ((_hasFallen || _isFalling) && transform.childCount > 0)
+            {
+                Transform child = transform.GetChild(0);
+                child.localPosition = _originalChildLocalPos;
+                SpriteRenderer sr = child.GetComponent<SpriteRenderer>();
+                if (sr != null) sr.sortingOrder = _originalChildSortingOrder;
+                _hasFallen = false;
+                _isFalling = false;
+            }
         }
     }
 }

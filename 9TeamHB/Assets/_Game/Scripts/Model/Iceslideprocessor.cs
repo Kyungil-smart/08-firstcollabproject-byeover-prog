@@ -17,12 +17,25 @@ namespace MyGame2.Stage
         private float _timer;
         private bool _isProcessing;
 
+        // 이전 프레임에 슬라이딩 중이었는지 (정지 감지용)
+        private bool _wasSliding;
+
         private void Update()
         {
             if (stageManager == null || stageManager.CurrentState == null) return;
             if (!stageManager.CurrentState.IsUpdatable()) return;
 
             StageState state = stageManager.CurrentState;
+
+            // Undo 중이면 슬라이드 즉시 중단
+            if (state.IsUndoProcessing)
+            {
+                StopAllSliding(state);
+                _timer = 0f;
+                _isProcessing = false;
+                _wasSliding = false;
+                return;
+            }
 
             // 미끄러지는 얼음 상자가 있는지 체크
             _isProcessing = false;
@@ -42,9 +55,17 @@ namespace MyGame2.Stage
             if (!_isProcessing)
             {
                 _timer = 0f;
+
+                // 슬라이딩이 끝난 시점에 1회만 TurnExecuted 발행 (스냅샷용)
+                if (_wasSliding)
+                {
+                    _wasSliding = false;
+                    stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
+                }
                 return;
             }
 
+            _wasSliding = true;
             _timer += Time.deltaTime;
             if (_timer < slideInterval) return;
             _timer -= slideInterval;
@@ -53,7 +74,7 @@ namespace MyGame2.Stage
             bool viewDirty = false;
             for (int i = state.BoxIds.Count - 1; i >= 0; i--)
             {
-                if (i >= state.BoxIds.Count) continue; // 중간에 제거될 수 있음
+                if (i >= state.BoxIds.Count) continue;
                 int boxId = state.BoxIds[i];
                 if (!state.TryGetEntity(boxId, out EntityState box)) continue;
                 if (!box.IsAlive || !box.Has<IceSlideData>()) continue;
@@ -64,8 +85,24 @@ namespace MyGame2.Stage
                 viewDirty |= SlideOneStep(state, boxId, box, ice);
             }
 
+            // 중간 스텝: 시각만 갱신 (스냅샷 안 찍힘)
             if (viewDirty)
-                stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
+                state.SetViewDirty();
+        }
+
+        // Undo 시 모든 얼음 상자 슬라이딩 즉시 정지
+        private void StopAllSliding(StageState state)
+        {
+            for (int i = 0; i < state.BoxIds.Count; i++)
+            {
+                int boxId = state.BoxIds[i];
+                if (!state.TryGetEntity(boxId, out EntityState box)) continue;
+                if (!box.Has<IceSlideData>()) continue;
+
+                IceSlideData ice = box.Get<IceSlideData>();
+                if (ice.IsSliding)
+                    StopSliding(box);
+            }
         }
 
         // 얼음 상자를 1칸 이동. 막히면 정지.
