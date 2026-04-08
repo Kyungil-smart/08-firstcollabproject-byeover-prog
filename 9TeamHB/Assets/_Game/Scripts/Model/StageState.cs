@@ -986,7 +986,7 @@ namespace MyGame2.Stage
                     if (fired == null) fired = new HashSet<GridPos>();
                     if (!fired.Add(pair)) continue;
 
-                    _events.RaisePairActivated(pair);
+                    // _events.RaisePairActivated(pair);
                 }
             }
         }
