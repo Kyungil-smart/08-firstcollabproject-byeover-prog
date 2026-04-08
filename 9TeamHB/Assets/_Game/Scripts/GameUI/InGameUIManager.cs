@@ -15,7 +15,7 @@ public class InGameUIManager : MonoBehaviour
     public GameObject gameQuitPrefab;
 
     [Header("씬 참조")]
-    [Tooltip("StageManager를 드래그해서 넣어줘")]
+    [Tooltip("StageManager")]
     [SerializeField] private StageManager stageManager;
 
     [Header("되돌리기 설정 (시간제)")]
