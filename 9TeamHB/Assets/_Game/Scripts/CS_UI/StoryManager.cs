@@ -163,7 +163,14 @@ public class StoryManager : MonoBehaviour
         PlayerPrefs.SetInt("FirstRunDone", 1);
         PlayerPrefs.Save();
 
-        // 로딩 씬 없이 바로 타이틀로
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Title_Scene");
+        if (!string.IsNullOrEmpty(nextSceneName))
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneName);
+        }
+        else
+        {
+            // 혹시 변수가 비어있을 때를 대비한 방어 코드
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Title_Scene");
+        }
     }
 }
