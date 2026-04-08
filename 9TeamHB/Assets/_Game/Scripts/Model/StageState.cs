@@ -484,14 +484,20 @@ namespace MyGame2.Stage
             // 예정지가 버튼계열이면 페어 활성화
             if (GetCell(destination).HasSignalButton)
             {
-                ActivePairCell(destination);
+                if(!GetCell(destination).IsSticky)
+                    ActivePairCell(destination);
+                else if(GetCell(destination).IsSticky && entity.IsPlayer)
+                    ActivePairCell(destination);
 
                 // 페어된 셀에 히든 트랩이 있으면 비활성화
                 if (_cellPairs.TryGetValue(destination, out List<GridPos> paired))
                 {
                     for (int p = 0; p < paired.Count; p++)
                     {
-                        DeactivateHiddenTrapAt(paired[p]);
+                        if(!GetCell(destination).IsSticky || (GetCell(destination).IsSticky && entity.IsPlayer))
+                        {
+                            DeactivateHiddenTrapAt(paired[p]);
+                        }
                     }
                 }
             }
