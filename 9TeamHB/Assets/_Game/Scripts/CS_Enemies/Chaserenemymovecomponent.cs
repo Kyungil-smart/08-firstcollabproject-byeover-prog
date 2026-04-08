@@ -100,10 +100,9 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
                 break;
         }
 
-        if (_currentState == EnemyAIState.Chase)
-        {
+        
             _eventChannel.OnAlertAndChaseRaised(_targetPlayerId);
-        }
+        
     }
 
     private void ResolveTarget(StageState state)
@@ -201,7 +200,7 @@ public class ChaserEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         }
 
         // 벽/점유 -> 1턴 대기
-        if (nextCell.HasWall || nextCell.IsOccupied)
+        if (nextCell.IsBlocked || nextCell.IsOccupied)
             return;
 
         state.SetFacing(_entityState.Id, moveDir);

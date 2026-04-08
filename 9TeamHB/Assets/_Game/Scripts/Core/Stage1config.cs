@@ -328,13 +328,6 @@ namespace MyGame2.Stage
             }),
             new PatrolData(new GridPos[]
             {
-                new GridPos(6,16),
-                new GridPos(8,16),
-                new GridPos(8,18),
-                new GridPos(6,18)
-            }),
-            new PatrolData(new GridPos[]
-            {
                 new GridPos(15, 16),
                 new GridPos(19, 16),
                 new GridPos(19, 19),
