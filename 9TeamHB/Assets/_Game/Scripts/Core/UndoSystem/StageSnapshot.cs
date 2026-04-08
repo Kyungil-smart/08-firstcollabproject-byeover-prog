@@ -9,7 +9,7 @@ namespace MyGame2.Stage
     {
         public CellData[] Cells { get; private set; }
         public Dictionary<int, EntityState> EntityDict { get; private set; }
-        public Dictionary<int, List<KeyFollower>> KeysDict { get; private set; }
+        public Dictionary<int, int> KeysDict { get; private set; }
         public int ActivePlayerId { get; private set; }
         public int TurnIndex { get; private set; }
         public bool IsGameOver { get; private set; }
@@ -26,7 +26,7 @@ namespace MyGame2.Stage
 
             // 엔티티: EntityState.CopyFrom()으로 독립 복사
             var entityCopy = new Dictionary<int, EntityState>(state.EntityDict.Count);
-            var keysCopy = new Dictionary<int, List<KeyFollower>>(4);
+            var keysCopy = new Dictionary<int, int>(4);
 
             foreach (var kvp in state.EntityDict)
             {
@@ -36,7 +36,7 @@ namespace MyGame2.Stage
                 if (kvp.Value.Has<PocketData>())
                 {
                     PocketData pocket = kvp.Value.Get<PocketData>();
-                    keysCopy[kvp.Key] = new List<KeyFollower>(pocket.Keys);
+                    keysCopy[kvp.Key] = pocket.Keys.Count;
                 }
             }
 
