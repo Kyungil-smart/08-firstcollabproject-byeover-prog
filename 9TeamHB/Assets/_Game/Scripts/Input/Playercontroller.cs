@@ -13,6 +13,9 @@ namespace MyGame2.Stage
 
         [Header("입력 설정")]
         [SerializeField] private float moveRepeatInterval = 0.2f;
+        
+        [Header("밀기 딜레이")]
+        [SerializeField] private float pushDelay = 0.1f;
 
         private InputAction _moveUpAction;
         private InputAction _moveLeftAction;
@@ -299,6 +302,12 @@ namespace MyGame2.Stage
         {
             _lastMoveTime = Time.time;
             TurnOutcome outcome = stageManager.TryExecuteTurn(direction);
+
+            // 상자를 밀었으면 추가 딜레이
+            if (outcome.Executed && outcome.PlayerMove.IsPushAndMove)
+            {
+                _lastMoveTime = Time.time + pushDelay;
+            }
 
             if (!outcome.Executed && !_pressedAt.ContainsKey(direction))
                 _lockedDirection = Direction.None;

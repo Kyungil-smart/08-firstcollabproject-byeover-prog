@@ -141,7 +141,7 @@ namespace MyGame2.Stage
                 {
                     Sprite wallSprite = cell.HasExtra ? wallSpriteSide : wallSpriteFace;
                     _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
-                        wallColor, wallSprite, tileOrder));
+                        wallColor, wallSprite, 0));
                     continue;
                 }
 
@@ -165,7 +165,7 @@ namespace MyGame2.Stage
                 else if (cell.HasGoal)
                 {
                     _tiles.Add(MakeTile($"T_{x}_{y}", _tileRoot, worldPos, scale,
-                        goalColor, goalSprite, overlayOrder));
+                        goalColor, goalSprite, tileOrder));  // tileOrder = -2
                 }
                 else if (cell.HasCrack)
                 {
