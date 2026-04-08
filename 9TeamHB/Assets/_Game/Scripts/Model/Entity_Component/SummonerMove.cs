@@ -23,6 +23,9 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
     private readonly Queue<int> _pendingSummonPlayerIds = new Queue<int>();
     private int _alertTargetPlayerId = StageState.InvalidEntityId;
 
+    // playerId -> chaserId -> 추적자가 살아있는 동안 중복 소환 방지
+    private readonly Dictionary<int, int> _activeChasers = new Dictionary<int, int>();
+
     public SummonerMove(
         StageStateReferenceSO stageStateRef,
         EntityState entityState,
@@ -48,6 +51,19 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
     {
         if (!_entityState.IsAlive) return;
         if(StageState.IsGameOver || StageState.IsStageClear) return;
+
+        // Undo 시 내부 AI 상태 초기화
+        if (StageState.IsUndoProcessing)
+        {
+            _currentState = EnemyAIState.Patrol;
+            _timer = 0f;
+            _alertTargetPlayerId = StageState.InvalidEntityId;
+            _pendingSummonPlayerIds.Clear();
+            _previousVisiblePlayers.Clear();
+            _currentVisiblePlayers.Clear();
+            _activeChasers.Clear();
+            return;
+        }
         
         RefreshDetection();
         
@@ -175,6 +191,10 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
             if (_previousVisiblePlayers.Contains(playerId))
                 continue;
 
+            // 이미 해당 플레이어용 추적자가 살아있으면 소환 안 함
+            if (HasActiveChaser(playerId))
+                continue;
+
             if (!ContainsPendingPlayer(playerId) &&
                 _alertTargetPlayerId != playerId)
             {
@@ -197,6 +217,22 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
         }
         return false;
     }
+    
+    // 해당 플레이어에게 이미 소환된 추적자가 살아있는지 확인.
+    // 죽은 추적자는 자동 정리.
+    
+    private bool HasActiveChaser(int playerId)
+    {
+        if (!_activeChasers.TryGetValue(playerId, out int chaserId))
+            return false;
+
+        if (StageState.TryGetEntity(chaserId, out EntityState chaser) && chaser.IsAlive)
+            return true;
+
+        // 추적자가 죽었으면 정리 -> 다음 감지 시 재소환 허용
+        _activeChasers.Remove(playerId);
+        return false;
+    }
 
     private void SpawnChaser(int targetPlayerId)
     {
@@ -211,6 +247,7 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
         
         int chaserId = StageState.SpawnEntity(_chaserDefinition, spawnPos, facing);
         ChaserTargetRegistry.Register(chaserId, targetPlayerId);
+        _activeChasers[targetPlayerId] = chaserId;
         
         StageState.SetViewDirty();
     }
