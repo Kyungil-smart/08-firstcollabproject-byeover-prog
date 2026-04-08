@@ -719,15 +719,16 @@ namespace MyGame2.Stage
                 if (!pairCell.HasActive)
                 {
                     pairCell.Flags |= CellFlags.Active;
+                    if (i == 0)
+                    {
+                        _events.RaisePairActivated(pair);
+                    }
                 }
                 _cells[idx] = pairCell;
 
                 // 히든 트랩 엔티티 비활성화 (isBlocking=false라 점유 안 하므로 전체 검색)
                 SetHiddenTrapActive(pair, false);
-                if (i == 0)
-                {
-                    _events.RaisePairActivated(pair);
-                }
+                
             }
         }
 
