@@ -99,7 +99,11 @@ namespace MyGame2.Stage
                     {
                         PocketData pocketData = existing.Get<PocketData>();
                         pocketData.ClearKeyFollowers();
-                        pocketData.Keys.AddRange(snapshot.KeysDict[kvp.Key]);
+                        for (int i = 0; i < snapshot.KeysDict[kvp.Key]; i++)
+                        {
+                            pocketData.AddKeyFollower(this);
+                        }
+                        //pocketData.Keys.AddRange(snapshot.KeysDict[kvp.Key]);
                     }
                 }
                 else
@@ -735,16 +739,14 @@ namespace MyGame2.Stage
                 CellData pairCell = _cells[idx];
                 if (!pairCell.HasActive)
                 {
+                    if (i == 0) _events.RaisePairActivated(pair);
+                    
                     pairCell.Flags |= CellFlags.Active;
                 }
                 _cells[idx] = pairCell;
 
                 // 히든 트랩 엔티티 비활성화 (isBlocking=false라 점유 안 하므로 전체 검색)
                 SetHiddenTrapActive(pair, false);
-                if (i == 0)
-                {
-                    _events.RaisePairActivated(pair);
-                }
             }
         }
 
@@ -1002,7 +1004,7 @@ namespace MyGame2.Stage
                     if (fired == null) fired = new HashSet<GridPos>();
                     if (!fired.Add(pair)) continue;
 
-                    _events.RaisePairActivated(pair);
+                    // _events.RaisePairActivated(pair);
                 }
             }
         }
