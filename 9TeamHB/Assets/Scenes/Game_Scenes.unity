@@ -158,6 +158,8 @@ MonoBehaviour:
     type: 3}
   gameQuitPrefab: {fileID: 4678675293507642822, guid: 0d839841899192f48864584c2d53d0eb,
     type: 3}
+  tutorialShortcutPrefab: {fileID: 877617133511060775, guid: 87e4ebb15379ef549b709325fc85768f,
+    type: 3}
   stageManager: {fileID: 823654580}
   maxUndoSeconds: 10
   stageCount: 0
@@ -1084,9 +1086,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.RobotAutoMover
   stageManager: {fileID: 823654580}
   gameManager: {fileID: 1573434693}
-  moveInterval: 0.2
+  moveInterval: 0.25
   alertDuration: 0.5
-  chaseSpeedMultiplier: 2
+  chaseSpeedMultiplier: 1.5
 --- !u!4 &1098185550
 Transform:
   m_ObjectHideFlags: 0
@@ -1436,7 +1438,7 @@ MonoBehaviour:
   rewindDuration: 0.5
   rewindDelay: 1
   sortingOrder: -1
-  deactivatedColor: {r: 0.6415094, g: 0.6415094, b: 0.6415094, a: 0.5}
+  deactivatedColor: {r: 0.5566038, g: 0.53822535, b: 0.53822535, a: 0.5}
   activeColor: {r: 1, g: 1, b: 1, a: 1}
 --- !u!4 &1906414216
 Transform:
@@ -1484,6 +1486,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MyGame2.Stage.IceSlideProcessor
   stageManager: {fileID: 823654580}
   slideInterval: 0.08
+  cellSize: 1
 --- !u!4 &1909252390
 Transform:
   m_ObjectHideFlags: 0

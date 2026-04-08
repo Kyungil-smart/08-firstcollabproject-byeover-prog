@@ -14,8 +14,12 @@ namespace MyGame2.Stage
         [Tooltip("한 칸 이동 간격 (초) — GridEntityView slideSpeed와 맞춰서 조정")]
         [SerializeField] private float slideInterval = 0.08f;
 
+        [Tooltip("셀 크기 (StageManager의 cellSize와 동일하게)")]
+        [SerializeField] private float cellSize = 1f;
+
         private float _timer;
         private bool _isProcessing;
+        private bool _wasSliding;
 
         private void Update()
         {
@@ -24,36 +28,50 @@ namespace MyGame2.Stage
 
             StageState state = stageManager.CurrentState;
 
-            // 미끄러지는 얼음 상자가 있는지 체크
+            if (state.IsUndoProcessing)
+            {
+                StopAllSliding(state);
+                _timer = 0f;
+                _isProcessing = false;
+                _wasSliding = false;
+                return;
+            }
+
+            // 미끄러지는 얼음 상자 체크
             _isProcessing = false;
             for (int i = 0; i < state.BoxIds.Count; i++)
             {
                 int boxId = state.BoxIds[i];
                 if (!state.TryGetEntity(boxId, out EntityState box)) continue;
                 if (!box.IsAlive || !box.Has<IceSlideData>()) continue;
-
-                IceSlideData ice = box.Get<IceSlideData>();
-                if (!ice.IsSliding) continue;
-
-                _isProcessing = true;
-                break;
+                if (box.Get<IceSlideData>().IsSliding)
+                {
+                    _isProcessing = true;
+                    break;
+                }
             }
 
             if (!_isProcessing)
             {
                 _timer = 0f;
+                if (_wasSliding)
+                {
+                    _wasSliding = false;
+                    stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
+                }
                 return;
             }
 
+            _wasSliding = true;
             _timer += Time.deltaTime;
             if (_timer < slideInterval) return;
             _timer -= slideInterval;
 
-            // 미끄러지는 모든 얼음 상자를 1칸씩 이동
+            // 1칸씩 이동
             bool viewDirty = false;
             for (int i = state.BoxIds.Count - 1; i >= 0; i--)
             {
-                if (i >= state.BoxIds.Count) continue; // 중간에 제거될 수 있음
+                if (i >= state.BoxIds.Count) continue;
                 int boxId = state.BoxIds[i];
                 if (!state.TryGetEntity(boxId, out EntityState box)) continue;
                 if (!box.IsAlive || !box.Has<IceSlideData>()) continue;
@@ -65,7 +83,34 @@ namespace MyGame2.Stage
             }
 
             if (viewDirty)
-                stageManager.Events?.RaiseTurnExecuted(TurnOutcome.None());
+                SyncSlidingViews(state);
+        }
+
+        private void SyncSlidingViews(StageState state)
+        {
+            GridEntityView[] views = FindObjectsByType<GridEntityView>(FindObjectsSortMode.None);
+            for (int i = 0; i < views.Length; i++)
+            {
+                GridEntityView view = views[i];
+                if (!state.TryGetEntity(view.EntityId, out EntityState entity)) continue;
+                if (!entity.Has<IceSlideData>()) continue;
+                view.Sync(entity, cellSize);
+            }
+        }
+
+        // Undo 시 모든 얼음 상자 슬라이딩 즉시 정지
+        private void StopAllSliding(StageState state)
+        {
+            for (int i = 0; i < state.BoxIds.Count; i++)
+            {
+                int boxId = state.BoxIds[i];
+                if (!state.TryGetEntity(boxId, out EntityState box)) continue;
+                if (!box.Has<IceSlideData>()) continue;
+
+                IceSlideData ice = box.Get<IceSlideData>();
+                if (ice.IsSliding)
+                    StopSliding(box);
+            }
         }
 
         // 얼음 상자를 1칸 이동. 막히면 정지.

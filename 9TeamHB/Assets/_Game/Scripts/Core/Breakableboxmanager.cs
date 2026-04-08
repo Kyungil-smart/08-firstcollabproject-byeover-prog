@@ -224,77 +224,80 @@ namespace MyGame2.Stage
 
         // Undo 매 스텝: 파괴됐던 상자가 복원됐으면 역재생
         private void CheckRestore()
-{
-    StageState state = stageManager.CurrentState;
-    if (state == null) return;
-
-    CleanupReverseEffects();
-
-    // 현재 파괴 진행 중인 것도 Undo면 전부 취소
-    List<int> cancelBreaking = null;
-    foreach (int id in _breakingIds)
-    {
-        if (cancelBreaking == null) cancelBreaking = new List<int>(2);
-        cancelBreaking.Add(id);
-    }
-    if (cancelBreaking != null)
-    {
-        for (int i = 0; i < cancelBreaking.Count; i++)
         {
-            int id = cancelBreaking[i];
-            if (_activeCoroutines.TryGetValue(id, out Coroutine co) && co != null)
-            {
-                StopCoroutine(co);
-                _activeCoroutines.Remove(id);
-            }
-            if (_activeBreakFX.TryGetValue(id, out GameObject fx) && fx != null)
-            {
-                Destroy(fx);
-                _activeBreakFX.Remove(id);
-            }
-            _breakingIds.Remove(id);
+            StageState state = stageManager.CurrentState;
+            if (state == null) return;
 
-            GridEntityView view = FindViewForEntity(id);
-            if (view != null) view.gameObject.SetActive(true);
-        }
-    }
+            CleanupReverseEffects();
 
-    // 파괴 완료된 상자가 Undo로 되살아난 경우
-    List<int> restored = null;
-    foreach (var kvp in _brokenPositions)
-    {
-        int id = kvp.Key;
-        if (state.TryGetEntity(id, out EntityState entity) && entity.IsAlive)
-        {
-            if (restored == null) restored = new List<int>(2);
-            restored.Add(id);
-            _trackedIds.Add(id);
-
-            GridEntityView view = FindViewForEntity(id);
-            if (view != null) view.gameObject.SetActive(true);
-        }
-    }
-    if (restored != null)
-    {
-        for (int i = 0; i < restored.Count; i++)
-            _brokenPositions.Remove(restored[i]);
-    }
-    
-    // 스냅샷 복원 시 IsBreaking=true가 남아서 자동 파괴되는 버그 방지
-    foreach (int id in _trackedIds)
-    {
-        if (state.TryGetEntity(id, out EntityState ent) && ent.Has<BreakableData>())
-        {
-            BreakableData bd = ent.Get<BreakableData>();
-            if (bd.IsBreaking || bd.IsStepped)
+            // 현재 파괴 진행 중인 것도 Undo면 전부 취소
+            List<int> cancelBreaking = null;
+            foreach (int id in _breakingIds)
             {
-                bd.IsBreaking = false;
-                bd.IsStepped = false;
-                ent.Set(bd);
+                if (cancelBreaking == null) cancelBreaking = new List<int>(2);
+                cancelBreaking.Add(id);
+            }
+            if (cancelBreaking != null)
+            {
+                for (int i = 0; i < cancelBreaking.Count; i++)
+                {
+                    int id = cancelBreaking[i];
+                    if (_activeCoroutines.TryGetValue(id, out Coroutine co) && co != null)
+                    {
+                        StopCoroutine(co);
+                        _activeCoroutines.Remove(id);
+                    }
+                    if (_activeBreakFX.TryGetValue(id, out GameObject fx) && fx != null)
+                    {
+                        Destroy(fx);
+                        _activeBreakFX.Remove(id);
+                    }
+                    _breakingIds.Remove(id);
+
+                    GridEntityView view = FindViewForEntity(id);
+                    if (view != null) view.gameObject.SetActive(true);
+                }
+            }
+
+            // 파괴 완료된 상자가 Undo로 되살아난 경우
+            List<int> restored = null;
+            foreach (var kvp in _brokenPositions)
+            {
+                int id = kvp.Key;
+                if (state.TryGetEntity(id, out EntityState entity) && entity.IsAlive)
+                {
+                    if (restored == null) restored = new List<int>(2);
+                    restored.Add(id);
+                    _trackedIds.Add(id);
+
+                    GridEntityView view = FindViewForEntity(id);
+                    if (view != null) view.gameObject.SetActive(true);
+                }
+            }
+            if (restored != null)
+            {
+                for (int i = 0; i < restored.Count; i++)
+                    _brokenPositions.Remove(restored[i]);
+            }
+
+            // 스냅샷 복원 후 BreakableData 전체 필드 초기화
+            // MemberwiseClone 얕은 복사로 스냅샷 데이터가 오염될 수 있으므로
+            // IsBlocked / IsBreaking / IsStepped 모두 안전하게 리셋
+            foreach (int id in _trackedIds)
+            {
+                if (state.TryGetEntity(id, out EntityState ent) && ent.Has<BreakableData>())
+                {
+                    BreakableData bd = ent.Get<BreakableData>();
+                    if (bd.IsBreaking || bd.IsStepped || bd.IsBlocked)
+                    {
+                        bd.IsBreaking = false;
+                        bd.IsStepped = false;
+                        bd.IsBlocked = false;
+                        ent.Set(bd);
+                    }
+                }
             }
         }
-    }
-}
 
         // 프레임 역순 재생 -> 끝나면 View 보이기
         private IEnumerator AnimateReverse(Vector3 position, GridEntityView view)

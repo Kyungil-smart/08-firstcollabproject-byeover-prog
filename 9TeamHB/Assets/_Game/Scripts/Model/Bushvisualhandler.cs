@@ -5,7 +5,7 @@ namespace MyGame2.Stage
 {
     // 플레이어가 부쉬에 진입하면 부쉬와 플레이어 모두 반투명 처리.
     // 부쉬에서 나오면 원래 알파로 복구.
-    
+
     public sealed class BushVisualHandler : MonoBehaviour
     {
         [Header("씬 참조")]
@@ -29,6 +29,9 @@ namespace MyGame2.Stage
 
         // 부쉬 엔티티 View 캐시 (부쉬 위에 플레이어가 있을 때 같이 투명해질 대상)
         private readonly Dictionary<GridPos, GridEntityView> _bushViews = new Dictionary<GridPos, GridEntityView>();
+
+        // 부쉬 위 비플레이어 엔티티 추적 — 이탈 시 알파 복구용 (bushPos → entityId)
+        private readonly Dictionary<GridPos, int> _bushOccupantEntities = new Dictionary<GridPos, int>();
 
         private void OnEnable()
         {
@@ -54,6 +57,7 @@ namespace MyGame2.Stage
             _playerBushPos.Clear();
             _targetAlpha.Clear();
             _bushViews.Clear();
+            _bushOccupantEntities.Clear();
 
             // 부쉬 엔티티의 View를 캐싱
             StageState state = stageManager.CurrentState;
@@ -155,11 +159,77 @@ namespace MyGame2.Stage
 
                 _playerInBush[playerId] = isInBush;
             }
+
+            // 상자 등 비플레이어 엔티티가 부쉬 위에 있으면 해당 부쉬도 반투명
+            CheckBushEntityOccupancy(state);
+        }
+
+ 
+        // 부쉬 타일 위에 비플레이어 엔티티(상자, 얼음 등)가 있으면 부쉬를 반투명 처리.
+        // 플레이어 점유는 위에서 이미 처리했으므로 여기서는 건너뜀.
+
+        private void CheckBushEntityOccupancy(StageState state)
+        {
+            // 이전에 부쉬 위에 있던 엔티티가 이탈했는지 확인 -> 알파 복구
+            List<GridPos> toRemove = null;
+            foreach (var kvp in _bushOccupantEntities)
+            {
+                GridPos bushPos = kvp.Key;
+                int prevEntityId = kvp.Value;
+
+                CellData cell = state.GetCell(bushPos);
+                // 엔티티가 떠났거나 다른 엔티티로 바뀜
+                if (!cell.IsOccupied || cell.OccupantId != prevEntityId)
+                {
+                    // 이전 엔티티 알파 복구
+                    _targetAlpha[prevEntityId] = 1f;
+
+                    // 플레이어가 점유 중이 아니면 부쉬도 복구
+                    bool playerHere = false;
+                    foreach (var pp in _playerBushPos)
+                    {
+                        if (pp.Value.Equals(bushPos)) { playerHere = true; break; }
+                    }
+                    if (!playerHere && _bushViews.TryGetValue(bushPos, out GridEntityView bv))
+                        _targetAlpha[bv.EntityId] = 1f;
+
+                    if (toRemove == null) toRemove = new List<GridPos>(4);
+                    toRemove.Add(bushPos);
+                }
+            }
+            if (toRemove != null)
+                for (int i = 0; i < toRemove.Count; i++)
+                    _bushOccupantEntities.Remove(toRemove[i]);
+
+            // 현재 부쉬 위에 비플레이어 엔티티가 있으면 반투명 등록
+            foreach (var kvp in _bushViews)
+            {
+                GridPos bushPos = kvp.Key;
+                GridEntityView bushView = kvp.Value;
+
+                // 플레이어가 이미 처리한 부쉬는 스킵
+                bool playerHere = false;
+                foreach (var pp in _playerBushPos)
+                {
+                    if (pp.Value.Equals(bushPos)) { playerHere = true; break; }
+                }
+                if (playerHere) continue;
+
+                CellData cell = state.GetCell(bushPos);
+                if (cell.IsOccupied &&
+                    state.TryGetEntity(cell.OccupantId, out EntityState occ) &&
+                    !occ.IsPlayer && occ.IsAlive)
+                {
+                    _targetAlpha[bushView.EntityId] = hiddenAlpha;
+                    _targetAlpha[occ.Id] = hiddenAlpha;
+                    _bushOccupantEntities[bushPos] = occ.Id;
+                }
+            }
         }
         
         // 지정 위치의 부쉬에 다른 플레이어가 점유 중인지 확인.
         // 다른 플레이어가 있으면 true → 부쉬 알파를 복구하면 안 됨.
-
+        
         private bool IsOccupiedByOtherPlayer(int excludePlayerId, GridPos bushPos)
         {
             foreach (var kvp in _playerBushPos)

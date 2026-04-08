@@ -37,7 +37,6 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
     private readonly Queue<int> _pendingSummonPlayerIds = new Queue<int>();
     private int _alertTargetPlayerId = StageState.InvalidEntityId;
 
-    // playerId -> chaserId — 추적자가 살아있는 동안 중복 소환 방지
     private readonly Dictionary<int, int> _activeChasers = new Dictionary<int, int>();
 
     public SummonerEnemyMoveComponent(
@@ -69,7 +68,6 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         if (!_entityState.IsAlive) return;
         if (state.IsGameOver || state.IsStageClear) return;
 
-        // Undo 시 내부 AI 상태 초기화
         if (state.IsUndoProcessing)
         {
             _currentState = EnemyAIState.Patrol;
@@ -163,7 +161,6 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
             if (_previousVisiblePlayers.Contains(playerId))
                 continue;
 
-            // 이미 해당 플레이어용 추적자가 살아있으면 소환 안 함
             if (HasActiveChaser(state, playerId))
                 continue;
 
@@ -190,18 +187,13 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
         }
         return false;
     }
-    
-    // 해당 플레이어에게 이미 소환된 추적자가 살아있는지 확인.
-    // 죽은 추적자는 자동 정리.
-    
+
     private bool HasActiveChaser(StageState state, int playerId)
     {
         if (!_activeChasers.TryGetValue(playerId, out int chaserId))
             return false;
-
         if (state.TryGetEntity(chaserId, out EntityState chaser) && chaser.IsAlive)
             return true;
-
         _activeChasers.Remove(playerId);
         return false;
     }
@@ -255,34 +247,55 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
 
     private GridPos GetNextPerimeterCell(StageState state, GridPos pos)
     {
-        if (pos.Y == _rectMinY && pos.X < _rectMaxX)
-            return TryPerimeter(state, pos.X + 1, pos.Y, pos);
-        if (pos.X == _rectMaxX && pos.Y < _rectMaxY)
-            return TryPerimeter(state, pos.X, pos.Y + 1, pos);
-        if (pos.Y == _rectMaxY && pos.X > _rectMinX)
-            return TryPerimeter(state, pos.X - 1, pos.Y, pos);
-        if (pos.X == _rectMinX && pos.Y > _rectMinY)
-            return TryPerimeter(state, pos.X, pos.Y - 1, pos);
+        // 부쉬/벽을 건너뛰며 다음 유효한 둘레 셀을 찾음
+        int perimeterLen = 2 * ((_rectMaxX - _rectMinX) + (_rectMaxY - _rectMinY));
+        if (perimeterLen <= 0) return pos;
 
-        if (pos.X == _rectMinX && pos.Y == _rectMinY)
-            return TryPerimeter(state, pos.X + 1, pos.Y, pos);
-        if (pos.X == _rectMaxX && pos.Y == _rectMinY)
-            return TryPerimeter(state, pos.X, pos.Y + 1, pos);
-        if (pos.X == _rectMaxX && pos.Y == _rectMaxY)
-            return TryPerimeter(state, pos.X - 1, pos.Y, pos);
-        if (pos.X == _rectMinX && pos.Y == _rectMaxY)
-            return TryPerimeter(state, pos.X, pos.Y - 1, pos);
+        GridPos current = pos;
+        for (int i = 0; i < perimeterLen; i++)
+        {
+            GridPos next = RawNextOnPerimeter(current);
+            if (next.Equals(pos)) return pos; // 한 바퀴 돌아옴 → 전부 막힘
 
+            if (state.IsInside(next))
+            {
+                CellData cell = state.GetCell(next);
+                if (!cell.HasWall && !cell.HasBush)
+                    return next;
+            }
+
+            current = next; // 부쉬/벽 → 건너뛰고 다음 둘레 셀로
+        }
         return pos;
     }
 
-    private GridPos TryPerimeter(StageState state, int x, int y, GridPos fallback)
+    // 검증 없이 둘레상 다음 좌표만 반환 (시계방향)
+    private GridPos RawNextOnPerimeter(GridPos pos)
     {
-        GridPos next = new GridPos(x, y);
-        if (!state.IsInside(next)) return fallback;
-        if (state.GetCell(next).HasWall) return fallback;
-        if (state.GetCell(next).HasBush) return fallback; // 부쉬 진입 불가
-        return next;
+        // 하변: 오른쪽으로
+        if (pos.Y == _rectMinY && pos.X < _rectMaxX)
+            return new GridPos(pos.X + 1, pos.Y);
+        // 우변: 아래로
+        if (pos.X == _rectMaxX && pos.Y < _rectMaxY)
+            return new GridPos(pos.X, pos.Y + 1);
+        // 상변: 왼쪽으로
+        if (pos.Y == _rectMaxY && pos.X > _rectMinX)
+            return new GridPos(pos.X - 1, pos.Y);
+        // 좌변: 위로
+        if (pos.X == _rectMinX && pos.Y > _rectMinY)
+            return new GridPos(pos.X, pos.Y - 1);
+
+        // 꼭짓점
+        if (pos.X == _rectMinX && pos.Y == _rectMinY)
+            return new GridPos(pos.X + 1, pos.Y);
+        if (pos.X == _rectMaxX && pos.Y == _rectMinY)
+            return new GridPos(pos.X, pos.Y + 1);
+        if (pos.X == _rectMaxX && pos.Y == _rectMaxY)
+            return new GridPos(pos.X - 1, pos.Y);
+        if (pos.X == _rectMinX && pos.Y == _rectMaxY)
+            return new GridPos(pos.X, pos.Y - 1);
+
+        return pos;
     }
 
     private GridPos FindNearestPerimeterCell(StageState state, GridPos from)
@@ -318,10 +331,58 @@ public class SummonerEnemyMoveComponent : IComponentData, IUpdate, IDisposable
     private void MoveToward(StageState state, GridPos target)
     {
         if (_entityState.Position.Equals(target)) return;
+
+        // 1순위: 목표 직선 방향
         Direction dir = Dir(_entityState.Position, target);
         if (dir == Direction.None) return;
+
         GridPos next = _entityState.Position.Move(dir);
-        FlyTo(state, next);
+        if (CanFlyTo(state, next))
+        {
+            FlyTo(state, next);
+            return;
+        }
+
+        // 2순위: 수직/수평 우회 — 부쉬에 막혔을 때 돌아감
+        int dx = target.X - _entityState.Position.X;
+        int dy = target.Y - _entityState.Position.Y;
+
+        Direction alt1, alt2;
+        if (dir == Direction.Left || dir == Direction.Right)
+        {
+            alt1 = dy > 0 ? Direction.Down : (dy < 0 ? Direction.Up : Direction.Down);
+            alt2 = alt1 == Direction.Down ? Direction.Up : Direction.Down;
+        }
+        else
+        {
+            alt1 = dx > 0 ? Direction.Right : (dx < 0 ? Direction.Left : Direction.Right);
+            alt2 = alt1 == Direction.Right ? Direction.Left : Direction.Right;
+        }
+
+        GridPos altNext1 = _entityState.Position.Move(alt1);
+        if (CanFlyTo(state, altNext1))
+        {
+            FlyTo(state, altNext1);
+            return;
+        }
+
+        GridPos altNext2 = _entityState.Position.Move(alt2);
+        if (CanFlyTo(state, altNext2))
+        {
+            FlyTo(state, altNext2);
+            return;
+        }
+        // 전방향 막힘 → 이번 턴 이동 포기
+    }
+
+    // FlyTo 가능 여부 사전 체크 (실제 이동 없이 검증만)
+    private bool CanFlyTo(StageState state, GridPos target)
+    {
+        if (!state.IsInside(target)) return false;
+        CellData cell = state.GetCell(target);
+        if (cell.HasWall || cell.HasBush) return false;
+        if (_entityState.Position.Equals(target)) return false;
+        return true;
     }
 
     // 비행 이동: 점유 시스템 우회 (상자 위를 지나가도 상자 점유 안 건드림)

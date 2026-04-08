@@ -55,7 +55,6 @@ namespace MyGame2.Stage
         // 키 추가
         public void AddKeyFollower(GridEntityView playerView)
         {
-            Debug.Log($"키 추종자 생성 로직 :{playerView.name}");
             // 추종자의 타겟 설정을 위한 삼항 연산자
             Transform target = (_keys.Count == 0) ?
                 playerView.transform : _keys[^1].transform;
@@ -66,6 +65,16 @@ namespace MyGame2.Stage
 
             _keys.Add(key);
 
+        }
+
+        public void AddKeyFollower(StageState state)
+        {
+            var request = new ViewRequest
+            {
+                Id = _owner.Id,
+                Callback = v => AddKeyFollower(v)
+            };
+            state.Events.RaiseViewRequest(request);
         }
 
         // 키 사용

@@ -27,11 +27,15 @@ public class InGameSoundManager : MonoBehaviour
     
     // BGM
 
-    [Header("BGM")]
+    [Header("BGM — 메인")]
     public SoundEntry mainBGM;            // Start_OP_Main (타이틀)
+    public SoundEntry bgmStageSelect;     // StageSelect
+    
+    [Header("BGM — 인게임")]
     public SoundEntry bgmInPuzzle1;       // InPuzzle_1
     public SoundEntry bgmInPuzzle2;       // InPuzzle_2
-    public SoundEntry bgmStageSelect;     // StageSelect
+
+    [Header("BGM — 엔딩")]
     public SoundEntry bgmEnding;          // Ending
     
     // SFX — 이동
@@ -47,7 +51,9 @@ public class InGameSoundManager : MonoBehaviour
     [Header("SFX — 오브젝트")]
     public SoundEntry sfxObjectPush;
     public SoundEntry sfxIcePush;
-    public SoundEntry sfxPressButton;     // 버튼/레버
+    public SoundEntry sfxIceSlide;        // 얼음 상자 미끄러지는 중
+    public SoundEntry sfxPressButton;     // 바닥 버튼
+    public SoundEntry sfxLeverToggle;     // 레버 활성화
     public SoundEntry sfxBreakBox;
     public SoundEntry sfxDoorOpen;
     public SoundEntry sfxDoorClose;
@@ -121,10 +127,15 @@ public class InGameSoundManager : MonoBehaviour
         if (sfxSource != null) sfxSource.volume = volume;
     }
     
+    // Undo 중 SFX 재생 억제 플래그
+    // InGameUIManager가 Undo 시작/종료 시 세팅
+    public bool SuppressSFX { get; set; }
+
     // SFX 재생 (개별 볼륨 적용)
 
     public void PlaySFX(SoundEntry entry)
     {
+        if (SuppressSFX) return;
         if (entry.clip == null || sfxSource == null) return;
         sfxSource.PlayOneShot(entry.clip, entry.SafeVolume);
     }
@@ -132,6 +143,7 @@ public class InGameSoundManager : MonoBehaviour
     // AudioClip 직접 재생 (하위 호환)
     public void PlaySFX(AudioClip clip)
     {
+        if (SuppressSFX) return;
         if (clip == null || sfxSource == null) return;
         sfxSource.PlayOneShot(clip);
     }
@@ -203,4 +215,9 @@ public class InGameSoundManager : MonoBehaviour
     public void PlayTitleBGM()       { PlayBGM(mainBGM); }
     public void PlayStageSelectBGM() { PlayBGM(bgmStageSelect); }
     public void PlayEndingBGM()      { PlayBGM(bgmEnding); }
+
+    // 오브젝트 SFX 편의 메서드
+    public void PlayLeverToggle()    { PlaySFX(sfxLeverToggle); }
+    public void PlayIceSlide()       { PlaySFX(sfxIceSlide); }
+    public void PlayButtonPress()    { PlaySFX(sfxPressButton); }
 }
