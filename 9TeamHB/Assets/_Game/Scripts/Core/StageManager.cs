@@ -77,7 +77,7 @@ namespace MyGame2.Stage
             LastOutcome = outcome;
             SyncViews();
             SyncSelection();
-
+            
             //게임오버관련 Invoke
             if (CurrentState != null && CurrentState.IsGameOver)
             {
@@ -257,7 +257,7 @@ namespace MyGame2.Stage
 
                 if (members.Count < 2)
                 {
-                    // 멤버 1개 → 페어 연결 불가 (의도적 단일 배치일 수 있으므로 경고 생략)
+                    // 멤버 1개 -> 페어 연결 불가 (의도적 단일 배치일 수 있으므로 경고 생략)
                 }
             }
         }
