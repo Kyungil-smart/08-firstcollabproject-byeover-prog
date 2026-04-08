@@ -23,7 +23,6 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
     private readonly Queue<int> _pendingSummonPlayerIds = new Queue<int>();
     private int _alertTargetPlayerId = StageState.InvalidEntityId;
 
-    // playerId -> chaserId -> 추적자가 살아있는 동안 중복 소환 방지
     private readonly Dictionary<int, int> _activeChasers = new Dictionary<int, int>();
 
     public SummonerMove(
@@ -52,7 +51,6 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
         if (!_entityState.IsAlive) return;
         if(StageState.IsGameOver || StageState.IsStageClear) return;
 
-        // Undo 시 내부 AI 상태 초기화
         if (StageState.IsUndoProcessing)
         {
             _currentState = EnemyAIState.Patrol;
@@ -126,12 +124,20 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
             if (dir == Direction.None) return;
         }
         GridPos next = _entityState.Position.Move(dir);
-        if (StageState.GetCell(next).HasBush)
+
+        // 부쉬 차단 시 방향 반전 → 반대쪽도 부쉬면 이번 턴 이동 포기
+        if (StageState.IsInside(next) && StageState.GetCell(next).HasBush)
         {
             patrol.Reverse();
-            next = _entityState.Position.Move(patrol.GetDirectionFrom(_entityState.Position));
+            dir = patrol.GetDirectionFrom(_entityState.Position);
+            if (dir == Direction.None) return;
+
+            next = _entityState.Position.Move(dir);
+            if (StageState.IsInside(next) && StageState.GetCell(next).HasBush)
+                return; // 양쪽 다 부쉬 → 이동 불가, Reverse 유지
         }
-        MoveToward(next);
+
+        FlyTo(next);
     }
 
     void MoveToward(GridPos target)
@@ -191,7 +197,6 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
             if (_previousVisiblePlayers.Contains(playerId))
                 continue;
 
-            // 이미 해당 플레이어용 추적자가 살아있으면 소환 안 함
             if (HasActiveChaser(playerId))
                 continue;
 
@@ -217,19 +222,13 @@ public class SummonerMove : IComponentData, IUpdate, IDisposable
         }
         return false;
     }
-    
-    // 해당 플레이어에게 이미 소환된 추적자가 살아있는지 확인.
-    // 죽은 추적자는 자동 정리.
-    
+
     private bool HasActiveChaser(int playerId)
     {
         if (!_activeChasers.TryGetValue(playerId, out int chaserId))
             return false;
-
         if (StageState.TryGetEntity(chaserId, out EntityState chaser) && chaser.IsAlive)
             return true;
-
-        // 추적자가 죽었으면 정리 -> 다음 감지 시 재소환 허용
         _activeChasers.Remove(playerId);
         return false;
     }

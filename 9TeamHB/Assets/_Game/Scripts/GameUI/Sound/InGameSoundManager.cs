@@ -27,11 +27,15 @@ public class InGameSoundManager : MonoBehaviour
     
     // BGM
 
-    [Header("BGM")]
+    [Header("BGM — 메인")]
     public SoundEntry mainBGM;            // Start_OP_Main (타이틀)
+    public SoundEntry bgmStageSelect;     // StageSelect
+    
+    [Header("BGM — 인게임")]
     public SoundEntry bgmInPuzzle1;       // InPuzzle_1
     public SoundEntry bgmInPuzzle2;       // InPuzzle_2
-    public SoundEntry bgmStageSelect;     // StageSelect
+
+    [Header("BGM — 엔딩")]
     public SoundEntry bgmEnding;          // Ending
     
     // SFX — 이동
@@ -47,7 +51,9 @@ public class InGameSoundManager : MonoBehaviour
     [Header("SFX — 오브젝트")]
     public SoundEntry sfxObjectPush;
     public SoundEntry sfxIcePush;
-    public SoundEntry sfxPressButton;     // 버튼/레버
+    public SoundEntry sfxIceSlide;        // 얼음 상자 미끄러지는 중
+    public SoundEntry sfxPressButton;     // 바닥 버튼
+    public SoundEntry sfxLeverToggle;     // 레버 활성화
     public SoundEntry sfxBreakBox;
     public SoundEntry sfxDoorOpen;
     public SoundEntry sfxDoorClose;
@@ -203,4 +209,9 @@ public class InGameSoundManager : MonoBehaviour
     public void PlayTitleBGM()       { PlayBGM(mainBGM); }
     public void PlayStageSelectBGM() { PlayBGM(bgmStageSelect); }
     public void PlayEndingBGM()      { PlayBGM(bgmEnding); }
+
+    // 오브젝트 SFX 편의 메서드
+    public void PlayLeverToggle()    { PlaySFX(sfxLeverToggle); }
+    public void PlayIceSlide()       { PlaySFX(sfxIceSlide); }
+    public void PlayButtonPress()    { PlaySFX(sfxPressButton); }
 }
