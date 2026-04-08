@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,6 +36,9 @@ namespace MyGame2.Stage
         // 런타임 상태
         private readonly Dictionary<int, GridEntityView> _views = new Dictionary<int, GridEntityView>(16);
         private int _currentStageIndex;
+
+        // 게임오버 딜레이 코루틴
+        private Coroutine _gameOverDelayCoroutine;
 
         // 외부에서 현재 스테이지 인덱스 참조용
         public int CurrentStageIndex => _currentStageIndex;
@@ -77,12 +81,23 @@ namespace MyGame2.Stage
             LastOutcome = outcome;
             SyncViews();
             SyncSelection();
-            
-            //게임오버관련 Invoke
-            if (CurrentState != null && CurrentState.IsGameOver)
+
+            // 게임오버 -> 1초 딜레이 후 이벤트 발행
+            // IsGameOver=true 시점에서 입력은 CanAcceptInput()에 의해 즉시 차단됨
+            // 시간은 계속 흐르므로 사망 원인(히든 트랩 애니메이션 등)이 보임
+            if (CurrentState != null && CurrentState.IsGameOver && _gameOverDelayCoroutine == null)
             {
-                _events.RaiseGameOver();
+                _gameOverDelayCoroutine = StartCoroutine(DelayedGameOver());
             }
+        }
+
+        // 1초 대기 후 게임오버 이벤트 발행
+        private IEnumerator DelayedGameOver()
+        {
+            yield return new WaitForSeconds(1f);
+
+            _gameOverDelayCoroutine = null;
+            _events.RaiseGameOver();
         }
 
         // 활성 플레이어 전환 시 선택 마커 갱신.
@@ -101,11 +116,17 @@ namespace MyGame2.Stage
             if (file == null)
             { Debug.LogError($"[StageManager] 인덱스 {stageIndex} TextAsset null.", this); return; }
 
+            // 게임오버 딜레이 코루틴 정리
+            if (_gameOverDelayCoroutine != null)
+            {
+                StopCoroutine(_gameOverDelayCoroutine);
+                _gameOverDelayCoroutine = null;
+            }
+
             _currentStageIndex = stageIndex;
             ClearViews();
 
             // 이전 상태의 IUpdate/IDisposable 컴포넌트 이벤트 구독 해제
-            // (투사체 발사기 등이 다음 스테이지에서도 계속 발사하는 버그 방지)
             if (CurrentState != null)
             {
                 foreach (EntityState e in CurrentState.Entities)
@@ -152,7 +173,11 @@ namespace MyGame2.Stage
         public bool LoadNextStage()
         {
             int next = _currentStageIndex + 1;
-            if (next >= stageFiles.Length) { Debug.Log("[StageManager] 마지막 스테이지.", this); return false; }
+            if (next >= stageFiles.Length)
+            {
+                LoadingManager.LoadScene("Ending_Scene");
+                return false;
+            }
             LoadStage(next);
             return true;
         }
@@ -180,13 +205,10 @@ namespace MyGame2.Stage
 
         // 페어 그룹 자동 연결
 
-        // PairGroupData를 가진 엔티티들을 그룹별로 묶어서
-        // 버튼/레버 위치 <-> 문 위치를 SetCellPair로 연결한다.
         private void ResolvePairGroups()
         {
             if (CurrentState == null) return;
 
-            // 그룹별 엔티티 수집
             var groups = new Dictionary<int, List<EntityState>>();
 
             foreach (EntityState e in CurrentState.Entities)
@@ -204,7 +226,6 @@ namespace MyGame2.Stage
             {
                 List<EntityState> members = kvp.Value;
 
-                // 트리거(버튼/레버)와 대상(문) 분리
                 List<EntityState> triggers = new List<EntityState>();
                 List<EntityState> doors = new List<EntityState>();
                 List<EntityState> others = new List<EntityState>();
@@ -220,10 +241,8 @@ namespace MyGame2.Stage
                         others.Add(e);
                 }
 
-                // 트리거 <-> 문 연결
                 if (triggers.Count > 0 && doors.Count > 0)
                 {
-                    // 트리거 1개 : 문 N개
                     if (triggers.Count == 1)
                     {
                         for (int i = 0; i < doors.Count; i++)
@@ -231,22 +250,18 @@ namespace MyGame2.Stage
                     }
                     else
                     {
-                        // N:N -> 순서대로 1:1
                         int pairCount = Mathf.Min(triggers.Count, doors.Count);
                         for (int i = 0; i < pairCount; i++)
                             CurrentState.SetCellPair(triggers[i].Position, doors[i].Position);
                     }
                 }
-                // 트리거/문이 아닌 범용 페어 (텔레포트 등)
                 else if (triggers.Count == 0 && doors.Count == 0 && others.Count >= 2)
                 {
-                    // 2개씩 순서대로 연결
                     for (int i = 0; i + 1 < others.Count; i += 2)
                     {
                         CurrentState.SetCellPair(others[i].Position, others[i + 1].Position);
                     }
                 }
-                // 혼합 (기타 + 문 등) -> 전체를 순서대로 페어
                 else if (members.Count >= 2)
                 {
                     for (int i = 0; i + 1 < members.Count; i += 2)
@@ -257,12 +272,10 @@ namespace MyGame2.Stage
 
                 if (members.Count < 2)
                 {
-                    // 멤버 1개 -> 페어 연결 불가 (의도적 단일 배치일 수 있으므로 경고 생략)
                 }
             }
         }
 
-        // 텔레포트 셀 페어: HasTeleport 셀을 읽기 순서(좌->우, 위->아래)로 2개씩 묶어 SetCellPair
         private void ResolveTeleportPairs()
         {
             if (CurrentState == null) return;
@@ -280,7 +293,6 @@ namespace MyGame2.Stage
                 }
             }
 
-            // 2개씩 순서대로 페어
             for (int i = 0; i + 1 < teleportCells.Count; i += 2)
             {
                 CurrentState.SetCellPair(teleportCells[i], teleportCells[i + 1]);
@@ -311,15 +323,11 @@ namespace MyGame2.Stage
                 view.Bind(e, cellSize);
                 _views[e.Id] = view;
 
-                // ViewRequest 등록: CameraManager 등이 ID로 View를 찾을 수 있도록
                 RegisterViewRequest(e.Id, view);
-
-                // InteractableTileVisual 초기화 (문/레버/버튼 애니메이션)
                 InitTileVisual(view, e.Id);
             }
         }
 
-        // ViewRequest 콜백 등록 헬퍼
         private void RegisterViewRequest(int entityId, GridEntityView view)
         {
             _events.ViewRequestSubscribe(entityId, request =>
@@ -328,7 +336,6 @@ namespace MyGame2.Stage
             });
         }
 
-        // InteractableTileVisual 초기화 헬퍼 (문/레버/버튼 프리팹용)
         private void InitTileVisual(GridEntityView view, int entityId)
         {
             var tileVisual = view.GetComponent<InteractableTileVisual>();
@@ -340,7 +347,6 @@ namespace MyGame2.Stage
 
         private void SyncViews()
         {
-            // 동적 생성된 엔티티의 View가 없으면 자동 생성
             foreach (EntityState e in CurrentState.Entities)
             {
                 if (!_views.ContainsKey(e.Id))
@@ -357,7 +363,6 @@ namespace MyGame2.Stage
                 }
             }
 
-            // 제거된 엔티티의 View 파괴
             List<int> toRemove = null;
             foreach (var pair in _views)
             {

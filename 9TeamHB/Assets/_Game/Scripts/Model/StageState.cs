@@ -826,7 +826,6 @@ namespace MyGame2.Stage
         {
             if (IsGameOver) return;
             IsGameOver = true;
-            _events?.RaiseGameOver();
         }
 
         // 게임오버 상태만 설정 (입력 차단용, 이벤트 미발행)
