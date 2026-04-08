@@ -14,11 +14,14 @@ namespace MyGame2.Stage
         [Tooltip("한 칸 이동 간격 (초) — GridEntityView slideSpeed와 맞춰서 조정")]
         [SerializeField] private float slideInterval = 0.08f;
 
+        [Tooltip("셀 크기 (StageManager의 cellSize와 동일하게)")]
+        [SerializeField] private float cellSize = 1f;
+
         private float _timer;
         private bool _isProcessing;
-
-        // 이전 프레임에 슬라이딩 중이었는지 (정지 감지용)
         private bool _wasSliding;
+        // PushRule Lerp 완료 대기 중
+        private bool _waitingForLerp;
 
         private void Update()
         {
@@ -34,11 +37,13 @@ namespace MyGame2.Stage
                 _timer = 0f;
                 _isProcessing = false;
                 _wasSliding = false;
+                _waitingForLerp = false;
                 return;
             }
 
             // 미끄러지는 얼음 상자가 있는지 체크
             _isProcessing = false;
+            int slidingBoxId = -1;
             for (int i = 0; i < state.BoxIds.Count; i++)
             {
                 int boxId = state.BoxIds[i];
@@ -49,14 +54,15 @@ namespace MyGame2.Stage
                 if (!ice.IsSliding) continue;
 
                 _isProcessing = true;
+                slidingBoxId = boxId;
                 break;
             }
 
             if (!_isProcessing)
             {
                 _timer = 0f;
+                _waitingForLerp = false;
 
-                // 슬라이딩이 끝난 시점에 1회만 TurnExecuted 발행 (스냅샷용)
                 if (_wasSliding)
                 {
                     _wasSliding = false;
@@ -65,7 +71,24 @@ namespace MyGame2.Stage
                 return;
             }
 
-            _wasSliding = true;
+            // 슬라이딩 시작 직후: PushRule이 1칸 밀었으므로 View Lerp 완료 대기
+            if (!_wasSliding)
+            {
+                _wasSliding = true;
+                _waitingForLerp = true;
+                _timer = 0f;
+            }
+
+            // View의 Lerp가 아직 진행 중이면 대기
+            if (_waitingForLerp)
+            {
+                GridEntityView view = FindSlidingView(slidingBoxId);
+                if (view != null && view.IsSliding)
+                    return; // Lerp 진행 중 -> 대기
+                _waitingForLerp = false;
+                _timer = 0f; // Lerp 끝난 직후부터 타이머 시작
+            }
+
             _timer += Time.deltaTime;
             if (_timer < slideInterval) return;
             _timer -= slideInterval;
@@ -85,9 +108,38 @@ namespace MyGame2.Stage
                 viewDirty |= SlideOneStep(state, boxId, box, ice);
             }
 
-            // 중간 스텝: 시각만 갱신 (스냅샷 안 찍힘)
             if (viewDirty)
-                state.SetViewDirty();
+            {
+                // 중간 스텝: View를 직접 Sync (TurnExecuted 없이 스냅샷 방지)
+                SyncSlidingViews(state);
+            }
+        }
+
+        // 미끄러지는 얼음 상자의 View만 직접 동기화 (이벤트 없이)
+        private void SyncSlidingViews(StageState state)
+        {
+            GridEntityView[] views = FindObjectsByType<GridEntityView>(FindObjectsSortMode.None);
+            for (int i = 0; i < views.Length; i++)
+            {
+                GridEntityView view = views[i];
+                if (!state.TryGetEntity(view.EntityId, out EntityState entity)) continue;
+                if (!entity.Has<IceSlideData>()) continue;
+
+                IceSlideData ice = entity.Get<IceSlideData>();
+                if (ice.IsSliding || _wasSliding)
+                    view.Sync(entity, cellSize);
+            }
+        }
+
+        private GridEntityView FindSlidingView(int entityId)
+        {
+            GridEntityView[] views = FindObjectsByType<GridEntityView>(FindObjectsSortMode.None);
+            for (int i = 0; i < views.Length; i++)
+            {
+                if (views[i].EntityId == entityId)
+                    return views[i];
+            }
+            return null;
         }
 
         // Undo 시 모든 얼음 상자 슬라이딩 즉시 정지
