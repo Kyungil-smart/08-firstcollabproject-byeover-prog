@@ -14,3 +14,4 @@ public class StoryData : ScriptableObject
 {
     public StoryPage[] pages;
 }
+
